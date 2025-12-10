@@ -43,27 +43,31 @@
   - `staffId` の必須化 & 監査フィールド追加 (v1.0 Review)
 - [x] **型定義の修正**: Prisma Client 更新 (完了)
 
-### Phase 8: 予約管理の補完 & カルテ機能の深化 (Recovery & Advanced Records)
+### Phase 8: 予約管理の完全化 (Appointment Completion)
 > **Priority High**: プロトタイプとして欠けている「予約の変更・キャンセル」を最優先で実装します。
 
 - [ ] **予約管理 (CRUD) の完成**:
   - [ ] 予約のキャンセル処理
   - [ ] 予約日時の変更機能
   - [ ] (Optional) 簡易予約一覧画面
+
+### Phase 9: カルテ機能の深化 (Advanced Records)
+> **Note**: 本フェーズ以降の機能実装には、事前の詳細な合意形成が必要です。
+
 - [ ] **画像アップロード**: 施術写真などのアップロードと表示
 - [ ] **定型文/テンプレート**: よく使う処置や所見の呼び出し機能
 - [ ] **過去カルテ引用**: 前回の施術内容をコピーまたは参照入力
 
-### Phase 9: AI / 通知機能の拡張 (AI & Notification)
+### Phase 10: AI / 通知機能の拡張 (AI & Notification)
 - [ ] **本日のサマリー**: AIによる「今日の患者傾向」要約
 - [ ] **リマインド通知**: LINE等の外部連携API (Concept)
 - [ ] **音声入力**: ブラウザ音声認識によるテキスト化 (Experimental)
 
-### Phase 10: 集計・管理 (Analytics & Admin)
+### Phase 11: 集計・管理 (Analytics & Admin)
 - [ ] **患者数集計**: 月別来院数などのグラフ表示
 - [ ] **データエクスポート**: CSV出力機能
 - [ ] **バックアップ機能**: SQLiteファイルのダウンロード
 
 ---
 
-> **Critical Restriction**: Phase 8以降の機能については、**ユーザーとの完全な合意形成（Consensus）が完了するまで実装を禁止します**。「Generic Base Kit」としての品質維持を最優先し、独断でのコード追加は行わないでください。
+> **Critical Restriction**: Phase 9以降の機能については、**ユーザーとの完全な合意形成（Consensus）が完了するまで実装を禁止します**。「Generic Base Kit」としての品質維持を最優先し、独断でのコード追加は行わないでください。
