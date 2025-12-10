@@ -121,6 +121,9 @@ async function main() {
     // 4. Appointments (本日の予約 - 動作確認用)
     const today = new Date()
 
+    // 既存の予約をクリア（重複防止）
+    await prisma.appointment.deleteMany({})
+
     // 10:00 - 山田さん
     const appt1 = new Date(today)
     appt1.setHours(10, 0, 0, 0)
