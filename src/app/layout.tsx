@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
+import { UserPlus, Calendar } from 'lucide-react';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -26,9 +27,20 @@ export default function RootLayout({
                 <span>🩺</span>
                 Clinic Notebook
               </Link>
-              <nav className="flex gap-4">
-                <Link href="/patients/new" className={buttonVariants({ variant: 'default', size: 'default' })}>
-                  ＋ 新患登録
+              <nav className="flex gap-4 items-center">
+                <Link
+                  href="/appointments"
+                  className="bg-white hover:bg-slate-50 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-md text-sm font-bold flex items-center gap-2 transition-colors shadow-sm"
+                >
+                  <Calendar className="w-4 h-4" />
+                  予約一覧
+                </Link>
+                <Link
+                  href="/patients/new"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-bold flex items-center gap-2 transition-colors shadow-sm"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  新患登録
                 </Link>
               </nav>
             </div>

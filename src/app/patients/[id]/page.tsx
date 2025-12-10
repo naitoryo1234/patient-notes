@@ -1,11 +1,12 @@
 import { getPatientById } from '@/services/patientService';
 import { getRecordsByPatientId } from '@/services/recordService';
 import { getActiveStaff } from '@/services/staffService';
-import { getNextAppointment } from '@/services/appointmentService';
-import { PatientProfile } from '@/components/domain/PatientProfile';
+import { getNextAppointment, getTodaysAppointmentForPatient } from '@/services/appointmentService';
+import { PatientDetailSidebar } from '@/components/domain/PatientDetailSidebar';
 import { RecordList } from '@/components/domain/RecordList';
 import { RecordFormContainer } from '@/components/domain/RecordFormContainer';
-import { AppointmentButton } from '@/components/domain/AppointmentButton';
+import { Button } from '@/components/ui/button';
+import { History } from 'lucide-react';
 import { addRecord } from '@/actions/recordActions';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -28,60 +29,73 @@ export default async function PatientDetailPage(props: PageProps) {
     const records = await getRecordsByPatientId(id);
     const staffList = await getActiveStaff();
     const nextAppt = await getNextAppointment(id);
+    const todaysAppt = await getTodaysAppointmentForPatient(id);
+
+    // Initial visit date logic:
+    // If there is an appointment TODAY, use its start time as default.
+    // Otherwise use current time.
+    // We adjust to local time offset manually for simple ISO string usage if needed, 
+    // but here we just ensure we have a valid Date object to format.
+    // Note: initialValues expects "YYYY-MM-DDTHH:mm" format string in local time usually for datetime-local input,
+    // but the component might be handling offset. 
+    // Standard <input type="datetime-local"> expects local ISO string without Z.
+    // We'll generate it carefully.
+
+    const getLocalISOString = (date: Date) => {
+        const offset = date.getTimezoneOffset() * 60000; // offset in milliseconds
+        const localDate = new Date(date.getTime() - offset);
+        return localDate.toISOString().slice(0, 16);
+    };
+
+    const initialVisitDate = todaysAppt
+        ? getLocalISOString(todaysAppt.startAt)
+        : getLocalISOString(new Date());
 
     // Bind patientID to the server action
     const addRecordAction = addRecord.bind(null, id);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column: Profile & New Entry */}
-            <div className="lg:col-span-1 space-y-6">
-                <PatientProfile patient={patient} />
-
-                {nextAppt && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 shadow-sm">
-                        <h4 className="text-xs font-bold text-emerald-700 uppercase mb-2 flex items-center gap-1">
-                            <span>📅</span> 次回の予定
-                        </h4>
-                        <div className="flex flex-col">
-                            <div className="flex items-baseline gap-2 text-emerald-900 mb-1">
-                                <span className="font-mono text-xl font-bold">
-                                    {format(nextAppt.startAt, 'MM/dd (eee) HH:mm', { locale: ja })}
-                                </span>
-                            </div>
-                            <div className="flex gap-2 items-center">
-                                {nextAppt.staffName && (
-                                    <span className="text-xs bg-white border border-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded">
-                                        担当: {nextAppt.staffName}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                        {nextAppt.memo && <div className="text-xs text-emerald-600 mt-2 border-t border-emerald-100 pt-1">{nextAppt.memo}</div>}
-                    </div>
-                )}
-
-                <div className="flex gap-2">
-                    <AppointmentButton patientId={id} staffList={staffList} />
-                    <Link href={`/patients/${id}/edit`} className="bg-slate-100 text-slate-600 px-4 py-2 rounded text-sm hover:bg-slate-200 flex items-center">
-                        編集
+            {/* Left Column: Profile & Navigation */}
+            <div className="lg:col-span-1">
+                <PatientDetailSidebar patient={patient} nextAppt={nextAppt} staffList={staffList} />
+                <div className="mt-4">
+                    <Link href={`/patients/${id}/history`} className="block w-full text-center py-3 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2 font-bold group">
+                        <History className="w-4 h-4 text-slate-400 group-hover:text-indigo-600" />
+                        過去の履歴を見る ({records.length})
                     </Link>
                 </div>
+            </div>
 
+            {/* Right Column: New Entry Form Only */}
+            <div className="lg:col-span-2">
+                <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <span>✏️</span> 新しい記録
+                </h2>
                 <RecordFormContainer
                     action={addRecordAction}
                     staffList={staffList}
                     initialValues={{
-                        visitDate: new Date().toISOString().slice(0, 16)
+                        visitDate: initialVisitDate,
+                        staffId: todaysAppt?.staffId || undefined
                     }}
                 />
-            </div>
 
-            {/* Right Column: Timeline */}
-            <div className="lg:col-span-2">
-                <h3 className="font-bold text-slate-800 mb-4 text-lg">施術履歴 ({records.length})</h3>
-                <RecordList records={records} />
+                {/* Show only the latest record for context if exists */}
+                {records.length > 0 && (
+                    <div className="mt-8 border-t border-slate-100 pt-6 opacity-80 hover:opacity-100 transition-opacity">
+                        <h3 className="text-sm font-bold text-slate-400 mb-4">前回の記録 (参照用)</h3>
+                        <RecordList records={[records[0]]} />
+                        {records.length > 1 && (
+                            <div className="text-center mt-2">
+                                <Link href={`/patients/${id}/history`} className="text-xs text-indigo-600 hover:underline">
+                                    ...他 {records.length - 1} 件の履歴を表示
+                                </Link>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
-        </div>
+        </div >
     );
 }

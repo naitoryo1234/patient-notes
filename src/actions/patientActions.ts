@@ -1,47 +1,84 @@
-'use server';
+'use server'
 
+import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { PatientSchema } from '@/config/schema';
-import * as patientService from '@/services/patientService';
+import { createPatient, findSimilarPatients } from '@/services/patientService';
 
+/**
+ * Create a new patient
+ */
 export async function addPatient(formData: FormData) {
-    const rawData = Object.fromEntries(formData.entries());
-
-    // Validation
-    const validated = PatientSchema.safeParse(rawData);
-
-    if (!validated.success) {
-        return { success: false, errors: validated.error.flatten().fieldErrors };
+    const rawData = {
+        name: formData.get('name') as string,
+        kana: formData.get('kana') as string,
+        birthDate: formData.get('birthDate') as string || undefined,
+        gender: formData.get('gender') as string,
+        phone: formData.get('phone') as string,
+        memo: formData.get('memo') as string,
     }
 
-    let newPatient;
-    try {
-        newPatient = await patientService.createPatient(validated.data);
-    } catch (error) {
-        console.error(error);
-        return { success: false, message: 'Database Error' };
+    if (!rawData.name || !rawData.kana) {
+        // Simple server-side validation
+        throw new Error('Name and Kana are required');
     }
+
+    const newPatient = await createPatient(rawData);
+
+    // Check if tags are in formData and update if needed
+    // ConfigForm might send tags as string or nothing. 
+    // If patient creation handles tags default as empty, we can update them here if present.
+    // For now, let's stick to basic creation and redirect.
 
     revalidatePath('/');
     redirect(`/patients/${newPatient.id}`);
 }
 
+/**
+ * Check for duplicate patients
+ */
 export async function checkDuplicates(name: string, kana: string) {
     if (!name && !kana) return [];
+    const results = await findSimilarPatients(name, kana);
+    // Serialize dates for client component
+    return results.map(p => ({
+        ...p,
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt.toISOString(),
+        birthDate: p.birthDate ? p.birthDate.toISOString() : null,
+    }));
+}
+
+/**
+ * Update patient memo
+ */
+export async function updatePatientMemo(patientId: string, memo: string) {
     try {
-        const results = await patientService.findSimilarPatients(name, kana);
-        // Serialize dates if necessary, but server components handles simple objects mostly.
-        // Prisma Date objects need to be serializable if passed to client components directly?
-        // Server Action returns to Client Component -> Needs serialization
-        return results.map((p: any) => ({
-            ...p,
-            birthDate: p.birthDate ? p.birthDate.toISOString() : null,
-            createdAt: p.createdAt.toISOString(),
-            updatedAt: p.updatedAt.toISOString(),
-        }));
-    } catch (e) {
-        console.error(e);
-        return [];
+        await prisma.patient.update({
+            where: { id: patientId },
+            data: { memo }
+        });
+        revalidatePath(`/patients/${patientId}`);
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to update patient memo:', error);
+        return { success: false, error: 'Failed to update memo' };
+    }
+}
+
+/**
+ * Update patient tags
+ */
+export async function updatePatientTags(patientId: string, tags: string[]) {
+    try {
+        await prisma.patient.update({
+            where: { id: patientId },
+            data: { tags: JSON.stringify(tags) }
+        });
+        revalidatePath(`/patients/${patientId}`);
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to update patient tags:', error);
+        return { success: false, error: 'Failed to update tags' };
     }
 }

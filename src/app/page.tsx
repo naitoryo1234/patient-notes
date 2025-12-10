@@ -4,6 +4,7 @@ import { getTodaysAppointments } from '@/services/appointmentService';
 import { DailyAppointmentPanel } from '@/components/dashboard/DailyAppointmentPanel';
 import { Users, UserPlus } from 'lucide-react';
 import { Patient } from '@prisma/client';
+import { getActiveStaff } from '@/services/staffService';
 
 export const dynamic = 'force-dynamic'; // Always fetch latest
 
@@ -12,33 +13,24 @@ export default async function Home(props: { searchParams: Promise<{ q?: string }
   const query = searchParams?.q || '';
   const patients = await getPatients(query);
   const todaysAppointments = await getTodaysAppointments(); // Fetch appointments
+  const activeStaff = await getActiveStaff();
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-100px)]">
       {/* Left Column: Today's Schedule (Fixed Panel) */}
       <div className="lg:col-span-1 h-full">
-        <DailyAppointmentPanel appointments={todaysAppointments} />
+        <DailyAppointmentPanel appointments={todaysAppointments} staffList={activeStaff} />
       </div>
 
       {/* Right Column: Search & Patient List */}
       <div className="lg:col-span-3 space-y-6 flex flex-col h-full overflow-hidden">
-        {/* Header Actions */}
-        <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-slate-200 shrink-0">
+        {/* Search & Header Combined */}
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 shrink-0 space-y-4">
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-indigo-600" />
             <h2 className="text-lg font-bold text-slate-800">患者検索</h2>
           </div>
-          <Link
-            href="/patients/new"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-bold flex items-center gap-2 transition-colors"
-          >
-            <UserPlus className="w-4 h-4" />
-            新規登録
-          </Link>
-        </div>
 
-        {/* Search Bar */}
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 shrink-0">
           <form className="relative">
             <input
               type="search"
