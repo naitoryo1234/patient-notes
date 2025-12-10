@@ -24,6 +24,16 @@ export const RecordSchema = z.object({
     plan: z.string().optional(),
     tags: z.array(z.string()).optional(), // UI handles Array, DB stores JSON
     staffId: z.string().optional().or(z.literal('')),
+}).refine(data => {
+    // 少なくとも1つのフィールドに入力があることを確認
+    const s = data.subjective?.trim() || '';
+    const o = data.objective?.trim() || '';
+    const a = data.assessment?.trim() || '';
+    const p = data.plan?.trim() || '';
+    return s.length > 0 || o.length > 0 || a.length > 0 || p.length > 0;
+}, {
+    message: "カルテの内容が空です。S/O/A/Pのいずれかを入力してください。",
+    path: ["subjective"] // エラーを表示するフィールド（代表）
 });
 
 export type RecordInput = z.infer<typeof RecordSchema>;

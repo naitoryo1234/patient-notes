@@ -9,7 +9,7 @@ import { cancelAppointmentAction } from '@/actions/appointmentActions';
 import { AppointmentEditModal } from '@/components/dashboard/AppointmentEditModal';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Pencil, Trash2, Calendar, User, History, CheckCircle2, XCircle, CalendarClock } from 'lucide-react';
+import { Pencil, Trash2, Calendar, User, History, CheckCircle2, XCircle, CalendarClock, AlertCircle } from 'lucide-react';
 
 interface AppointmentListClientProps {
     initialAppointments: Appointment[];
@@ -42,7 +42,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
             case 'completed':
                 return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
             case 'cancelled':
-                return <XCircle className="w-5 h-5 text-red-400" />;
+                return <XCircle className="w-5 h-5 text-slate-300" />;
             case 'scheduled':
             default:
                 return <CalendarClock className="w-5 h-5 text-slate-400" />;
@@ -55,8 +55,17 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
         return apt.staffId === filterStaffId;
     });
 
+    const pendingAssignments = initialAppointments.filter(a => !a.staffId && a.status !== 'cancelled').length;
+
     return (
         <div className="bg-white rounded-lg shadow border border-slate-200 overflow-hidden">
+            {/* Unassigned Warning */}
+            {pendingAssignments > 0 && (
+                <div className="bg-amber-50 border-b border-amber-100 p-2 flex items-center gap-2 text-xs text-amber-700 font-bold px-4 animate-in slide-in-from-top-1">
+                    <AlertCircle className="w-4 h-4 text-amber-600" />
+                    <span>担当未定の予約が {pendingAssignments} 件あります</span>
+                </div>
+            )}
             {/* Toolbar */}
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                 <div className="flex gap-2">
@@ -113,18 +122,20 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                 const visitDate = new Date(apt.visitDate);
                                 const diff = differenceInMinutes(visitDate, new Date());
                                 const isExpired = diff < -60; // 1 hour passed
-                                const rowClass = isExpired ? 'bg-slate-50' : 'bg-white';
-                                const textClass = isExpired ? 'text-slate-400' : 'text-slate-700';
+                                const isCancelled = apt.status === 'cancelled';
+
+                                const rowClass = isCancelled ? 'bg-slate-50 opacity-60' : (isExpired ? 'bg-slate-50' : 'bg-white');
+                                const textClass = isCancelled ? 'text-slate-400 line-through' : (isExpired ? 'text-slate-400' : 'text-slate-700');
 
                                 return (
-                                    <tr key={apt.id} className={`${rowClass} group hover:bg-indigo-50/30 transition-colors`}>
+                                    <tr key={apt.id} className={`${rowClass} group hover:bg-slate-50 transition-colors`}>
                                         <td className="px-4 py-3 text-center">
                                             <div className="flex justify-center" title={apt.status}>
                                                 {getStatusIcon(apt.status)}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 whitespace-nowrap">
-                                            <div className={`font-mono font-bold text-base ${isExpired ? 'text-slate-500' : 'text-slate-800'}`}>
+                                            <div className={`font-mono font-bold text-base ${isCancelled ? 'text-slate-400 line-through' : (isExpired ? 'text-slate-500' : 'text-slate-800')}`}>
                                                 {format(visitDate, 'yyyy/MM/dd (eee)', { locale: ja })}
                                             </div>
                                             <div className="text-xl font-bold">
@@ -133,7 +144,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                         </td>
                                         <td className="px-4 py-3 whitespace-nowrap">
                                             <Link href={`/patients/${apt.patientId}`} className="hover:underline flex flex-col">
-                                                <span className={`font-bold text-base ${isExpired ? '' : 'text-indigo-900'}`}>
+                                                <span className={`font-bold text-base ${isCancelled ? 'text-slate-400 line-through' : (isExpired ? '' : 'text-indigo-900')}`}>
                                                     {apt.patientName}
                                                 </span>
                                                 <span className="text-xs text-slate-400">
@@ -163,13 +174,15 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                                 >
                                                     <Pencil className="w-4 h-4" />
                                                 </button>
-                                                <button
-                                                    onClick={() => handleDelete(apt.id)}
-                                                    className="p-2 bg-white border border-slate-200 rounded hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors"
-                                                    title="キャンセル"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
+                                                {!isCancelled && (
+                                                    <button
+                                                        onClick={() => handleDelete(apt.id)}
+                                                        className="p-2 bg-white border border-slate-200 rounded hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors"
+                                                        title="キャンセル"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -178,7 +191,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                         )}
                     </tbody>
                 </table>
-            </div>
+            </div >
 
             {editingAppointment && (
                 <AppointmentEditModal
@@ -190,7 +203,8 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                         router.refresh(); // Refresh after edit
                     }}
                 />
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }

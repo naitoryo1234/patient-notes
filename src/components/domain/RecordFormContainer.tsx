@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ConfigForm } from '@/components/form/ConfigForm';
 import { RecordFormConfig } from '@/config/forms';
 import { Button } from '@/components/ui/button';
+import { TagInput } from '@/components/form/TagInput';
 import { parseAiText } from '@/services/aiParser';
 import { format } from 'date-fns';
 import { Staff } from '@/services/staffService';
@@ -37,6 +38,35 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
     const [step, setStep] = useState<'input' | 'confirm'>('input');
     const [aiText, setAiText] = useState('');
     const [formValues, setFormValues] = useState(initialValues);
+    const [errors, setErrors] = useState<Record<string, string[]> | null>(null);
+
+    const handleSubmit = async (formData: FormData) => {
+        setErrors(null);
+        // Client-side quick check (optional but good for UX)
+        // This mirrors the Zod check but gives instant feedback without server roundtrip
+        const s = (formData.get('subjective') as string)?.trim() || '';
+        const o = (formData.get('objective') as string)?.trim() || '';
+        const a = (formData.get('assessment') as string)?.trim() || '';
+        const p = (formData.get('plan') as string)?.trim() || '';
+
+        if (!s && !o && !a && !p) {
+            const errorMsg = ["カルテの内容が空です。S/O/A/Pのいずれかを入力してください。"];
+            setErrors({ subjective: errorMsg });
+            alert(errorMsg[0]);
+            return;
+        }
+
+        const result = await action(formData);
+        if (result && !result.success) {
+            if (result.errors) {
+                setErrors(result.errors);
+                const firstError = Object.values(result.errors).flat()[0] as string;
+                alert(firstError || '入力内容にエラーがあります');
+            } else {
+                alert(result.message || 'エラーが発生しました');
+            }
+        }
+    };
 
     const handleParse = () => {
         const parsed = parseAiText(aiText);
@@ -119,12 +149,11 @@ P: `);
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs text-slate-500 font-bold block">タグ (カンマ区切り)</label>
-                            <input
-                                type="text"
-                                placeholder="例: 腰痛, 初診"
+                            <TagInput
                                 value={formValues.tags || ''}
-                                onChange={(e) => setFormValues({ ...formValues, tags: e.target.value })}
-                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
+                                onChange={(val) => setFormValues({ ...formValues, tags: val })}
+                                placeholder="例: 腰痛, 初診"
+                                suggestions={RecordFormConfig.find(f => f.name === 'tags')?.options as string[]}
                             />
                         </div>
                     </div>
@@ -238,14 +267,27 @@ P: `);
                 </div>
             ) : (
                 /* Manual Form (ConfigForm) */
-                /* Key helps reset form when switching modes or values change significantly */
-                <ConfigForm
-                    key={JSON.stringify(formValues)}
-                    config={formConfig}
-                    action={action}
-                    submitLabel="記録を保存"
-                    initialValues={formValues}
-                />
+                <div className="space-y-4">
+                    {errors && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded text-sm mb-4 animate-in slide-in-from-top-1">
+                            <p className="font-bold flex items-center gap-2">
+                                <span>⚠️</span> 入力エラー
+                            </p>
+                            <ul className="list-disc list-inside mt-1 ml-1">
+                                {Object.entries(errors).map(([key, msgs]) => (
+                                    msgs.map((msg, i) => <li key={`${key}-${i}`}>{msg}</li>)
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                    <ConfigForm
+                        key={JSON.stringify(formValues)}
+                        config={formConfig}
+                        action={handleSubmit}
+                        submitLabel="記録を保存"
+                        initialValues={formValues}
+                    />
+                </div>
             )}
         </div>
     );

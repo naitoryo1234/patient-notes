@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { Patient } from '@prisma/client';
 import { format } from 'date-fns';
-import { Pencil, Check, X } from 'lucide-react';
+import { Pencil, Check, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { updatePatientMemo, updatePatientTags } from '@/actions/patientActions';
+import { updatePatientMemo, updatePatientTags, deletePatient } from '@/actions/patientActions';
 import { useRouter } from 'next/navigation';
 
 interface PatientProfileProps {
@@ -62,6 +62,19 @@ export function PatientProfile({ patient }: PatientProfileProps) {
         setIsEditingTags(false);
     };
 
+    const handleDelete = async () => {
+        if (!confirm('本当にこの患者を削除しますか？\n※未来の予約は自動的にキャンセルされます。')) {
+            return;
+        }
+
+        const result = await deletePatient(patient.id);
+        if (result.success) {
+            router.push('/');
+        } else {
+            alert('削除に失敗しました。');
+        }
+    };
+
     return (
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 space-y-4 group">
             <div className="flex justify-between items-start">
@@ -79,6 +92,9 @@ export function PatientProfile({ patient }: PatientProfileProps) {
                         <span>{patient.phone || '-'}</span>
                     </div>
                 </div>
+                <Button variant="ghost" size="icon" onClick={handleDelete} className="text-slate-400 hover:text-red-600 hover:bg-red-50 -mt-1 -mr-2">
+                    <Trash2 className="w-4 h-4" />
+                </Button>
             </div>
 
             {/* Tags Section */}

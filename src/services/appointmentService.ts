@@ -25,7 +25,7 @@ export const getTodaysAppointments = async (date: Date = new Date()): Promise<Ap
                 gte: start,
                 lte: end,
             },
-            status: { not: 'cancelled' }
+            // status: { not: 'cancelled' } // Include cancelled for display
         },
         include: {
             patient: {
@@ -53,6 +53,7 @@ export const getTodaysAppointments = async (date: Date = new Date()): Promise<Ap
         memo: a.memo || a.patient.memo || '',
         staffName: a.staff?.name,
         staffId: a.staffId || undefined,
+        status: a.status,
     }));
 };
 

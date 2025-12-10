@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { TagInput } from './TagInput';
 
 export interface FormOption {
     label: string;
@@ -59,6 +60,15 @@ export function ConfigForm({ config, action, submitLabel = '送信', initialValu
                                 return <option key={i} value={value}>{label}</option>;
                             })}
                         </select>
+                    ) : field.type === 'tags' ? (
+                        <TagInput
+                            id={field.name}
+                            name={field.name}
+                            value={initialValues[field.name]}
+                            onChange={(v) => { }} // Uncontrolled form uses the input's native value
+                            suggestions={field.options as string[]}
+                            placeholder={field.placeholder}
+                        />
                     ) : (
                         <input
                             id={field.name}

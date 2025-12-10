@@ -81,18 +81,19 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                         <p className="text-sm text-yellow-700 mb-3">以下の患者は既に登録されています。同一人物の可能性があります。</p>
                         <ul className="space-y-2">
                             {duplicates.map((d: any) => (
-                                <li key={d.id} className="bg-white border border-yellow-100 rounded p-2 text-sm flex justify-between items-center shadow-sm">
-                                    <div>
-                                        <span className="font-bold mr-2">{d.name}</span>
-                                        <span className="text-xs text-slate-500">({d.kana})</span>
-                                        <span className="ml-2 text-xs text-slate-400">ID: {d.pId}</span>
+                                <li key={d.id} className="bg-white border border-yellow-100 rounded-md p-3 text-sm flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="flex flex-col">
+                                        <div className="flex items-center">
+                                            <span className="font-bold mr-2 text-slate-800">{d.name}</span>
+                                            <span className="text-xs text-slate-500">({d.kana})</span>
+                                        </div>
+                                        <div className="text-xs text-slate-400 mt-0.5">ID: {d.pId}</div>
                                     </div>
                                     <Link
                                         href={`/patients/${d.id}`}
-                                        target="_blank"
-                                        className="text-xs bg-white border border-slate-200 px-2 py-1 rounded hover:bg-slate-50 text-slate-600"
+                                        className="h-8 px-3 inline-flex items-center justify-center rounded-md text-sm font-medium border border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 transition-colors"
                                     >
-                                        詳細を開く ↗
+                                        この患者のカルテへ →
                                     </Link>
                                 </li>
                             ))}

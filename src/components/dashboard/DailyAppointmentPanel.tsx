@@ -8,7 +8,7 @@ import { AppointmentEditModal } from './AppointmentEditModal';
 import { format, differenceInMinutes, isBefore, isAfter, addMinutes } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import Link from 'next/link';
-import { Bell, Clock, RefreshCw, Pencil, Trash2 } from 'lucide-react';
+import { Bell, Clock, RefreshCw, Pencil, Trash2, AlertCircle } from 'lucide-react';
 
 interface DailyAppointmentPanelProps {
     appointments: Appointment[]; // Initial server data
@@ -42,6 +42,8 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
         // Could also allow routing.refresh() here.
     };
 
+    const pendingAssignments = appointments.filter(a => !a.staffId && a.status !== 'cancelled').length;
+
     return (
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
             <div className="bg-slate-800 text-white p-4 flex justify-between items-center">
@@ -56,6 +58,14 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                     </button>
                 </div>
             </div>
+
+            {/* Unassigned Warning */}
+            {pendingAssignments > 0 && (
+                <div className="bg-amber-50 border-b border-amber-100 p-2 flex items-center gap-2 text-xs text-amber-700 font-bold px-4 animate-in slide-in-from-top-1">
+                    <AlertCircle className="w-4 h-4 text-amber-600" />
+                    <span>担当未定の予約が {pendingAssignments} 件あります</span>
+                </div>
+            )}
 
             <div className="flex-1 overflow-y-auto p-2 space-y-2 max-h-[500px] lg:max-h-none">
                 {appointments.length === 0 ? (
@@ -72,14 +82,16 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                         const diff = differenceInMinutes(aptTime, currentTime);
 
                         // Status Logic
-                        const isPast = diff < -15; // 15 mins passed
-                        const isUpcoming = diff >= 0 && diff <= 60; // Within 1 hour
-                        const isJustNow = diff >= -15 && diff < 0; // Just started/arrived
+                        const isCancelled = apt.status === 'cancelled';
+                        const isPast = !isCancelled && diff < -15; // 15 mins passed
+                        const isUpcoming = !isCancelled && diff >= 0 && diff <= 60; // Within 1 hour
+                        const isJustNow = !isCancelled && diff >= -15 && diff < 0; // Just started/arrived
 
                         let statusColor = "bg-white border-slate-200";
-                        if (isUpcoming) statusColor = "bg-yellow-50 border-yellow-300 shadow-sm ring-1 ring-yellow-200";
-                        if (isJustNow) statusColor = "bg-emerald-50 border-emerald-300 shadow-sm ring-1 ring-emerald-200";
-                        if (isPast) statusColor = "bg-slate-50 border-slate-100 opacity-60";
+                        if (isCancelled) statusColor = "bg-slate-50 border-slate-100 opacity-60 grayscale"; // Cancelled (Greyed out)
+                        else if (isUpcoming) statusColor = "bg-yellow-50 border-yellow-300 shadow-sm ring-1 ring-yellow-200";
+                        else if (isJustNow) statusColor = "bg-emerald-50 border-emerald-300 shadow-sm ring-1 ring-emerald-200";
+                        else if (isPast) statusColor = "bg-slate-50 border-slate-100 opacity-60";
 
                         return (
                             <div key={apt.id} className={`relative rounded-lg border transition-all hover:shadow-md ${statusColor} group`}>
@@ -89,7 +101,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                                 >
                                     <div className="flex justify-between items-start mb-1">
                                         <div className="flex items-center gap-2">
-                                            <span className={`text-lg font-bold font-mono ${isUpcoming ? 'text-yellow-700' : isJustNow ? 'text-emerald-700' : 'text-slate-700'}`}>
+                                            <span className={`text-lg font-bold font-mono ${isCancelled ? 'text-slate-400 line-through' : isUpcoming ? 'text-yellow-700' : isJustNow ? 'text-emerald-700' : 'text-slate-700'}`}>
                                                 {format(aptTime, 'HH:mm')}
                                             </span>
                                             {isUpcoming && (
@@ -102,6 +114,11 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                                                     来院時刻
                                                 </span>
                                             )}
+                                            {isCancelled && (
+                                                <span className="bg-slate-200 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                                                    キャンセル
+                                                </span>
+                                            )}
                                         </div>
                                         <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
                                             {apt.visitCount}回目
@@ -109,8 +126,8 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                                     </div>
 
                                     <div>
-                                        <div className="font-bold text-slate-800 text-base mb-0.5 group-hover:text-blue-600 transition-colors">
-                                            {apt.patientName} <span className="text-xs font-normal text-slate-500 ml-1">{apt.patientKana}</span>
+                                        <div className={`font-bold text-base mb-0.5 transition-colors ${isCancelled ? 'text-slate-400 line-through' : 'text-slate-800 group-hover:text-blue-600'}`}>
+                                            {apt.patientName} <span className="text-xs font-normal text-slate-500 ml-1 decoration-auto">{apt.patientKana}</span>
                                         </div>
                                         {apt.staffName && (
                                             <div className="text-xs text-slate-500 flex items-center gap-1 mb-1">
