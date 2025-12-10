@@ -5,6 +5,7 @@ import { DailyAppointmentPanel } from '@/components/dashboard/DailyAppointmentPa
 import { Users, UserPlus } from 'lucide-react';
 import { Patient } from '@prisma/client';
 import { getActiveStaff } from '@/services/staffService';
+import { format } from 'date-fns';
 
 export const dynamic = 'force-dynamic'; // Always fetch latest
 
@@ -59,33 +60,39 @@ export default async function Home(props: { searchParams: Promise<{ q?: string }
               </div>
             ) : (
               <ul className="divide-y divide-slate-100">
-                {patients.map((patient) => (
-                  <li key={patient.id}>
-                    <Link
-                      href={`/patients/${patient.id}`}
-                      className="block p-4 hover:bg-slate-50 transition-colors group"
-                    >
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-lg text-slate-800 group-hover:text-indigo-600 transition-colors">
-                              {patient.name}
-                            </span>
-                            <span className="text-sm text-slate-500">({patient.kana})</span>
+                {patients.map((patient) => {
+                  const lastVisit = patient.records[0]?.visitDate;
+                  return (
+                    <li key={patient.id}>
+                      <Link
+                        href={`/patients/${patient.id}`}
+                        className="block p-4 hover:bg-slate-50 transition-colors group"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-lg text-slate-800 group-hover:text-indigo-600 transition-colors">
+                                {patient.name}
+                              </span>
+                              <span className="text-sm text-slate-500">({patient.kana})</span>
+                            </div>
+                            <div className="text-sm text-slate-500 mt-1 flex gap-3">
+                              <span className="bg-slate-100 px-2 py-0.5 rounded text-xs">No.{patient.pId}</span>
+                              <span>{patient.gender || '-'}</span>
+                              <span>{patient.phone || '-'}</span>
+                              <span className={`ml-2 text-xs border-l pl-2 ${lastVisit ? 'text-slate-600' : 'text-slate-400'}`}>
+                                最終: {lastVisit ? format(lastVisit, 'yyyy/MM/dd') : '未受診'}
+                              </span>
+                            </div>
                           </div>
-                          <div className="text-sm text-slate-500 mt-1 flex gap-3">
-                            <span className="bg-slate-100 px-2 py-0.5 rounded text-xs">No.{patient.pId}</span>
-                            <span>{patient.gender || '-'}</span>
-                            <span>{patient.phone || '-'}</span>
+                          <div className="text-slate-400 group-hover:text-indigo-400">
+                            ➔
                           </div>
                         </div>
-                        <div className="text-slate-400 group-hover:text-indigo-400">
-                          ➔
-                        </div>
-                      </div>
-                    </Link>
-                  </li>
-                ))}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>

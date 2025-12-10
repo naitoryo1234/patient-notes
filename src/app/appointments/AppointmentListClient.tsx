@@ -9,7 +9,7 @@ import { cancelAppointmentAction } from '@/actions/appointmentActions';
 import { AppointmentEditModal } from '@/components/dashboard/AppointmentEditModal';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Pencil, Trash2, Calendar, User, History } from 'lucide-react';
+import { Pencil, Trash2, Calendar, User, History, CheckCircle2, XCircle, CalendarClock } from 'lucide-react';
 
 interface AppointmentListClientProps {
     initialAppointments: Appointment[];
@@ -20,6 +20,7 @@ interface AppointmentListClientProps {
 export function AppointmentListClient({ initialAppointments, staffList, includePast }: AppointmentListClientProps) {
     const router = useRouter();
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+    const [filterStaffId, setFilterStaffId] = useState<string>('all');
 
     const toggleHistory = () => {
         const query = includePast ? '' : '?history=true';
@@ -36,17 +37,41 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
         }
     };
 
-    const statusMap: Record<string, string> = {
-        'scheduled': '予定',
-        'completed': '完了',
-        'cancelled': '取消',
+    const getStatusIcon = (status: string | undefined) => {
+        switch (status) {
+            case 'completed':
+                return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
+            case 'cancelled':
+                return <XCircle className="w-5 h-5 text-red-400" />;
+            case 'scheduled':
+            default:
+                return <CalendarClock className="w-5 h-5 text-slate-400" />;
+        }
     };
+
+    const filteredAppointments = initialAppointments.filter(apt => {
+        if (filterStaffId === 'all') return true;
+        if (filterStaffId === 'unassigned') return !apt.staffId;
+        return apt.staffId === filterStaffId;
+    });
 
     return (
         <div className="bg-white rounded-lg shadow border border-slate-200 overflow-hidden">
             {/* Toolbar */}
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                 <div className="flex gap-2">
+                    <select
+                        value={filterStaffId}
+                        onChange={(e) => setFilterStaffId(e.target.value)}
+                        className="px-2 py-1.5 border border-slate-300 rounded text-sm text-slate-700 bg-white focus:ring-2 focus:ring-indigo-500 max-w-[150px]"
+                    >
+                        <option value="all">担当: 全員</option>
+                        {staffList.map(staff => (
+                            <option key={staff.id} value={staff.id}>{staff.name}</option>
+                        ))}
+                        <option value="unassigned">担当なし</option>
+                    </select>
+
                     <button
                         onClick={toggleHistory}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-bold border transition-colors ${includePast
@@ -59,7 +84,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                     </button>
                 </div>
                 <div className="text-sm text-slate-500">
-                    全 {initialAppointments.length} 件
+                    全 {filteredAppointments.length} 件
                 </div>
             </div>
 
@@ -68,6 +93,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                 <table className="w-full text-left text-sm text-slate-700">
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
                         <tr>
+                            <th className="px-4 py-3 whitespace-nowrap w-14 text-center">状態</th>
                             <th className="px-4 py-3 whitespace-nowrap">日時</th>
                             <th className="px-4 py-3 whitespace-nowrap">患者名</th>
                             <th className="px-4 py-3 whitespace-nowrap">担当</th>
@@ -76,14 +102,14 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                        {initialAppointments.length === 0 ? (
+                        {filteredAppointments.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="p-8 text-center text-slate-400">
+                                <td colSpan={6} className="p-8 text-center text-slate-400">
                                     表示する予約はありません
                                 </td>
                             </tr>
                         ) : (
-                            initialAppointments.map((apt) => {
+                            filteredAppointments.map((apt) => {
                                 const visitDate = new Date(apt.visitDate);
                                 const diff = differenceInMinutes(visitDate, new Date());
                                 const isExpired = diff < -60; // 1 hour passed
@@ -92,6 +118,11 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
 
                                 return (
                                     <tr key={apt.id} className={`${rowClass} group hover:bg-indigo-50/30 transition-colors`}>
+                                        <td className="px-4 py-3 text-center">
+                                            <div className="flex justify-center" title={apt.status}>
+                                                {getStatusIcon(apt.status)}
+                                            </div>
+                                        </td>
                                         <td className="px-4 py-3 whitespace-nowrap">
                                             <div className={`font-mono font-bold text-base ${isExpired ? 'text-slate-500' : 'text-slate-800'}`}>
                                                 {format(visitDate, 'yyyy/MM/dd (eee)', { locale: ja })}

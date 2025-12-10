@@ -15,6 +15,12 @@ export const getPatients = async (query?: string) => {
 
     return await prisma.patient.findMany({
         where,
+        include: {
+            records: {
+                orderBy: { visitDate: 'desc' },
+                take: 1
+            }
+        },
         orderBy: { updatedAt: 'desc' },
     });
 };
