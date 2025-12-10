@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./local.db"
+}
+
+// --------------------------------------------------------
+// Patient: 患者マスタ
+// --------------------------------------------------------
+model Patient {
+  id          String    @id @default(uuid())
+  pId         Int       @unique // 診察券番号 (App managed auto-inc)
+  name        String
+  kana        String    // 検索・名寄せ用
+  birthDate   DateTime?
+  phone       String?
+  gender      String?
+  address     String?
+  memo        String?   // ラポールメモ
+  
+  // JSON Fields for Flexibility & AI
+  tags        String    @default("[]") // JSON string: string[]
+  attributes  String    @default("{}") // JSON string: Record<string, any>
+  externalRef String    @default("{}") // JSON string: Record<string, string>
+  importMeta  String    @default("{}") // JSON string: Record<string, any>
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  records     ClinicalRecord[]
+  attachments Attachment[]
+}
+
+// --------------------------------------------------------
+// ClinicalRecord: 施術記録 (SOAP)
+// --------------------------------------------------------
+model ClinicalRecord {
+  id          String   @id @default(uuid())
+  
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId   String
+
+  visitDate   DateTime @default(now())
+  visitCount  Int      @default(1)
+
+  // SOAP Fields
+  subjective  String   @default("") // S: 主訴
+  objective   String   @default("") // O: 所見
+  assessment  String   @default("") // A: 施術
+  plan        String   @default("") // P: 計画
+  
+  rawText     String?  @default("") // OCR/Import raw text
+  
+  // Meta
+  tags        String   @default("[]") // JSON string
+  metadata    String   @default("{}") // JSON string for AI analysis
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attachments Attachment[]
+}
+
+// --------------------------------------------------------
+// Attachment: 添付ファイル (Future)
+// --------------------------------------------------------
+model Attachment {
+  id          String   @id @default(uuid())
+  
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId   String
+  
+  record      ClinicalRecord? @relation(fields: [recordId], references: [id])
+  recordId    String?
+
+  fileType    String   // MIME type
+  filePath    String   // Local path
+  
+  ocrText     String?  @default("") // Future AI/OCR Content
+  
+  createdAt   DateTime @default(now())
+}
