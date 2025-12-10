@@ -98,6 +98,12 @@ export function DailyAppointmentPanel({ appointments: initialData }: DailyAppoin
                                     <div className="font-bold text-slate-800 text-base mb-0.5 group-hover:text-blue-600 transition-colors">
                                         {apt.patientName} <span className="text-xs font-normal text-slate-500 ml-1">{apt.patientKana}</span>
                                     </div>
+                                    {apt.staffName && (
+                                        <div className="text-xs text-slate-500 flex items-center gap-1 mb-1">
+                                            <span className="bg-slate-100 px-1 rounded text-[10px]">担</span>
+                                            {apt.staffName}
+                                        </div>
+                                    )}
                                     <div className="flex flex-wrap gap-1 mt-1">
                                         {apt.tags.slice(0, 3).map((tag, i) => (
                                             <span key={i} className="text-[10px] px-1.5 py-0.5 bg-white border border-slate-200 text-slate-500 rounded text-xs">

@@ -6,8 +6,13 @@ import { scheduleAppointment } from '@/actions/appointmentActions';
 import { Calendar } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 
-export function AppointmentButton({ patientId }: { patientId: string }) {
+import { Staff } from '@/services/staffService';
+
+export function AppointmentButton({ patientId, staffList }: { patientId: string, staffList: Staff[] }) {
     const [isOpen, setIsOpen] = useState(false);
+
+    // ... (lines 10-38 is same, keep if possible or replace block)
+    // Actually I'll replace the full component start to include prop change and render.
 
     // Default to tomorrow 10:00
     const tomorrow = addDays(new Date(), 1);
@@ -17,7 +22,6 @@ export function AppointmentButton({ patientId }: { patientId: string }) {
     const handleSubmit = async (formData: FormData) => {
         await scheduleAppointment(formData);
         setIsOpen(false);
-        // Toast or specific feedback handled by UI usually, simplistic here
     };
 
     if (!isOpen) {
@@ -57,6 +61,18 @@ export function AppointmentButton({ patientId }: { patientId: string }) {
                         className="border rounded px-2 py-1 text-sm w-full"
                     />
                 </div>
+                {staffList.length > 0 && (
+                    <select
+                        name="staffId"
+                        className="border rounded px-2 py-1 text-sm w-full bg-white"
+                        defaultValue=""
+                    >
+                        <option value="">担当者 (任意)</option>
+                        {staffList.map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                    </select>
+                )}
                 <input
                     type="text"
                     name="memo"

@@ -2,6 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 
+export interface FormOption {
+    label: string;
+    value: string;
+}
+
 export interface FormFieldConfig {
     name: string;
     label: string;
@@ -9,7 +14,7 @@ export interface FormFieldConfig {
     required?: boolean;
     placeholder?: string;
     rows?: number;
-    options?: string[];
+    options?: (string | FormOption)[];
 }
 
 interface ConfigFormProps {
@@ -48,9 +53,11 @@ export function ConfigForm({ config, action, submitLabel = '送信', initialValu
                             className="flex h-10 w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <option value="">選択してください</option>
-                            {field.options?.map(opt => (
-                                <option key={opt} value={opt}>{opt}</option>
-                            ))}
+                            {field.options?.map((opt, i) => {
+                                const label = typeof opt === 'string' ? opt : opt.label;
+                                const value = typeof opt === 'string' ? opt : opt.value;
+                                return <option key={i} value={value}>{label}</option>;
+                            })}
                         </select>
                     ) : (
                         <input

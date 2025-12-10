@@ -33,10 +33,14 @@ model Patient {
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime? // Logical delete for safety
 
   records     ClinicalRecord[]
   appointments Appointment[]
   attachments Attachment[]
+
+  @@index([kana])
+  @@index([phone])
 }
 
 // --------------------------------------------------------
@@ -45,10 +49,12 @@ model Patient {
 model ClinicalRecord {
   id          String   @id @default(uuid())
   
-  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
   patientId   String
 
   visitDate   DateTime @default(now())
+  
+  // visitCount is application managed or computed, kept for now but consider removal in v1.1
   visitCount  Int      @default(1)
 
   // SOAP Fields
@@ -63,10 +69,21 @@ model ClinicalRecord {
   tags        String   @default("[]") // JSON string
   metadata    String   @default("{}") // JSON string for AI analysis
 
+  // Staff (Required for Audit)
+  staff       Staff    @relation(fields: [staffId], references: [id])
+  staffId     String
+
+  // Audit Fields (Lite)
+  revision    Int      @default(1)
+  updatedBy   String?  // staffId of the last editor
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   attachments Attachment[]
+
+  @@index([patientId, visitDate])
+  @@index([visitDate])
 }
 
 // --------------------------------------------------------
@@ -75,14 +92,14 @@ model ClinicalRecord {
 model Attachment {
   id          String   @id @default(uuid())
   
-  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
   patientId   String
   
   record      ClinicalRecord? @relation(fields: [recordId], references: [id])
   recordId    String?
 
   fileType    String   // MIME type
-  filePath    String   // Local path
+  storageKey  String   // Relative path for storage (e.g. "2024/01/uuid.jpg")
   
   ocrText     String?  @default("") // Future AI/OCR Content
   
@@ -92,14 +109,36 @@ model Attachment {
 model Appointment {
   id          String   @id @default(uuid())
   
-  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
   patientId   String
   
   startAt     DateTime // 予約日時
+  duration    Int      @default(30) // 分単位
   
   status      String   @default("scheduled") // scheduled, completed, cancelled
   memo        String?  // 予約メモ (電話受付など)
   
+  staff       Staff?   @relation(fields: [staffId], references: [id])
+  staffId     String?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([startAt, status])
+  @@index([patientId, startAt])
+}
+
+// --------------------------------------------------------
+// Staff: スタッフマスタ
+// --------------------------------------------------------
+model Staff {
+  id        String   @id @default(uuid())
+  name      String
+  role      String   @default("Doctor") // Doctor, Nurse, Clerk
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  records      ClinicalRecord[]
+  appointments Appointment[]
 }

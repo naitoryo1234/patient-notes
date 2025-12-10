@@ -6,19 +6,27 @@ description: セッション完了時の引き継ぎレポート（完了タス�
    - `git status` を確認し、作業内容が保存されているかチェックします。
    - specific command: `git status`
 
-2. **完了作業の要約 (Summarize Completed Work)**:
+2. **変更のコミット (Commit Changes)**:
+   - 未保存の変更がある場合、適切なコミットメッセージ（例: `feat: implement phase 7 staff management`）と共にコミットを提案・実行してください。
+   - specific command: `git add . && git commit -m "..."`
+
+3. **完了作業の要約 (Summarize Completed Work)**:
    - このセッションで実装した機能（例: Phase 4, 5, 6）を日本語で列挙します。
    - 大きな設計変更（例: 新テーブル `Appointment` 追加）があれば記述します。
 
-3. **保留タスクと次のステップ (Identify Pending Tasks & Next Steps)**:
+4. **計画変更ログの更新 (Update Plan Changelog)**:
+   - このセッションで「大きな方針変更」や「設計判断」があった場合、`docs/management/PLAN_CHANGELOG.md` に追記してください。
+   - 変更内容の要約と、その背景（Why）を残すことが重要です。
+
+5. **保留タスクと次のステップ (Identify Pending Tasks & Next Steps)**:
    - 次回セッションの直近の目標（例: 「予約とカルテの紐付け」「担当者設定」）を要約します。
    - specific command: `grep -r "TODO" src/` (任意: コード内メモの確認)
 
-4. **技術的なコンテキスト (Document Technical Context)**:
+6. **技術的なコンテキスト (Document Technical Context)**:
    - 環境固有の要件（例: 「`prisma generate` が必要」「サーバー再起動が必要」）を記述します。
    - 一時的な修正（`@ts-ignore` 等）があれば明記します。
 
-5. **引き継ぎメッセージの生成 (Generate Handover Message)**:
+7. **引き継ぎメッセージの生成 (Generate Handover Message)**:
    - 以下の形式に従い、**すべて日本語で** Markdownメッセージを出力します。
    - **必須**: 次回開始時に読むべき初期化ドキュメント (`docs/ai-host/INIT_ROUTER_TEAM_HARU.md`) への誘導を含めてください。
    - また、「AIからの返答や、私が確認すべきドキュメントについてはすべて日本語で書くこと」という指示を次回初期化時のプロンプトに含めるよう促してください。

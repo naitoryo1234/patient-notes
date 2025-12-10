@@ -5,6 +5,18 @@ const prisma = new PrismaClient()
 async function main() {
     console.log('Start seeding...')
 
+    // 0. Staff (院長) - Create First
+    const staff1 = await prisma.staff.upsert({
+        where: { id: 'staff-001' },
+        update: {},
+        create: {
+            id: 'staff-001',
+            name: '院長',
+            role: 'Doctor',
+            active: true
+        }
+    })
+
     // 1. 山田 太郎 (腰痛・定期メンテ)
     const patient1 = await prisma.patient.upsert({
         where: { pId: 1001 },
@@ -30,6 +42,7 @@ async function main() {
                         assessment: '腰部脊柱管狭窄症の疑いは低い。筋筋膜性腰痛。',
                         plan: '鍼通電とストレッチ指導。',
                         tags: JSON.stringify(['鍼', '腰部']),
+                        staffId: staff1.id,
                     },
                     {
                         visitDate: new Date('2024-11-08T10:00:00'),
@@ -39,6 +52,7 @@ async function main() {
                         assessment: '経過良好。',
                         plan: '継続してメンテナンス。次回2週間後。',
                         tags: JSON.stringify(['マッサージ', '経過観察']),
+                        staffId: staff1.id,
                     }
                 ]
             }
@@ -68,6 +82,7 @@ async function main() {
                         assessment: '胸郭出口症候群のテスト陰性。眼精疲労からの緊張型頭痛疑い。',
                         plan: '頚部・肩甲骨周囲の調整。',
                         tags: JSON.stringify(['整体', '眼精疲労']),
+                        staffId: staff1.id,
                     }
                 ]
             }
@@ -96,13 +111,14 @@ async function main() {
                         assessment: '急性腰痛発作。炎症所見あり。',
                         plan: 'アイシングとテーピング固定。安静指導。',
                         tags: JSON.stringify(['アイシング', 'テーピング', '急性期']),
+                        staffId: staff1.id,
                     }
                 ]
             }
         },
     })
 
-    console.log({ patient1, patient2, patient3 })
+    console.log({ patient1, patient2, patient3, staff1 })
     console.log('Seeding finished.')
 }
 

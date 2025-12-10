@@ -6,13 +6,32 @@ import { RecordFormConfig } from '@/config/forms';
 import { Button } from '@/components/ui/button';
 import { parseAiText } from '@/services/aiParser';
 import { format } from 'date-fns';
+import { Staff } from '@/services/staffService';
+import { FormFieldConfig } from '@/components/form/ConfigForm';
 
 interface RecordFormContainerProps {
     action: (formData: FormData) => Promise<any>;
     initialValues?: Record<string, any>;
+    staffList: Staff[];
 }
 
-export function RecordFormContainer({ action, initialValues = {} }: RecordFormContainerProps) {
+export function RecordFormContainer({ action, initialValues = {}, staffList }: RecordFormContainerProps) {
+    // Dynamic Config Construction
+    const formConfig: FormFieldConfig[] = [...RecordFormConfig];
+
+    // Add Staff Select if staff exists
+    if (staffList.length > 0) {
+        formConfig.unshift({
+            name: 'staffId',
+            label: '担当者',
+            type: 'select',
+            required: false,
+            options: staffList.map(s => ({
+                label: s.name,
+                value: s.id
+            }))
+        });
+    }
     const [mode, setMode] = useState<'manual' | 'ai'>('manual');
     const [aiText, setAiText] = useState('');
     const [formValues, setFormValues] = useState(initialValues);
@@ -83,7 +102,7 @@ export function RecordFormContainer({ action, initialValues = {} }: RecordFormCo
                 /* Key helps reset form when switching modes or values change significantly */
                 <ConfigForm
                     key={JSON.stringify(formValues)}
-                    config={RecordFormConfig}
+                    config={formConfig}
                     action={action}
                     submitLabel="記録を保存"
                     initialValues={formValues}

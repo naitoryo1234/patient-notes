@@ -23,6 +23,7 @@ export const RecordSchema = z.object({
     assessment: z.string().optional(),
     plan: z.string().optional(),
     tags: z.array(z.string()).optional(), // UI handles Array, DB stores JSON
+    staffId: z.string().optional().or(z.literal('')),
 });
 
 export type RecordInput = z.infer<typeof RecordSchema>;

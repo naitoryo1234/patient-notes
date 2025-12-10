@@ -29,6 +29,7 @@ export const createRecord = async (data: RecordInput, patientId: string) => {
             tags: JSON.stringify(data.tags || []),
             metadata: '{}',
             rawText: '', // Future use
+            staffId: data.staffId || null,
         },
     });
 };
