@@ -51,7 +51,7 @@ export function PatientDetailSidebar({ patient, nextAppt, staffList }: PatientDe
             <div className="flex gap-2">
                 <AppointmentButton patientId={patient.id} staffList={staffList} />
                 <Link href={`/patients/${patient.id}/edit`} className="bg-slate-100 text-slate-600 px-4 py-2 rounded text-sm hover:bg-slate-200 flex items-center">
-                    編集
+                    基本情報の変更
                 </Link>
             </div>
         </div>

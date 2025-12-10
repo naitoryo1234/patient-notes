@@ -64,14 +64,28 @@ export function AppointmentEditModal({ appointment, staffList, isOpen, onClose }
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">時間</label>
-                            <input
-                                type="time"
-                                name="visitTime"
-                                required
-                                defaultValue={defaultTime}
-                                className="w-full border-slate-300 rounded-md focus:ring-indigo-500"
-                            />
+                            <label className="block text-sm font-bold text-slate-700 mb-1">時間 & 所要時間</label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="time"
+                                    name="visitTime"
+                                    required
+                                    defaultValue={defaultTime}
+                                    className="w-full border-slate-300 rounded-md focus:ring-indigo-500"
+                                />
+                                <select
+                                    name="duration"
+                                    defaultValue={appointment.duration || 60}
+                                    className="w-24 border-slate-300 rounded-md focus:ring-indigo-500 text-sm"
+                                >
+                                    <option value="15">15分</option>
+                                    <option value="30">30分</option>
+                                    <option value="45">45分</option>
+                                    <option value="60">60分</option>
+                                    <option value="90">90分</option>
+                                    <option value="120">120分</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 

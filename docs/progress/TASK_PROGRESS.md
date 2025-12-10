@@ -62,7 +62,17 @@
 
 ## 🚧 今後の実装予定 (Upcoming / Planned)
 
-### Phase 10: v1.2 Launch Pad (Optimization & Dist) [Current]
+### Phase 9.5: Final Polish (v1.1 Completion) [Current]
+> **Goal**: 404エラー修正、UX改善、タグ表示など、残存課題の一掃。
+
+- [ ] **緊急修正 (Critical Fixes)**:
+    - [ ] 患者編集画面の404エラー修正 (実装漏れ対応)
+- [ ] **UX向上 (UX Polish)**:
+    - [ ] 予約入力の速度改善 (+15minボタン等)
+    - [ ] 検索結果へのタグ表示
+    - [ ] 表記揺れ・文言の統一
+
+### Phase 10: v1.2 Launch Pad (Optimization & Dist)
 > **Goal**: 配布・本番運用に向けた最終調整と「Base Kit」としての整理。
 
 - [ ] **導入・設定機能**:

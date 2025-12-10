@@ -13,7 +13,7 @@ export default async function Home(props: { searchParams: Promise<{ q?: string }
   const searchParams = await props.searchParams;
   const query = searchParams?.q || '';
   const patients = await getPatients(query);
-  const todaysAppointments = await getTodaysAppointments(); // Fetch appointments
+  const todaysAppointments = await getTodaysAppointments(); // Fetch today's appointments
   const activeStaff = await getActiveStaff();
 
   return (

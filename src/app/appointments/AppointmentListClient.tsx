@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import { Appointment } from '@/services/appointmentService';
 import { Staff } from '@/services/staffService';
-import { format, isBefore, isToday, differenceInMinutes } from 'date-fns';
+import { format, isBefore, isToday, differenceInMinutes, isSameDay, addDays, subDays, startOfDay } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { cancelAppointmentAction } from '@/actions/appointmentActions';
 import { AppointmentEditModal } from '@/components/dashboard/AppointmentEditModal';
+import { NewAppointmentButton } from '@/components/dashboard/NewAppointmentButton';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Pencil, Trash2, Calendar, User, History, CheckCircle2, XCircle, CalendarClock, AlertCircle } from 'lucide-react';
+import { Pencil, Trash2, Calendar, User, History, CheckCircle2, XCircle, CalendarClock, AlertCircle, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 interface AppointmentListClientProps {
     initialAppointments: Appointment[];
@@ -21,6 +22,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
     const router = useRouter();
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
     const [filterStaffId, setFilterStaffId] = useState<string>('all');
+    const [filterDate, setFilterDate] = useState<Date | null>(null); // null = all dates
 
     const toggleHistory = () => {
         const query = includePast ? '' : '?history=true';
@@ -49,10 +51,34 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
         }
     };
 
+    // Date Navigation
+    const navigateDate = (offset: number) => {
+        if (offset === 0) {
+            setFilterDate(null); // Reset to all
+        } else if (filterDate) {
+            setFilterDate(addDays(filterDate, offset));
+        } else {
+            // If no date set, start from today
+            setFilterDate(addDays(new Date(), offset > 0 ? 0 : offset));
+        }
+    };
+
+    const setSpecificDate = (offsetFromToday: number) => {
+        setFilterDate(addDays(new Date(), offsetFromToday));
+    };
+
     const filteredAppointments = initialAppointments.filter(apt => {
-        if (filterStaffId === 'all') return true;
-        if (filterStaffId === 'unassigned') return !apt.staffId;
-        return apt.staffId === filterStaffId;
+        // Staff filter
+        if (filterStaffId !== 'all') {
+            if (filterStaffId === 'unassigned' && apt.staffId) return false;
+            if (filterStaffId !== 'unassigned' && apt.staffId !== filterStaffId) return false;
+        }
+        // Date filter
+        if (filterDate) {
+            const aptDate = new Date(apt.visitDate);
+            if (!isSameDay(aptDate, filterDate)) return false;
+        }
+        return true;
     });
 
     const pendingAssignments = initialAppointments.filter(a => !a.staffId && a.status !== 'cancelled').length;
@@ -67,8 +93,17 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                 </div>
             )}
             {/* Toolbar */}
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <div className="flex gap-2">
+            <div className="p-4 border-b border-slate-100 flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center bg-slate-50">
+                <div className="flex flex-wrap gap-2 items-center w-full xl:w-auto">
+                    {/* Add Appointment Button */}
+                    <NewAppointmentButton
+                        staffList={staffList}
+                        initialDate={filterDate || new Date()}
+                    />
+
+                    <div className="h-6 w-px bg-slate-200 mx-2 hidden sm:block"></div>
+
+                    {/* Staff Filter */}
                     <select
                         value={filterStaffId}
                         onChange={(e) => setFilterStaffId(e.target.value)}
@@ -92,6 +127,62 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                         過去の予約も含める
                     </button>
                 </div>
+
+                {/* Date Filter Section */}
+                <div className="flex flex-wrap items-center gap-2 bg-white rounded-md border border-slate-200 p-1.5 w-full xl:w-auto overflow-x-auto">
+                    <div className="flex items-center gap-1 shrink-0">
+                        <button
+                            onClick={() => navigateDate(-1)}
+                            className="p-1.5 hover:bg-slate-100 rounded text-slate-500"
+                            title="前日"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+
+                        <div className="flex items-center gap-2 min-w-[140px] justify-center">
+                            <Calendar className="w-4 h-4 text-slate-400" />
+                            {filterDate ? (
+                                <>
+                                    <span className="text-sm font-bold text-slate-700">
+                                        {format(filterDate, 'M/d (EEE)', { locale: ja })}
+                                    </span>
+                                    {isToday(filterDate) && (
+                                        <span className="text-xs bg-indigo-100 text-indigo-700 px-1 rounded">今日</span>
+                                    )}
+                                </>
+                            ) : (
+                                <span className="text-sm text-slate-400">日付指定なし</span>
+                            )}
+                        </div>
+
+                        <button
+                            onClick={() => navigateDate(1)}
+                            className="p-1.5 hover:bg-slate-100 rounded text-slate-500"
+                            title="翌日"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+
+                    {/* Quick Jump Buttons */}
+                    <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={() => setSpecificDate(0)} className="text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded">今日</button>
+                        <button onClick={() => setSpecificDate(1)} className="text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded">明日</button>
+                        <button onClick={() => navigateDate(7)} className="text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded">+1週間</button>
+
+                        {filterDate && (
+                            <button
+                                onClick={() => setFilterDate(null)}
+                                className="ml-2 text-xs px-2 py-1 text-red-500 hover:bg-red-50 rounded flex items-center gap-1"
+                            >
+                                <X className="w-3 h-3" /> 解除
+                            </button>
+                        )}
+                    </div>
+                </div>
+
                 <div className="text-sm text-slate-500">
                     全 {filteredAppointments.length} 件
                 </div>

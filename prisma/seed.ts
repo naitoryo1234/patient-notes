@@ -138,6 +138,7 @@ async function main() {
         data: {
             patientId: patient1.id,
             startAt: todayMorning,
+            duration: 60,
             status: 'scheduled',
             memo: '朝一番。鍼希望。',
             staffId: staff1.id
@@ -152,6 +153,7 @@ async function main() {
         data: {
             patientId: patient2.id,
             startAt: todayNow,
+            duration: 90, // Longer
             status: 'scheduled',
             staffId: staff2.id // Assigned to Nurse
         }
@@ -163,6 +165,7 @@ async function main() {
         data: {
             patientId: patient3.id,
             startAt: todayEvening,
+            duration: 30, // Short
             status: 'scheduled',
             memo: '初診。問診票記入あり。',
             staffId: staff1.id // Doctor
@@ -175,6 +178,7 @@ async function main() {
         data: {
             patientId: patient4.id,
             startAt: todayCancelled,
+            duration: 60,
             status: 'cancelled',
             memo: '電話あり。急用のためキャンセル。',
             staffId: staff1.id
@@ -187,6 +191,7 @@ async function main() {
         data: {
             patientId: patient1.id,
             startAt: yesterday,
+            duration: 60,
             status: 'completed',
             memo: '前回予約分',
             staffId: staff1.id
@@ -199,6 +204,7 @@ async function main() {
         data: {
             patientId: patient2.id,
             startAt: tomorrow,
+            duration: 60,
             status: 'scheduled',
             memo: '翌日の予約',
             staffId: staff1.id
@@ -211,6 +217,7 @@ async function main() {
         data: {
             patientId: patient1.id,
             startAt: nextWeek,
+            duration: 60,
             status: 'scheduled',
             memo: '1週間後の定期メンテナンス',
             staffId: staff1.id
@@ -222,6 +229,7 @@ async function main() {
         data: {
             patientId: patient2.id,
             startAt: nextWeek2,
+            duration: 120, // Long treatment
             status: 'scheduled',
             memo: 'カラーリング後のケア',
             staffId: staff2.id
@@ -233,6 +241,7 @@ async function main() {
         data: {
             patientId: patient3.id,
             startAt: nextWeek3,
+            duration: 30,
             status: 'scheduled',
             memo: '経過確認',
             staffId: staff1.id
@@ -297,6 +306,7 @@ async function main() {
             data: {
                 patientId: patient7.id,
                 startAt: d,
+                duration: 60,
                 status: i < 10 ? 'completed' : 'scheduled',
                 memo: `予約テスト ${i + 1}回目`,
                 staffId: staff1.id

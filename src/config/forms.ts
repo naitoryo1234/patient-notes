@@ -7,6 +7,13 @@ export const PatientFormConfig = [
     { name: 'birthDate', label: '生年月日', type: 'date' },
     { name: 'gender', label: '性別', type: 'select', options: ['男性', '女性', 'その他'] },
     { name: 'memo', label: 'メモ (特徴など)', type: 'textarea', rows: 3 },
+    {
+        name: 'tags',
+        label: 'タグ',
+        type: 'tags',
+        placeholder: 'Enterで追加 (例: 腰痛)',
+        options: []
+    }
 ];
 
 export const RecordFormConfig = [

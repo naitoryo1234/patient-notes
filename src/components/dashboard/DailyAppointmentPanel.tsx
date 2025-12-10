@@ -5,7 +5,7 @@ import { Appointment } from '@/services/appointmentService';
 import { Staff } from '@/services/staffService';
 import { cancelAppointmentAction } from '@/actions/appointmentActions';
 import { AppointmentEditModal } from './AppointmentEditModal';
-import { format, differenceInMinutes, isBefore, isAfter, addMinutes } from 'date-fns';
+import { format, differenceInMinutes } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import Link from 'next/link';
 import { Bell, Clock, RefreshCw, Pencil, Trash2, AlertCircle } from 'lucide-react';

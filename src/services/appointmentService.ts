@@ -7,6 +7,7 @@ export interface Appointment {
     patientName: string;
     patientKana: string;
     visitDate: Date;
+    duration: number; // minutes
     visitCount: number;
     tags: string[];
     memo?: string; // patient memo
@@ -48,6 +49,7 @@ export const getTodaysAppointments = async (date: Date = new Date()): Promise<Ap
         patientName: a.patient.name,
         patientKana: a.patient.kana,
         visitDate: a.startAt,
+        duration: a.duration || 60, // Default to 60 if missing
         visitCount: a.patient._count.records + 1,
         tags: a.patient.tags ? JSON.parse(a.patient.tags) : [],
         memo: a.memo || a.patient.memo || '',
@@ -95,6 +97,7 @@ export const findAllAppointments = async (options?: { includePast?: boolean; inc
         patientName: a.patient.name,
         patientKana: a.patient.kana,
         visitDate: a.startAt,
+        duration: a.duration || 60,
         visitCount: a.patient._count.records + 1,
         tags: a.patient.tags ? JSON.parse(a.patient.tags) : [],
         memo: a.memo || a.patient.memo || '',
@@ -193,8 +196,8 @@ export const getNextAppointment = async (patientId: string) => {
     };
 };
 
-export const createAppointment = async (patientId: string, startAt: Date, memo?: string, staffId?: string) => {
-    const isAvailable = await checkStaffAvailability(startAt, 30, staffId);
+export const createAppointment = async (patientId: string, startAt: Date, memo?: string, staffId?: string, duration: number = 60) => {
+    const isAvailable = await checkStaffAvailability(startAt, duration, staffId);
     if (!isAvailable) {
         throw new Error('重複する予約が存在します');
     }
@@ -205,6 +208,7 @@ export const createAppointment = async (patientId: string, startAt: Date, memo?:
             startAt,
             memo,
             staffId,
+            duration
         }
     });
 };
@@ -216,19 +220,21 @@ export const cancelAppointment = async (id: string) => {
     });
 };
 
-export const updateAppointment = async (id: string, data: { startAt?: Date, memo?: string, staffId?: string }) => {
+export const updateAppointment = async (id: string, data: { startAt?: Date, memo?: string, staffId?: string, duration?: number }) => {
     const current = await prisma.appointment.findUnique({ where: { id } });
     if (!current) throw new Error('Appointment not found');
 
-    if (data.startAt || data.staffId !== undefined) {
+    if (data.startAt || data.staffId !== undefined || data.duration) {
         // Use new values or fallback to current
-        // Note: data.staffId can be implicitly undefined (no change) or explicit null/string
-        // If data doesn't have staffId key, it's undefined.
-
         const targetStart = data.startAt || current.startAt;
         const targetStaffId = data.staffId !== undefined ? data.staffId : current.staffId;
+        const targetDuration = data.duration || current.duration;
 
-        const isAvailable = await checkStaffAvailability(targetStart, current.duration, targetStaffId, id);
+        // Skip availability check if only memo is updated and time/staff/duration are same...
+        // But for safety, always check if these changed. 
+        // We really only need to check if start, duration, or staff changed.
+
+        const isAvailable = await checkStaffAvailability(targetStart, targetDuration, targetStaffId, id);
         if (!isAvailable) {
             throw new Error('重複する予約が存在します');
         }

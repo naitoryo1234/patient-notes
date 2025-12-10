@@ -16,9 +16,10 @@ export async function scheduleAppointment(formData: FormData) {
     }
 
     const startAt = new Date(`${dateStr}T${timeStr}`);
+    const duration = formData.get('duration') ? parseInt(formData.get('duration') as string) : 60;
 
     try {
-        await createAppointment(patientId, startAt, memo, staffId || undefined);
+        await createAppointment(patientId, startAt, memo, staffId || undefined, duration);
         revalidatePath('/');
         revalidatePath(`/patients/${patientId}`);
         return { success: true };
@@ -52,9 +53,10 @@ export async function updateAppointmentAction(formData: FormData) {
     }
 
     const startAt = new Date(`${dateStr}T${timeStr}`);
+    const duration = formData.get('duration') ? parseInt(formData.get('duration') as string) : undefined;
 
     try {
-        await updateAppointment(id, { startAt, memo, staffId: staffId || undefined });
+        await updateAppointment(id, { startAt, memo, staffId: staffId || undefined, duration });
         revalidatePath('/');
         return { success: true };
     } catch (e: any) {

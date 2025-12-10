@@ -16,6 +16,7 @@ export async function addPatient(formData: FormData) {
         gender: formData.get('gender') as string,
         phone: formData.get('phone') as string,
         memo: formData.get('memo') as string,
+        tags: formData.get('tags') as string || undefined
     }
 
     if (!rawData.name || !rawData.kana) {
@@ -23,15 +24,71 @@ export async function addPatient(formData: FormData) {
         throw new Error('Name and Kana are required');
     }
 
-    const newPatient = await createPatient(rawData);
+    // Process tags (comma separated string -> JSON array)
+    // Note: createPatient service might need adjustment if tags not passed
+    // But createPatient takes PatientCreateInput which expects tags as String (JSON)
+    // We should parse it here.
+    let tagsJson: string | undefined = undefined;
+    if (rawData.tags) {
+        tagsJson = JSON.stringify(rawData.tags.split(',').map(t => t.trim()).filter(Boolean));
+    }
 
-    // Check if tags are in formData and update if needed
-    // ConfigForm might send tags as string or nothing. 
-    // If patient creation handles tags default as empty, we can update them here if present.
-    // For now, let's stick to basic creation and redirect.
+    const inputData = { ...rawData, tags: tagsJson };
+    const newPatient = await createPatient(inputData);
 
     revalidatePath('/');
     redirect(`/patients/${newPatient.id}`);
+}
+
+/**
+ * Update entire patient profile
+ */
+export async function updatePatient(formData: FormData) {
+    const id = formData.get('id') as string;
+    const name = formData.get('name') as string;
+    const kana = formData.get('kana') as string;
+    const gender = formData.get('gender') as string;
+    const phone = formData.get('phone') as string;
+    const birthDateStr = formData.get('birthDate') as string;
+    const memo = formData.get('memo') as string;
+    const tagsStr = formData.get('tags') as string;
+
+    if (!id || !name || !kana) {
+        return { success: false, message: '必須項目が不足しています' };
+    }
+
+    let birthDate: Date | null = null;
+    if (birthDateStr) {
+        birthDate = new Date(birthDateStr);
+    }
+
+    let tagsJson: string | undefined = undefined;
+    if (tagsStr) {
+        tagsJson = JSON.stringify(tagsStr.split(',').map(t => t.trim()).filter(Boolean));
+    }
+
+    try {
+        await prisma.patient.update({
+            where: { id },
+            data: {
+                name,
+                kana,
+                gender: gender || null,
+                phone: phone || null,
+                birthDate: birthDate || null,
+                memo: memo || '',
+                tags: tagsJson // Update tags if present (ConfigForm sends them)
+            }
+        });
+
+        revalidatePath(`/patients/${id}`);
+    } catch (error) {
+        console.error('Failed to update patient:', error);
+        return { success: false, error: 'Failed to update patient' };
+    }
+
+    // Success redirect
+    redirect(`/patients/${id}`);
 }
 
 /**
@@ -113,4 +170,40 @@ export async function deletePatient(patientId: string) {
         console.error('Failed to delete patient:', error);
         return { success: false, error: 'Failed to delete patient' };
     }
+}
+
+/**
+ * Search patients for selection (Lightweight)
+ */
+export async function searchPatientsForSelect(query: string) {
+    if (!query || query.length < 1) return [];
+
+    const isNumeric = /^\d+$/.test(query);
+    const idCondition = isNumeric ? { pId: parseInt(query) } : undefined;
+
+    const patients = await prisma.patient.findMany({
+        where: {
+            OR: [
+                { name: { contains: query } },
+                { kana: { contains: query } },
+                ...(idCondition ? [idCondition] : [])
+            ],
+            deletedAt: null
+        },
+        select: {
+            id: true,
+            name: true,
+            kana: true,
+            pId: true,
+            birthDate: true,
+            phone: true
+        },
+        take: 10,
+        orderBy: { updatedAt: 'desc' }
+    });
+
+    return patients.map(p => ({
+        ...p,
+        birthDate: p.birthDate ? p.birthDate.toISOString() : null
+    }));
 }
