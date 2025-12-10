@@ -37,3 +37,12 @@ export const RecordSchema = z.object({
 });
 
 export type RecordInput = z.infer<typeof RecordSchema>;
+
+export const StaffSchema = z.object({
+    id: z.string().optional(),
+    name: z.string().min(1, '氏名は必須です'),
+    role: z.string().default('Director'),
+    active: z.boolean().optional(),
+});
+
+export type StaffInput = z.infer<typeof StaffSchema>;

@@ -166,18 +166,25 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                             {apt.memo || <span className="text-slate-300 italic">なし</span>}
                                         </td>
                                         <td className="px-4 py-3 text-right whitespace-nowrap">
-                                            <div className="flex justify-end gap-2">
+                                            <div className="flex justify-end gap-2 text-right items-center">
+                                                <Link
+                                                    href={`/patients/${apt.patientId}#new-record`}
+                                                    className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1 font-bold no-underline mr-auto md:mr-0"
+                                                >
+                                                    <Pencil className="w-3 h-3" />
+                                                    カルテ作成
+                                                </Link>
                                                 <button
                                                     onClick={() => setEditingAppointment(apt)}
-                                                    className="p-2 bg-white border border-slate-200 rounded hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 transition-colors"
-                                                    title="編集"
+                                                    className="p-1.5 bg-white border border-slate-200 rounded hover:bg-slate-50 transition-colors text-slate-500"
+                                                    title="予約編集"
                                                 >
-                                                    <Pencil className="w-4 h-4" />
+                                                    <CalendarClock className="w-4 h-4" />
                                                 </button>
                                                 {!isCancelled && (
                                                     <button
                                                         onClick={() => handleDelete(apt.id)}
-                                                        className="p-2 bg-white border border-slate-200 rounded hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors"
+                                                        className="p-1.5 bg-white border border-slate-200 rounded hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors text-slate-500"
                                                         title="キャンセル"
                                                     >
                                                         <Trash2 className="w-4 h-4" />

@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
-import { UserPlus, Calendar } from 'lucide-react';
+import { UserPlus, Calendar, Settings } from 'lucide-react';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -41,6 +41,13 @@ export default function RootLayout({
                 >
                   <UserPlus className="w-4 h-4" />
                   新患登録
+                </Link>
+                <Link
+                  href="/settings/staff"
+                  className="text-slate-500 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 transition-colors"
+                  title="設定 (スタッフ管理)"
+                >
+                  <Settings className="w-5 h-5" />
                 </Link>
               </nav>
             </div>

@@ -134,7 +134,7 @@ model Appointment {
 model Staff {
   id        String   @id @default(uuid())
   name      String
-  role      String   @default("Doctor") // Doctor, Nurse, Clerk
+  role      String   @default("Director") // Director, Therapist, Clerk, Other
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

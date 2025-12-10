@@ -204,8 +204,14 @@ P: `);
         );
     }
 
+
+    // Use window.location hash to detect if we should focus the form
+    // Note: In Next.js App Router we might use simpler CSS scroll-margin with the Link anchor
+    // But we want to ensure focus or visual highlight if possible.
+    // For now, let's just make sure the container has an ID.
+
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+        <div id="new-record" className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 scroll-mt-24">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-slate-800 flex items-center gap-2">
                     <span>📝</span> 新しい記録

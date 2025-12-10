@@ -141,6 +141,37 @@ export const getTodaysAppointmentForPatient = async (patientId: string) => {
     return closest;
 };
 
+export const checkStaffAvailability = async (startAt: Date, duration: number, staffId?: string | null, excludeId?: string) => {
+    // Check range: +/- 3 hours to cover long appointments
+    const rangeStart = new Date(startAt.getTime() - 180 * 60000);
+    const rangeEnd = new Date(startAt.getTime() + 180 * 60000);
+
+    const candidates = await prisma.appointment.findMany({
+        where: {
+            status: { not: 'cancelled' },
+            staffId: staffId || null,
+            startAt: {
+                gte: rangeStart,
+                lte: rangeEnd
+            },
+            ...(excludeId ? { id: { not: excludeId } } : {})
+        }
+    });
+
+    const myStart = startAt.getTime();
+    const myEnd = myStart + duration * 60000;
+
+    for (const appt of candidates) {
+        const otherStart = appt.startAt.getTime();
+        const otherEnd = otherStart + (appt.duration || 30) * 60000;
+
+        if (myStart < otherEnd && myEnd > otherStart) {
+            return false;
+        }
+    }
+    return true;
+};
+
 export const getNextAppointment = async (patientId: string) => {
     const now = new Date();
     const appointment = await prisma.appointment.findFirst({
@@ -163,6 +194,11 @@ export const getNextAppointment = async (patientId: string) => {
 };
 
 export const createAppointment = async (patientId: string, startAt: Date, memo?: string, staffId?: string) => {
+    const isAvailable = await checkStaffAvailability(startAt, 30, staffId);
+    if (!isAvailable) {
+        throw new Error('重複する予約が存在します');
+    }
+
     return await prisma.appointment.create({
         data: {
             patientId,
@@ -181,6 +217,23 @@ export const cancelAppointment = async (id: string) => {
 };
 
 export const updateAppointment = async (id: string, data: { startAt?: Date, memo?: string, staffId?: string }) => {
+    const current = await prisma.appointment.findUnique({ where: { id } });
+    if (!current) throw new Error('Appointment not found');
+
+    if (data.startAt || data.staffId !== undefined) {
+        // Use new values or fallback to current
+        // Note: data.staffId can be implicitly undefined (no change) or explicit null/string
+        // If data doesn't have staffId key, it's undefined.
+
+        const targetStart = data.startAt || current.startAt;
+        const targetStaffId = data.staffId !== undefined ? data.staffId : current.staffId;
+
+        const isAvailable = await checkStaffAvailability(targetStart, current.duration, targetStaffId, id);
+        if (!isAvailable) {
+            throw new Error('重複する予約が存在します');
+        }
+    }
+
     return await prisma.appointment.update({
         where: { id },
         data: {
