@@ -30,11 +30,7 @@
 - [x] ダッシュボード「本日の来院予定」パネル
 - [x] 予約の自動ハイライト (直近1時間, 来院時刻)
 - [△] 次回予約の簡易登録ボタン (Createのみ)
-- [ ] 予約の変更・キャンセル機能 (未実装)
-
----
-
-## 🚧 今後の実装予定 (Upcoming / Planned)
+- [x] 予約の変更・キャンセル機能 (Phase 8で実装)
 
 ### Phase 7: 予約連携の強化 (Completed)
 - [x] **カルテ連携**: カルテ一覧や詳細に「次回の予約」を表示
@@ -44,14 +40,12 @@
 - [x] **型定義の修正**: Prisma Client 更新 (完了)
 
 ### Phase 8: 予約管理の完全化 (Appointment Completion)
-> **Priority High**: プロトタイプとして欠けている「予約の変更・キャンセル」を最優先で実装します。
-
 - [x] **予約管理 (CRUD) の完成**:
   - [x] 予約のキャンセル処理
   - [x] 予約日時の変更機能
   - [x] (Optional) 簡易予約一覧画面
 
-### Phase 9: カルテ機能の深化 (Advanced Records & Management) [Current]
+### Phase 9: カルテ機能の深化 (Advanced Records & Management)
 - [x] **カルテ入力強化**:
     - [x] 「前回コピー(Do)」ボタン
     - [x] 記録の削除機能
@@ -64,7 +58,11 @@
 - [x] **データ統合性**:
     - [x] 患者削除時の予約自動キャンセル
 
-### Phase 10: v1.2 Launch Pad (Optimization & Dist)
+---
+
+## 🚧 今後の実装予定 (Upcoming / Planned)
+
+### Phase 10: v1.2 Launch Pad (Optimization & Dist) [Current]
 > **Goal**: 配布・本番運用に向けた最終調整と「Base Kit」としての整理。
 
 - [ ] **導入・設定機能**:
