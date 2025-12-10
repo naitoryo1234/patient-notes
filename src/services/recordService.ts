@@ -33,3 +33,9 @@ export const createRecord = async (data: RecordInput, patientId: string) => {
         },
     });
 };
+
+export const deleteRecord = async (recordId: string) => {
+    return await prisma.clinicalRecord.delete({
+        where: { id: recordId }
+    });
+};

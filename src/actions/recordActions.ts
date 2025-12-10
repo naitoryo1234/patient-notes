@@ -38,3 +38,15 @@ export async function addRecord(patientId: string, formData: FormData) {
     revalidatePath(`/patients/${patientId}`);
     return { success: true };
 }
+
+export async function deleteRecord(recordId: string, patientId: string) {
+    try {
+        await recordService.deleteRecord(recordId);
+        revalidatePath(`/patients/${patientId}`);
+        revalidatePath(`/patients/${patientId}/history`);
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to delete record:', error);
+        return { success: false, message: 'Failed to delete record' };
+    }
+}

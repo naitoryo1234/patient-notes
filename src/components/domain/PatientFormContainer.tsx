@@ -5,6 +5,7 @@ import { ConfigForm } from '@/components/form/ConfigForm';
 import { PatientFormConfig } from '@/config/forms';
 import { Button } from '@/components/ui/button';
 import { parseAiText } from '@/services/aiParser';
+import { AiUsageGuidePatient } from '@/components/guide/AiUsageGuidePatient';
 
 import { checkDuplicates } from '@/actions/patientActions';
 import Link from 'next/link';
@@ -66,7 +67,10 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
     if (step === 'confirm' && mode === 'ai') {
         return (
             <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 space-y-6">
-                <h2 className="text-xl font-bold text-slate-800">登録内容の確認</h2>
+                <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-slate-800">登録内容の確認・編集</h2>
+                    <span className="text-xs text-slate-500">※内容を直接修正できます</span>
+                </div>
 
                 {/* Duplicate Warning */}
                 {duplicates.length > 0 && (
@@ -99,17 +103,66 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                     </div>
                 )}
 
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-3">
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <div><span className="text-xs text-slate-500 block">氏名</span><span className="font-semibold">{formValues.name || '-'}</span></div>
-                        <div><span className="text-xs text-slate-500 block">ふりがな</span><span className="font-semibold">{formValues.kana || '-'}</span></div>
-                        <div><span className="text-xs text-slate-500 block">生年月日</span><span className="font-semibold">{formValues.birthDate || '-'}</span></div>
-                        <div><span className="text-xs text-slate-500 block">電話番号</span><span className="font-semibold">{formValues.phone || '-'}</span></div>
-                        <div><span className="text-xs text-slate-500 block">性別</span><span className="font-semibold">{formValues.gender || '-'}</span></div>
+                        <div className="space-y-1">
+                            <label className="text-xs text-slate-500 font-bold">氏名</label>
+                            <input
+                                type="text"
+                                value={formValues.name || ''}
+                                onChange={(e) => setFormValues({ ...formValues, name: e.target.value })}
+                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs text-slate-500 font-bold">ふりがな</label>
+                            <input
+                                type="text"
+                                value={formValues.kana || ''}
+                                onChange={(e) => setFormValues({ ...formValues, kana: e.target.value })}
+                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs text-slate-500 font-bold">生年月日</label>
+                            <input
+                                type="text"
+                                placeholder="YYYY-MM-DD"
+                                value={formValues.birthDate || ''}
+                                onChange={(e) => setFormValues({ ...formValues, birthDate: e.target.value })}
+                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs text-slate-500 font-bold">電話番号</label>
+                            <input
+                                type="text"
+                                value={formValues.phone || ''}
+                                onChange={(e) => setFormValues({ ...formValues, phone: e.target.value })}
+                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs text-slate-500 font-bold">性別</label>
+                            <select
+                                value={formValues.gender || ''}
+                                onChange={(e) => setFormValues({ ...formValues, gender: e.target.value })}
+                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
+                            >
+                                <option value="">選択してください</option>
+                                <option value="男性">男性</option>
+                                <option value="女性">女性</option>
+                                <option value="その他">その他</option>
+                            </select>
+                        </div>
                     </div>
-                    <div className="pt-2 border-t border-slate-200">
-                        <span className="text-xs text-slate-500 block">メモ</span>
-                        <p className="text-sm whitespace-pre-wrap">{formValues.memo || '-'}</p>
+                    <div className="pt-2 border-t border-slate-200 space-y-1">
+                        <label className="text-xs text-slate-500 font-bold">メモ</label>
+                        <textarea
+                            value={formValues.memo || ''}
+                            onChange={(e) => setFormValues({ ...formValues, memo: e.target.value })}
+                            className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[80px]"
+                        />
                     </div>
                 </div>
 
@@ -158,6 +211,9 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
 [Memo]
 持病あり。紹介で来院。`}
                         </pre>
+                        <div className="mt-2 flex justify-end">
+                            <AiUsageGuidePatient />
+                        </div>
                     </div>
                     <textarea
                         className="w-full h-64 p-3 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono"
@@ -180,7 +236,8 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                     submitLabel="登録する"
                     initialValues={formValues}
                 />
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }

@@ -13,9 +13,10 @@ interface RecordFormContainerProps {
     action: (formData: FormData) => Promise<any>;
     initialValues?: Record<string, any>;
     staffList: Staff[];
+    lastRecord?: any; // ClinicalRecord type but simple any to avoid import issues for now or use the Type
 }
 
-export function RecordFormContainer({ action, initialValues = {}, staffList }: RecordFormContainerProps) {
+export function RecordFormContainer({ action, initialValues = {}, staffList, lastRecord }: RecordFormContainerProps) {
     // Dynamic Config Construction
     const formConfig: FormFieldConfig[] = [...RecordFormConfig];
 
@@ -33,6 +34,7 @@ export function RecordFormContainer({ action, initialValues = {}, staffList }: R
         });
     }
     const [mode, setMode] = useState<'manual' | 'ai'>('manual');
+    const [step, setStep] = useState<'input' | 'confirm'>('input');
     const [aiText, setAiText] = useState('');
     const [formValues, setFormValues] = useState(initialValues);
 
@@ -50,9 +52,128 @@ export function RecordFormContainer({ action, initialValues = {}, staffList }: R
             // rawText is not in the form config yet, but good to keep in mind
         }));
 
-        // Switch back to manual mode to let user verify
+        // Switch to confirm step to let user verify
+        setStep('confirm');
+    };
+
+    const handleConfirm = () => {
+        setStep('input');
         setMode('manual');
     };
+
+    const handleBackToAi = () => {
+        setStep('input');
+        // keep aiText
+    };
+
+    const handleCopyLastRecord = () => {
+        if (!lastRecord) return;
+
+        // Check if form has existing content
+        const hasContent = formValues.subjective || formValues.objective || formValues.assessment || formValues.plan;
+
+        if (hasContent) {
+            const confirmed = window.confirm('現在入力中の内容が上書きされますがよろしいですか？');
+            if (!confirmed) return;
+        }
+
+        setFormValues(prev => ({
+            ...prev,
+            subjective: lastRecord.subjective || '',
+            objective: lastRecord.objective || '',
+            assessment: lastRecord.assessment || '',
+            plan: lastRecord.plan || '',
+        }));
+    };
+
+    const handleInsertTemplate = () => {
+        const today = new Date().toISOString().slice(0, 10);
+        setAiText(`来院日: ${today}
+タグ: 
+
+S: 
+O: 
+A: 
+P: `);
+    };
+
+    // Render Logic
+    if (step === 'confirm' && mode === 'ai') {
+        return (
+            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 space-y-4">
+                <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-slate-800">登録内容の確認・編集</h2>
+                    <span className="text-xs text-slate-500">※内容を直接修正できます</span>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-xs text-slate-500 font-bold block">来院日時</label>
+                            <input
+                                type="datetime-local"
+                                value={formValues.visitDate || ''}
+                                onChange={(e) => setFormValues({ ...formValues, visitDate: e.target.value })}
+                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs text-slate-500 font-bold block">タグ (カンマ区切り)</label>
+                            <input
+                                type="text"
+                                placeholder="例: 腰痛, 初診"
+                                value={formValues.tags || ''}
+                                onChange={(e) => setFormValues({ ...formValues, tags: e.target.value })}
+                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-red-400 block">S (Subjective)</label>
+                            <textarea
+                                value={formValues.subjective || ''}
+                                onChange={(e) => setFormValues({ ...formValues, subjective: e.target.value })}
+                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px]"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-blue-400 block">O (Objective)</label>
+                            <textarea
+                                value={formValues.objective || ''}
+                                onChange={(e) => setFormValues({ ...formValues, objective: e.target.value })}
+                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px]"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-green-400 block">A (Assessment)</label>
+                            <textarea
+                                value={formValues.assessment || ''}
+                                onChange={(e) => setFormValues({ ...formValues, assessment: e.target.value })}
+                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px]"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-purple-400 block">P (Plan)</label>
+                            <textarea
+                                value={formValues.plan || ''}
+                                onChange={(e) => setFormValues({ ...formValues, plan: e.target.value })}
+                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px]"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                    <Button variant="ghost" onClick={handleBackToAi}>テキストに戻る</Button>
+                    <Button onClick={handleConfirm} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                        この内容でフォームに入力
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
@@ -76,13 +197,31 @@ export function RecordFormContainer({ action, initialValues = {}, staffList }: R
                         <span>✨</span> AI取込 (Beta)
                     </button>
                 </div>
+                {/* Copy Button */}
+                {lastRecord && mode === 'manual' && (
+                    <button
+                        onClick={handleCopyLastRecord}
+                        className="text-xs text-indigo-600 border border-indigo-200 bg-indigo-50 px-3 py-1.5 rounded-md hover:bg-indigo-100 transition-colors ml-4"
+                        title="前回のS/O/A/Pをコピーします"
+                    >
+                        📋 前回の記録をコピー
+                    </button>
+                )}
             </div>
 
             {mode === 'ai' ? (
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="bg-indigo-50 border border-indigo-100 rounded-md p-3 text-xs text-indigo-800">
-                        <p className="font-bold mb-1">💡 AI出力テキストを貼り付けてください</p>
-                        <p>Geminiなどで作成した「S: 〜 O: 〜」形式のテキストを解析し、下のフォームに自動入力します。</p>
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-md p-3 text-xs text-indigo-800 flex justify-between items-start">
+                        <div>
+                            <p className="font-bold mb-1">💡 AI出力テキストを貼り付けてください</p>
+                            <p>Geminiなどで作成した「S: 〜 O: 〜」形式のテキストを解析し、下のフォームに自動入力します。</p>
+                        </div>
+                        <button
+                            onClick={handleInsertTemplate}
+                            className="bg-white border border-indigo-200 text-indigo-600 px-2 py-1 rounded hover:bg-indigo-100 transition-colors whitespace-nowrap ml-2 shadow-sm"
+                        >
+                            テンプレートを挿入
+                        </button>
                     </div>
                     <textarea
                         className="w-full h-48 p-3 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono"
@@ -93,7 +232,7 @@ export function RecordFormContainer({ action, initialValues = {}, staffList }: R
                     <div className="flex justify-end gap-2">
                         <Button variant="ghost" onClick={() => setMode('manual')}>キャンセル</Button>
                         <Button onClick={handleParse} disabled={!aiText.trim()} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                            解析してフォームに入力
+                            解析して確認
                         </Button>
                     </div>
                 </div>

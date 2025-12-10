@@ -16,10 +16,11 @@
 | **行動指針** | [`guidelines/CORE_PRINCIPLES.md`](guidelines/CORE_PRINCIPLES.md) | "Doctor First" & "System Robustness" |
 | **禁止事項** | [`guidelines/RESTRICTIONS.md`](guidelines/RESTRICTIONS.md) | データ消失防止・スキーマ管理の鉄則 |
 
-### 2. モードの確立（必須）
+### 2. モード・プロトコルの確立（必須）
 | 項目 | 参照ファイル | 概要 |
 | :--- | :--- | :--- |
 | **モード切替** | [`guidelines/MODE_DEFINITIONS.md`](guidelines/MODE_DEFINITIONS.md) | 設計/実装/安全チェック等のモード判定ルール |
+| **運用プロトコル** | [`guidelines/PROTOCOLS.md`](guidelines/PROTOCOLS.md) | アイデア保存・提案プロセス等の運用ルール |
 
 ### 3. プロジェクト知識のロード（必須）
 | 項目 | 参照ファイル | 概要 |

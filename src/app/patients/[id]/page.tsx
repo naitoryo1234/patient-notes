@@ -12,6 +12,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
+import { AiUsageGuide } from '@/components/guide/AiUsageGuide';
 
 interface PageProps {
     params: { id: string };
@@ -65,6 +66,11 @@ export default async function PatientDetailPage(props: PageProps) {
                         過去の履歴を見る ({records.length})
                     </Link>
                 </div>
+
+                {/* AI Guide */}
+                <div className="mt-6">
+                    <AiUsageGuide />
+                </div>
             </div>
 
             {/* Right Column: New Entry Form Only */}
@@ -79,6 +85,7 @@ export default async function PatientDetailPage(props: PageProps) {
                         visitDate: initialVisitDate,
                         staffId: todaysAppt?.staffId || undefined
                     }}
+                    lastRecord={records[0] || undefined}
                 />
 
                 {/* Show only the latest record for context if exists */}

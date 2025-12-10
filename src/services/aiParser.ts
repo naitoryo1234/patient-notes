@@ -108,10 +108,18 @@ export function parseAiText(text: string): ParsedRecord {
         // JP Keywords with various delimiters
         const jpKeyMatch = trimmed.match(/^(主訴|所見|評価|施術|計画|方針|メモ|備考)(\s*[:：\)\）]|\s+)/); // Added \s+ to allow "メモ 内容"
 
+        // Complex CSV/Parenthesis Match: S (Subjective...), content
+        // Matches: S (Subjective: ...), content OR S, content
+        const complexHeaderMatch = trimmed.match(/^(S|O|A|P|M|Subjective|Objective|Assessment|Plan|Memo)\s*(?:\([^)]+\))?\s*[,:：]\s*/i);
+
         let foundKey: string | null = null;
         let contentStartRegex: RegExp | null = null;
 
-        if (bracketMatch) {
+        if (complexHeaderMatch) {
+            foundKey = complexHeaderMatch[1];
+            // Regex to strip the whole header including parenthesis and separator
+            contentStartRegex = /^(S|O|A|P|M|Subjective|Objective|Assessment|Plan|Memo)\s*(?:\([^)]+\))?\s*[,:：]\s*/i;
+        } else if (bracketMatch) {
             foundKey = bracketMatch[1];
             contentStartRegex = /^\[(SOAP|Memo|Subjective|Objective|Assessment|Plan|S|O|A|P|M)\]\s*/i;
         } else if (colonMatch) {
