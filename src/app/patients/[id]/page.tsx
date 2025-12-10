@@ -3,8 +3,10 @@ import { getRecordsByPatientId } from '@/services/recordService';
 import { PatientProfile } from '@/components/domain/PatientProfile';
 import { RecordList } from '@/components/domain/RecordList';
 import { RecordFormContainer } from '@/components/domain/RecordFormContainer';
+import { AppointmentButton } from '@/components/domain/AppointmentButton';
 import { addRecord } from '@/actions/recordActions';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 
 interface PageProps {
     params: { id: string };
@@ -32,6 +34,13 @@ export default async function PatientDetailPage(props: PageProps) {
             {/* Left Column: Profile & New Entry */}
             <div className="lg:col-span-1 space-y-6">
                 <PatientProfile patient={patient} />
+
+                <div className="flex gap-2">
+                    <AppointmentButton patientId={id} />
+                    <Link href={`/patients/${id}/edit`} className="bg-slate-100 text-slate-600 px-4 py-2 rounded text-sm hover:bg-slate-200">
+                        編集
+                    </Link>
+                </div>
 
                 <RecordFormContainer
                     action={addRecordAction}
