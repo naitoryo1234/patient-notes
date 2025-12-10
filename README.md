@@ -14,6 +14,19 @@ pnpm dev
 bun dev
 ```
 
+### ⚠️ 環境に関する注意 (PowerShell Users)
+このプロジェクトの開発環境は **Windows (PowerShell)** を想定しています。
+PowerShell (v5.1等) ではコマンド連結に `&&` が使用できない場合があります。
+その際は、代わりに `;` を使用するか、1行ずつ実行してください。
+
+```powershell
+# NG (Error)
+git add . && git commit -m "msg"
+
+# GM (Use semicolon)
+git add . ; git commit -m "msg"
+```
+
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
