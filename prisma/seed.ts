@@ -104,7 +104,7 @@ async function main() {
             records: {
                 create: [
                     {
-                        visitDate: new Date('2024-12-09T09:00:00'),
+                        visitDate: new Date('2025-12-09T09:00:00'), // updated to 2025
                         visitCount: 1,
                         subjective: '今朝、重い荷物を持った瞬間にグキッとなった。歩くのも辛い。',
                         objective: '腰部熱感あり。疼痛緩和姿勢（前傾）。',
@@ -116,6 +116,36 @@ async function main() {
                 ]
             }
         },
+    })
+
+    // 4. Appointments (本日の予約 - 動作確認用)
+    const today = new Date()
+
+    // 10:00 - 山田さん
+    const appt1 = new Date(today)
+    appt1.setHours(10, 0, 0, 0)
+
+    await prisma.appointment.create({
+        data: {
+            patientId: patient1.id, // upsert returns the record
+            startAt: appt1,
+            status: 'scheduled',
+            memo: '動作確認データ',
+            staffId: staff1.id
+        }
+    })
+
+    // 14:30 - 佐藤さん
+    const appt2 = new Date(today)
+    appt2.setHours(14, 30, 0, 0)
+
+    await prisma.appointment.create({
+        data: {
+            patientId: patient2.id,
+            startAt: appt2,
+            status: 'scheduled',
+            staffId: staff1.id
+        }
     })
 
     console.log({ patient1, patient2, patient3, staff1 })
