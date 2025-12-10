@@ -19,6 +19,21 @@ export const getPatients = async (query?: string) => {
     });
 };
 
+export const findSimilarPatients = async (name: string, kana: string) => {
+    if (!name && !kana) return [];
+
+    return await prisma.patient.findMany({
+        where: {
+            OR: [
+                { name: { contains: name } },
+                { kana: { contains: kana } }
+            ]
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 5
+    });
+};
+
 export const getPatientById = async (id: string) => {
     return await prisma.patient.findUnique({
         where: { id },

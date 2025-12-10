@@ -2,8 +2,7 @@ import { getPatientById } from '@/services/patientService';
 import { getRecordsByPatientId } from '@/services/recordService';
 import { PatientProfile } from '@/components/domain/PatientProfile';
 import { RecordList } from '@/components/domain/RecordList';
-import { ConfigForm } from '@/components/form/ConfigForm';
-import { RecordFormConfig } from '@/config/forms';
+import { RecordFormContainer } from '@/components/domain/RecordFormContainer';
 import { addRecord } from '@/actions/recordActions';
 import { notFound } from 'next/navigation';
 
@@ -34,19 +33,12 @@ export default async function PatientDetailPage(props: PageProps) {
             <div className="lg:col-span-1 space-y-6">
                 <PatientProfile patient={patient} />
 
-                <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-                    <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <span>📝</span> 新しい記録
-                    </h3>
-                    <ConfigForm
-                        config={RecordFormConfig}
-                        action={addRecordAction}
-                        submitLabel="記録を保存"
-                        initialValues={{
-                            visitDate: new Date().toISOString().slice(0, 16) // "YYYY-MM-DDTHH:mm" for datetime-local
-                        }}
-                    />
-                </div>
+                <RecordFormContainer
+                    action={addRecordAction}
+                    initialValues={{
+                        visitDate: new Date().toISOString().slice(0, 16)
+                    }}
+                />
             </div>
 
             {/* Right Column: Timeline */}

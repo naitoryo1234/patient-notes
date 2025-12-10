@@ -1,6 +1,6 @@
-import { ConfigForm } from '@/components/form/ConfigForm';
 import { PatientFormConfig } from '@/config/forms';
 import { addPatient } from '@/actions/patientActions';
+import { PatientFormContainer } from '@/components/domain/PatientFormContainer';
 
 export default function NewPatientPage() {
     return (
@@ -10,11 +10,9 @@ export default function NewPatientPage() {
                 <p className="text-slate-500">基本情報を入力して電子カルテを作成します。</p>
             </div>
 
-            <ConfigForm
-                config={PatientFormConfig}
-                action={addPatient}
-                submitLabel="登録する"
-            />
+            <div className="max-w-2xl mx-auto">
+                <PatientFormContainer action={addPatient} />
+            </div>
         </div>
     );
 }

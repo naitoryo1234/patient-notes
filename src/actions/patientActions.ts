@@ -15,14 +15,33 @@ export async function addPatient(formData: FormData) {
         return { success: false, errors: validated.error.flatten().fieldErrors };
     }
 
+    let newPatient;
     try {
-        await patientService.createPatient(validated.data);
+        newPatient = await patientService.createPatient(validated.data);
     } catch (error) {
         console.error(error);
         return { success: false, message: 'Database Error' };
     }
 
-    revalidatePath('/patients');
     revalidatePath('/');
-    redirect('/patients');
+    redirect(`/patients/${newPatient.id}`);
+}
+
+export async function checkDuplicates(name: string, kana: string) {
+    if (!name && !kana) return [];
+    try {
+        const results = await patientService.findSimilarPatients(name, kana);
+        // Serialize dates if necessary, but server components handles simple objects mostly.
+        // Prisma Date objects need to be serializable if passed to client components directly?
+        // Server Action returns to Client Component -> Needs serialization
+        return results.map((p: any) => ({
+            ...p,
+            birthDate: p.birthDate ? p.birthDate.toISOString() : null,
+            createdAt: p.createdAt.toISOString(),
+            updatedAt: p.updatedAt.toISOString(),
+        }));
+    } catch (e) {
+        console.error(e);
+        return [];
+    }
 }
