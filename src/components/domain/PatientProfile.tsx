@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { Patient } from '@prisma/client';
 import { format } from 'date-fns';
-import { Pencil, Check, X, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { Pencil, Check, X, Trash2, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { updatePatientMemo, updatePatientTags, deletePatient } from '@/actions/patientActions';
 import { useRouter } from 'next/navigation';
@@ -75,24 +76,61 @@ export function PatientProfile({ patient }: PatientProfileProps) {
         }
     };
 
+    // Tag Colors Definition
+    const TAG_COLORS: Record<string, string> = {
+        '重要': 'bg-red-50 text-red-700 border-red-100',
+        '注意': 'bg-red-50 text-red-700 border-red-100',
+        '禁忌': 'bg-red-50 text-red-700 border-red-100',
+        'アレルギー': 'bg-red-50 text-red-700 border-red-100',
+        'VIP': 'bg-amber-50 text-amber-700 border-amber-100',
+        '紹介': 'bg-amber-50 text-amber-700 border-amber-100',
+    };
+
+    const getTagStyle = (tag: string) => {
+        return TAG_COLORS[tag] || 'bg-blue-50 text-blue-700 border-blue-100';
+    };
+
+    // Memo Logic
+    const [isMemoExpanded, setIsMemoExpanded] = useState(false);
+    const shouldClampMemo = memo.length > 100 || memo.split('\n').length > 3;
+
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 space-y-4 group">
-            <div className="flex justify-between items-start">
-                <div>
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="bg-slate-100 text-slate-500 text-xs px-2 py-0.5 rounded font-mono">
-                            No.{patient.pId}
-                        </span>
-                        <h2 className="text-xl font-bold text-slate-900">{patient.name}</h2>
-                        <span className="text-slate-500 text-sm">({patient.kana})</span>
-                    </div>
-                    <div className="text-sm text-slate-600 space-x-3">
-                        <span>{patient.gender || '-'}</span>
-                        <span>{patient.birthDate ? format(new Date(patient.birthDate), 'yyyy-MM-dd') : '-'}</span>
-                        <span>{patient.phone || '-'}</span>
-                    </div>
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 space-y-4 group relative">
+            {/* ... (Header & Buttons remain same) ... */}
+            <div className="pr-12 md:pr-20"> {/* Right padding to avoid overlap with buttons */}
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="bg-slate-100 text-slate-500 text-xs px-2 py-0.5 rounded font-mono shrink-0">
+                        No.{patient.pId}
+                    </span>
+                    <h2 className="text-xl font-bold text-slate-900 break-words">{patient.name}</h2>
+                    <span className="text-slate-500 text-sm whitespace-normal md:whitespace-nowrap">({patient.kana})</span>
                 </div>
-                <Button variant="ghost" size="icon" onClick={handleDelete} className="text-slate-400 hover:text-red-600 hover:bg-red-50 -mt-1 -mr-2">
+                <div className="text-sm text-slate-600 space-x-3">
+                    <span>{patient.gender || '-'}</span>
+                    <span>{patient.birthDate ? format(new Date(patient.birthDate), 'yyyy-MM-dd') : '-'}</span>
+                    <span>{patient.phone || '-'}</span>
+                </div>
+            </div>
+
+            {/* Action Buttons - Absolute Positioned */}
+            <div className="absolute top-4 right-4 flex gap-1">
+                <Link href={`/patients/${patient.id}/edit`}>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-slate-500 hover:text-indigo-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 shadow-sm transition-all"
+                        title="基本情報を変更"
+                    >
+                        <UserCog className="w-4 h-4" />
+                    </Button>
+                </Link>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleDelete}
+                    className="h-8 w-8 text-slate-500 hover:text-red-600 bg-slate-50 hover:bg-red-50 border border-slate-200 hover:border-red-200 shadow-sm transition-all ml-1"
+                    title="患者を削除"
+                >
                     <Trash2 className="w-4 h-4" />
                 </Button>
             </div>
@@ -103,25 +141,28 @@ export function PatientProfile({ patient }: PatientProfileProps) {
                     <div className="flex flex-wrap gap-2 items-center min-h-[28px]">
                         {tags.length > 0 ? (
                             tags.map((tag, i) => (
-                                <span key={i} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
+                                <span key={i} className={`px-2 py-1 text-xs rounded-full border ${getTagStyle(tag)}`}>
                                     #{tag}
                                 </span>
                             ))
                         ) : (
                             <span className="text-xs text-slate-400 italic">タグなし</span>
                         )}
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setIsEditingTags(true)}
-                            className="text-slate-400 hover:text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                            className="h-6 w-6 ml-1 text-slate-400 hover:text-indigo-600 bg-slate-50 border border-slate-200 shadow-sm"
+                            title="タグを編集"
                         >
                             <Pencil className="w-3 h-3" />
-                        </button>
+                        </Button>
                     </div>
                 ) : (
                     <div className="space-y-2 bg-slate-50 p-3 rounded-md border border-slate-200">
                         <div className="flex flex-wrap gap-2 mb-2">
                             {tags.map((tag, i) => (
-                                <span key={i} className="px-2 py-1 bg-white border border-blue-100 text-blue-700 text-xs rounded-full flex items-center gap-1">
+                                <span key={i} className={`px-2 py-1 text-xs rounded-full border flex items-center gap-1 ${getTagStyle(tag)} bg-white`} >
                                     #{tag}
                                     <button onClick={() => handleRemoveTag(tag)} className="hover:text-red-500">
                                         <X className="w-3 h-3" />
@@ -149,17 +190,35 @@ export function PatientProfile({ patient }: PatientProfileProps) {
             {/* Memo Section */}
             <div className="relative">
                 {!isEditingMemo ? (
-                    <div className="bg-yellow-50/50 p-3 rounded text-sm text-slate-700 border border-yellow-100 relative group/memo">
+                    <div className="bg-yellow-50/50 p-3 rounded text-sm text-slate-700 border border-yellow-100 relative group/memo transition-all">
                         <div className="flex justify-between items-start mb-1">
-                            <p className="font-semibold text-xs text-yellow-600">📌 メモ</p>
-                            <button
-                                onClick={() => setIsEditingMemo(true)}
-                                className="text-slate-400 hover:text-indigo-600 opacity-0 group-hover/memo:opacity-100 transition-opacity"
-                            >
-                                <Pencil className="w-3 h-3" />
-                            </button>
+                            <p className="font-semibold text-xs text-yellow-600 flex items-center gap-2">
+                                📌 メモ
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setIsEditingMemo(true)}
+                                    className="h-6 w-6 text-slate-500 hover:text-indigo-600 bg-white/50 hover:bg-white border border-yellow-200/50 hover:border-indigo-200 shadow-sm transition-all"
+                                    title="メモを編集"
+                                >
+                                    <Pencil className="w-3 h-3" />
+                                </Button>
+                            </p>
                         </div>
-                        <p className="whitespace-pre-wrap min-h-[1.5em]">{memo || <span className="text-slate-400 italic">メモを入力...</span>}</p>
+                        <div className={`relative ${!isMemoExpanded && shouldClampMemo ? 'max-h-[4.5em] overflow-hidden' : ''}`}>
+                            <p className="whitespace-pre-wrap min-h-[1.5em]">{memo || <span className="text-slate-400 italic">メモを入力...</span>}</p>
+                            {!isMemoExpanded && shouldClampMemo && (
+                                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-yellow-50/90 to-transparent pointer-events-none" />
+                            )}
+                        </div>
+                        {!isEditingMemo && shouldClampMemo && (
+                            <button
+                                onClick={() => setIsMemoExpanded(!isMemoExpanded)}
+                                className="text-xs text-yellow-600/70 hover:text-yellow-700 font-bold mt-1 w-full text-center hover:bg-yellow-100/50 rounded py-0.5 transition-colors"
+                            >
+                                {isMemoExpanded ? '閉じる' : 'もっと見る'}
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div className="space-y-2">

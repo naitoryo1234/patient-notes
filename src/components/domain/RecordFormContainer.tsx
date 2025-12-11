@@ -40,31 +40,86 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
     const [formValues, setFormValues] = useState(initialValues);
     const [errors, setErrors] = useState<Record<string, string[]> | null>(null);
 
-    const handleSubmit = async (formData: FormData) => {
-        setErrors(null);
-        // Client-side quick check (optional but good for UX)
-        // This mirrors the Zod check but gives instant feedback without server roundtrip
-        const s = (formData.get('subjective') as string)?.trim() || '';
-        const o = (formData.get('objective') as string)?.trim() || '';
-        const a = (formData.get('assessment') as string)?.trim() || '';
-        const p = (formData.get('plan') as string)?.trim() || '';
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-        if (!s && !o && !a && !p) {
+    // 1. Process Input from ConfigForm or AI Parser
+    const processInput = async (formData: FormData) => {
+        setErrors(null);
+        // Extract values from FormData
+        const visitDate = formData.get('visitDate') as string;
+        const staffId = formData.get('staffId') as string;
+        const tags = formData.get('tags') as string;
+        const subjective = (formData.get('subjective') as string)?.trim() || '';
+        const objective = (formData.get('objective') as string)?.trim() || '';
+        const assessment = (formData.get('assessment') as string)?.trim() || '';
+        const plan = (formData.get('plan') as string)?.trim() || '';
+
+        // Validation
+        if (!subjective && !objective && !assessment && !plan) {
             const errorMsg = ["カルテの内容が空です。S/O/A/Pのいずれかを入力してください。"];
             setErrors({ subjective: errorMsg });
-            alert(errorMsg[0]);
-            return;
+            return { success: false, errors: { subjective: errorMsg } };
         }
 
-        const result = await action(formData);
-        if (result && !result.success) {
-            if (result.errors) {
-                setErrors(result.errors);
-                const firstError = Object.values(result.errors).flat()[0] as string;
-                alert(firstError || '入力内容にエラーがあります');
+        // Update state for preview
+        setFormValues(prev => ({
+            ...prev,
+            visitDate,
+            staffId,
+            tags,
+            subjective,
+            objective,
+            assessment,
+            plan
+        }));
+
+        setStep('confirm');
+        return { success: true };
+    };
+
+    // 2. Final Submit State
+    const handleFinalSubmit = async () => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
+        try {
+            // Reconstruct FormData from state
+            const formData = new FormData();
+            Object.entries(formValues).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    formData.append(key, value as string);
+                }
+            });
+
+            const result = await action(formData);
+
+            if (result && !result.success) {
+                if (result.errors) {
+                    setErrors(result.errors);
+                    setStep('input'); // Back to input on error
+                } else {
+                    alert(result.message || 'エラーが発生しました');
+                }
             } else {
-                alert(result.message || 'エラーが発生しました');
+                // Success
+                // Clear SOAP fields but keep Date/Staff/Tags for smooth workflow
+                setFormValues(prev => ({
+                    ...prev,
+                    subjective: '',
+                    objective: '',
+                    assessment: '',
+                    plan: '',
+                    // Keep visitDate, tags, staffId as is
+                }));
+                // Reset AI text if used
+                setAiText('');
+                setStep('input');
+                // Optional: Show success toast (handled by Server Action revalidate usually, but maybe alert?)
             }
+        } catch (error) {
+            console.error(error);
+            alert('送信中にエラーが発生しました');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -86,14 +141,8 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
         setStep('confirm');
     };
 
-    const handleConfirm = () => {
+    const handleBackToInput = () => {
         setStep('input');
-        setMode('manual');
-    };
-
-    const handleBackToAi = () => {
-        setStep('input');
-        // keep aiText
     };
 
     const handleCopyLastRecord = () => {
@@ -128,12 +177,13 @@ P: `);
     };
 
     // Render Logic
-    if (step === 'confirm' && mode === 'ai') {
+    if (step === 'confirm') {
+        const isAiMode = mode === 'ai';
         return (
             <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 space-y-4">
                 <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-slate-800">登録内容の確認・編集</h2>
-                    <span className="text-xs text-slate-500">※内容を直接修正できます</span>
+                    <h2 className="text-xl font-bold text-slate-800">登録内容の確認</h2>
+                    <span className="text-xs text-slate-500">※以下の内容で保存します</span>
                 </div>
 
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-4">
@@ -147,8 +197,21 @@ P: `);
                                 className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
                             />
                         </div>
-                        <div className="space-y-1">
-                            <label className="text-xs text-slate-500 font-bold block">タグ (カンマ区切り)</label>
+                        {staffList.length > 0 && (
+                            <div className="space-y-1">
+                                <label className="text-xs text-slate-500 font-bold block">担当者</label>
+                                <select
+                                    value={formValues.staffId || ''}
+                                    onChange={(e) => setFormValues({ ...formValues, staffId: e.target.value })}
+                                    className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
+                                >
+                                    <option value="">選択なし</option>
+                                    {staffList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                </select>
+                            </div>
+                        )}
+                        <div className="space-y-1 md:col-span-2">
+                            <label className="text-xs text-slate-500 font-bold block">タグ</label>
                             <TagInput
                                 value={formValues.tags || ''}
                                 onChange={(val) => setFormValues({ ...formValues, tags: val })}
@@ -195,9 +258,11 @@ P: `);
                 </div>
 
                 <div className="flex justify-end gap-2">
-                    <Button variant="ghost" onClick={handleBackToAi}>テキストに戻る</Button>
-                    <Button onClick={handleConfirm} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                        この内容でフォームに入力
+                    <Button variant="ghost" onClick={handleBackToInput} disabled={isSubmitting}>
+                        {isAiMode ? 'テキストに戻る' : '入力に戻る'}
+                    </Button>
+                    <Button onClick={handleFinalSubmit} disabled={isSubmitting} className="bg-indigo-600 hover:bg-indigo-700 text-white min-w-[140px]">
+                        {isSubmitting ? '保存中...' : '確定して保存'}
                     </Button>
                 </div>
             </div>
@@ -212,36 +277,40 @@ P: `);
 
     return (
         <div id="new-record" className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 scroll-mt-24">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2 shrink-0">
                     <span>📝</span> 新しい記録
                 </h3>
-                <div className="flex bg-slate-100 rounded-lg p-1">
-                    <button
-                        onClick={() => setMode('manual')}
-                        className={`text-xs px-3 py-1.5 rounded-md transition-all ${mode === 'manual' ? 'bg-white shadow-sm text-slate-900 font-medium' : 'text-slate-500 hover:text-slate-700'
-                            }`}
-                    >
-                        通常入力
-                    </button>
-                    <button
-                        onClick={() => setMode('ai')}
-                        className={`text-xs px-3 py-1.5 rounded-md transition-all flex items-center gap-1 ${mode === 'ai' ? 'bg-indigo-50 text-indigo-700 font-medium shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                            }`}
-                    >
-                        <span>✨</span> AI取込 (Beta)
-                    </button>
+
+                <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                    <div className="flex bg-slate-100 rounded-lg p-1 w-full sm:w-auto">
+                        <button
+                            onClick={() => setMode('manual')}
+                            className={`flex-1 sm:flex-initial text-xs px-3 py-1.5 rounded-md transition-all whitespace-nowrap ${mode === 'manual' ? 'bg-white shadow-sm text-slate-900 font-medium' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                        >
+                            通常入力
+                        </button>
+                        <button
+                            onClick={() => setMode('ai')}
+                            className={`flex-1 sm:flex-initial text-xs px-3 py-1.5 rounded-md transition-all flex items-center justify-center gap-1 whitespace-nowrap ${mode === 'ai' ? 'bg-indigo-50 text-indigo-700 font-medium shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                        >
+                            <span>✨</span> AI取込 (Beta)
+                        </button>
+                    </div>
+
+                    {/* Copy Button */}
+                    {lastRecord && mode === 'manual' && (
+                        <button
+                            onClick={handleCopyLastRecord}
+                            className="w-full sm:w-auto text-xs text-indigo-600 border border-indigo-200 bg-indigo-50 px-3 py-1.5 rounded-md hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1"
+                            title="前回のS/O/A/Pをコピーします"
+                        >
+                            📋 <span className="md:hidden">前回コピー</span><span className="hidden md:inline">前回の記録をコピー</span>
+                        </button>
+                    )}
                 </div>
-                {/* Copy Button */}
-                {lastRecord && mode === 'manual' && (
-                    <button
-                        onClick={handleCopyLastRecord}
-                        className="text-xs text-indigo-600 border border-indigo-200 bg-indigo-50 px-3 py-1.5 rounded-md hover:bg-indigo-100 transition-colors ml-4"
-                        title="前回のS/O/A/Pをコピーします"
-                    >
-                        📋 前回の記録をコピー
-                    </button>
-                )}
             </div>
 
             {mode === 'ai' ? (
@@ -289,8 +358,8 @@ P: `);
                     <ConfigForm
                         key={JSON.stringify(formValues)}
                         config={formConfig}
-                        action={handleSubmit}
-                        submitLabel="記録を保存"
+                        action={processInput}
+                        submitLabel="確認画面へ"
                         initialValues={formValues}
                     />
                 </div>

@@ -1,12 +1,12 @@
 'use client';
 
-import { ClinicalRecord } from '@prisma/client';
+import { ClinicalRecord, Staff } from '@prisma/client';
 import { format } from 'date-fns';
-import { Trash2 } from 'lucide-react';
+import { Trash2, User } from 'lucide-react';
 import { deleteRecord } from '@/actions/recordActions';
 
 interface RecordListProps {
-    records: ClinicalRecord[];
+    records: (ClinicalRecord & { staff?: Staff | null })[];
 }
 
 export function RecordList({ records }: RecordListProps) {
@@ -35,13 +35,19 @@ export function RecordList({ records }: RecordListProps) {
                 return (
                     <div key={record.id} className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden group">
                         <div className="bg-slate-50 px-4 py-2 border-b border-slate-100 flex justify-between items-center">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 flex-wrap">
                                 <span className="font-bold text-slate-700">
                                     {format(new Date(record.visitDate), 'yyyy/MM/dd HH:mm')}
                                 </span>
                                 <span className="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">
                                     {record.visitCount}回目
                                 </span>
+                                {record.staff && (
+                                    <span className="text-xs flex items-center gap-1 text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-full shadow-sm">
+                                        <User className="w-3 h-3" />
+                                        {record.staff.name}
+                                    </span>
+                                )}
                                 {tags.map((tag, i) => (
                                     <span key={i} className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
                                         {tag}
@@ -51,7 +57,7 @@ export function RecordList({ records }: RecordListProps) {
                             <div>
                                 <button
                                     onClick={() => handleDelete(record.id, record.patientId)}
-                                    className="p-1 text-slate-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                    className="p-1 text-slate-300 hover:text-red-500 transition-colors"
                                     title="記録を削除"
                                 >
                                     <Trash2 className="w-4 h-4" />

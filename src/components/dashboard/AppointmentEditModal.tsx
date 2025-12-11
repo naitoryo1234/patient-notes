@@ -15,6 +15,7 @@ interface AppointmentEditModalProps {
 
 export function AppointmentEditModal({ appointment, staffList, isOpen, onClose }: AppointmentEditModalProps) {
     const [isPending, setIsPending] = useState(false);
+    const [error, setError] = useState<{ message: string; date?: string } | null>(null);
 
     // Default values
     const defaultDate = format(new Date(appointment.visitDate), 'yyyy-MM-dd');
@@ -28,12 +29,20 @@ export function AppointmentEditModal({ appointment, staffList, isOpen, onClose }
 
     const handleSubmit = async (formData: FormData) => {
         setIsPending(true);
+        setError(null);
+
         const res = await updateAppointmentAction(formData);
         setIsPending(false);
+
         if (res.success) {
             onClose();
         } else {
-            alert(res.message);
+            // Extract date from form data to construct link
+            const visitDate = formData.get('visitDate') as string;
+            setError({
+                message: res.message,
+                date: visitDate
+            });
         }
     };
 
@@ -52,6 +61,25 @@ export function AppointmentEditModal({ appointment, staffList, isOpen, onClose }
                 <form action={handleSubmit} className="p-4 space-y-4">
                     <input type="hidden" name="id" value={appointment.id} />
 
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm space-y-2">
+                            <p className="font-bold flex items-center gap-2">
+                                ⚠️ 更新できませんでした
+                            </p>
+                            <p>{error.message}</p>
+                            {error.date && (
+                                <a
+                                    href={`/appointments?date=${error.date}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block text-center w-full bg-white border border-red-300 hover:bg-red-50 text-red-600 py-1.5 rounded mt-2 font-bold transition-colors"
+                                >
+                                    📅 予約台帳で空き状況を確認する
+                                </a>
+                            )}
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-bold text-slate-700 mb-1">日付</label>
@@ -66,13 +94,19 @@ export function AppointmentEditModal({ appointment, staffList, isOpen, onClose }
                         <div>
                             <label className="block text-sm font-bold text-slate-700 mb-1">時間 & 所要時間</label>
                             <div className="flex gap-2">
-                                <input
-                                    type="time"
+                                <select
                                     name="visitTime"
                                     required
                                     defaultValue={defaultTime}
                                     className="w-full border-slate-300 rounded-md focus:ring-indigo-500"
-                                />
+                                >
+                                    {Array.from({ length: 24 * 12 }).map((_, i) => {
+                                        const h = Math.floor(i / 12);
+                                        const m = (i % 12) * 5;
+                                        const t = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                                        return <option key={t} value={t}>{t}</option>;
+                                    })}
+                                </select>
                                 <select
                                     name="duration"
                                     defaultValue={appointment.duration || 60}
@@ -133,7 +167,7 @@ export function AppointmentEditModal({ appointment, staffList, isOpen, onClose }
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

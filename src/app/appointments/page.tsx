@@ -1,6 +1,7 @@
-import { findAllAppointments } from '@/services/appointmentService';
+import { findAllAppointments, getTodaysAppointments } from '@/services/appointmentService';
 import { getActiveStaff } from '@/services/staffService';
 import { AppointmentListClient } from './AppointmentListClient';
+import { DailyAppointmentPanel } from '@/components/dashboard/DailyAppointmentPanel';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 
@@ -11,10 +12,11 @@ export default async function AppointmentsPage({ searchParams }: { searchParams:
     const includePast = params?.history === 'true';
     // Include cancelled to show them in list (greyed out)
     const appointments = await findAllAppointments({ includePast, includeCancelled: true });
+    const todaysAppointments = await getTodaysAppointments();
     const staffList = await getActiveStaff();
 
     return (
-        <div className="space-y-6 max-w-5xl mx-auto">
+        <div className="space-y-4">
             <div className="flex items-center gap-4">
                 <Link href="/" className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500">
                     <ChevronLeft className="w-6 h-6" />
@@ -25,11 +27,21 @@ export default async function AppointmentsPage({ searchParams }: { searchParams:
                 </div>
             </div>
 
-            <AppointmentListClient
-                initialAppointments={appointments}
-                staffList={staffList}
-                includePast={includePast}
-            />
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-180px)]">
+                {/* Left Column: Today's Schedule (Fixed Panel) */}
+                <div className="lg:col-span-1 h-full">
+                    <DailyAppointmentPanel appointments={todaysAppointments} staffList={staffList} />
+                </div>
+
+                {/* Right Column: All Appointments */}
+                <div className="lg:col-span-3 h-full overflow-hidden">
+                    <AppointmentListClient
+                        initialAppointments={appointments}
+                        staffList={staffList}
+                        includePast={includePast}
+                    />
+                </div>
+            </div>
         </div>
     );
 }

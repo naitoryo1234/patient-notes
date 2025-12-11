@@ -76,22 +76,34 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                     appointments.filter(apt => {
                         const aptTime = new Date(apt.visitDate);
                         const diff = differenceInMinutes(aptTime, currentTime);
-                        return diff >= -60; // Hide if > 60 mins past
+                        const duration = apt.duration || 60;
+                        // Show until the duration has passed
+                        return diff >= -duration;
                     }).map(apt => {
                         const aptTime = new Date(apt.visitDate);
                         const diff = differenceInMinutes(aptTime, currentTime);
+                        const duration = apt.duration || 60;
 
                         // Status Logic
                         const isCancelled = apt.status === 'cancelled';
-                        const isPast = !isCancelled && diff < -15; // 15 mins passed
-                        const isUpcoming = !isCancelled && diff >= 0 && diff <= 60; // Within 1 hour
-                        const isJustNow = !isCancelled && diff >= -15 && diff < 0; // Just started/arrived
+
+                        // Time-based states
+                        // Upcoming: Within 60 mins before start
+                        const isUpcoming = !isCancelled && diff > 0 && diff <= 60;
+
+                        // Just Started: 0 to 15 mins after start
+                        const isJustNow = !isCancelled && diff <= 0 && diff >= -15;
+
+                        // In Progress: 15 mins after start until End (duration)
+                        // Note: If duration is < 15, isJustNow covers it, this won't trigger.
+                        const isInProgress = !isCancelled && diff < -15 && diff >= -duration;
 
                         let statusColor = "bg-white border-slate-200";
                         if (isCancelled) statusColor = "bg-slate-50 border-slate-100 opacity-60 grayscale"; // Cancelled (Greyed out)
                         else if (isUpcoming) statusColor = "bg-yellow-50 border-yellow-300 shadow-sm ring-1 ring-yellow-200";
                         else if (isJustNow) statusColor = "bg-emerald-50 border-emerald-300 shadow-sm ring-1 ring-emerald-200";
-                        else if (isPast) statusColor = "bg-slate-50 border-slate-100 opacity-60";
+                        else if (isInProgress) statusColor = "bg-white border-slate-300 shadow-md ring-1 ring-slate-100"; // Active but standard color
+                        // Default fallback is white/slate-200 (for > 60 mins future)
 
                         return (
                             <div key={apt.id} className={`relative rounded-lg border transition-all hover:shadow-md ${statusColor} group`}>

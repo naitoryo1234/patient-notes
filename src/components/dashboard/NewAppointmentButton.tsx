@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Calendar, Search, User, Plus, Clock } from 'lucide-react';
+import { Calendar, Search, User, Plus, Clock, CalendarPlus } from 'lucide-react';
 import { searchPatientsForSelect } from '@/actions/patientActions';
 import { scheduleAppointment } from '@/actions/appointmentActions';
 import { Staff } from '@/services/staffService';
@@ -101,8 +101,8 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm gap-2">
-                    <Plus className="w-4 h-4" />
+                <Button className="bg-[#6366f1] hover:bg-[#4f46e5] text-white shadow-md gap-3 px-6 h-11 rounded-lg text-base font-bold transition-all hover:shadow-lg">
+                    <CalendarPlus className="w-5 h-5" />
                     新規予約
                 </Button>
             </DialogTrigger>
@@ -182,14 +182,20 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
                                         required
                                         className="border rounded px-3 py-2 text-sm w-full focus:ring-2 focus:ring-indigo-500 outline-none"
                                     />
-                                    <input
-                                        type="time"
+                                    <select
                                         name="visitTime"
                                         value={time}
                                         onChange={(e) => setTime(e.target.value)}
                                         required
-                                        className="border rounded px-3 py-2 text-sm w-full focus:ring-2 focus:ring-indigo-500 outline-none"
-                                    />
+                                        className="border rounded px-3 py-2 text-sm w-full focus:ring-2 focus:ring-indigo-500 outline-none max-h-48"
+                                    >
+                                        {Array.from({ length: 24 * 12 }).map((_, i) => {
+                                            const h = Math.floor(i / 12);
+                                            const m = (i % 12) * 5;
+                                            const t = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                                            return <option key={t} value={t}>{t}</option>;
+                                        })}
+                                    </select>
                                 </div>
 
                                 <div className="flex items-center gap-2">

@@ -84,6 +84,26 @@ export default async function Home(props: { searchParams: Promise<{ q?: string }
                                 最終: {lastVisit ? format(lastVisit, 'yyyy/MM/dd') : '未受診'}
                               </span>
                             </div>
+
+                            {/* Tags Display */}
+                            {(() => {
+                              let tags: string[] = [];
+                              try {
+                                tags = JSON.parse(patient.tags);
+                              } catch (e) {
+                                // ignore parse error
+                              }
+                              if (tags.length === 0) return null;
+                              return (
+                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                  {tags.map((tag, i) => (
+                                    <span key={i} className="px-1.5 py-0.5 rounded text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-100 font-medium">
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              );
+                            })()}
                           </div>
                           <div className="text-slate-400 group-hover:text-indigo-400">
                             ➔
@@ -97,7 +117,7 @@ export default async function Home(props: { searchParams: Promise<{ q?: string }
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
