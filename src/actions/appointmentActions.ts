@@ -76,3 +76,15 @@ export async function updateAppointmentAction(formData: FormData) {
         return { success: false, message: e.message || '更新に失敗しました' };
     }
 }
+
+export async function checkInAppointmentAction(appointmentId: string) {
+    if (!appointmentId) return { success: false, message: 'IDが不足しています' };
+    try {
+        await import('@/services/appointmentService').then(s => s.checkInAppointment(appointmentId));
+        revalidatePath('/');
+        return { success: true };
+    } catch (e: any) {
+        console.error(e);
+        return { success: false, message: e.message || 'チェックインに失敗しました' };
+    }
+}

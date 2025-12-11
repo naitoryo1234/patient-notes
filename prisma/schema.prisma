@@ -115,7 +115,8 @@ model Appointment {
   startAt     DateTime // 予約日時
   duration    Int      @default(30) // 分単位
   
-  status      String   @default("scheduled") // scheduled, completed, cancelled
+  status      String   @default("scheduled") // scheduled, arrived, completed, cancelled
+  arrivedAt   DateTime? // Check-in time
   memo        String?  // 予約メモ (電話受付など)
   
   staff       Staff?   @relation(fields: [staffId], references: [id])

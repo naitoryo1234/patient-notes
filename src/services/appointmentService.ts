@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { startOfDay, endOfDay } from 'date-fns';
 
@@ -13,13 +14,27 @@ export interface Appointment {
     memo?: string; // patient memo
     staffName?: string;
     staffId?: string;
-    status?: string;
+    status: string; // Changed to required string as per schema default
+    arrivedAt?: Date;
 }
 
 // Helper to calculate overlap
 const hasOverlap = (start1: number, end1: number, start2: number, end2: number) => {
     return start1 < end2 && end1 > start2;
 };
+
+// Define the Prisma return type
+type AppointmentWithRel = Prisma.AppointmentGetPayload<{
+    include: {
+        patient: {
+            include: {
+                _count: { select: { records: true } }
+            }
+        },
+        staff: true,
+    }
+}> & { arrivedAt?: Date }; // Temporarily extend for arrivedAt
+
 
 export const getTodaysAppointments = async (date: Date = new Date()): Promise<Appointment[]> => {
     const start = startOfDay(date);
@@ -42,7 +57,7 @@ export const getTodaysAppointments = async (date: Date = new Date()): Promise<Ap
 
     const patientVisitCounter = new Map<string, number>();
 
-    return appointments.map((a: any) => {
+    return appointments.map((a: AppointmentWithRel) => {
         const currentCount = patientVisitCounter.get(a.patientId) || 0;
         patientVisitCounter.set(a.patientId, currentCount + 1);
 
@@ -62,6 +77,8 @@ export const getTodaysAppointments = async (date: Date = new Date()): Promise<Ap
             staffName: a.staff?.name,
             staffId: a.staffId || undefined,
             status: a.status,
+            // @ts-ignore
+            arrivedAt: a.arrivedAt || undefined,
         };
     });
 };
@@ -93,7 +110,7 @@ export const findAllAppointments = async (options?: { includePast?: boolean; inc
 
     const patientVisitCounter = new Map<string, number>();
 
-    return appointments.map((a: any) => {
+    return appointments.map((a: AppointmentWithRel) => {
         // Only increment counter if we are looking at a coherent list (e.g. sorted by time)
         // For general list, this might be tricky if we mix dates, but assuming chronological order it works for "future visits".
         // Note: If we include past, the "db record count" includes those past visits, so double counting might happen.
@@ -116,7 +133,9 @@ export const findAllAppointments = async (options?: { includePast?: boolean; inc
             memo: a.memo || a.patient.memo || '',
             staffName: a.staff?.name,
             staffId: a.staffId || undefined,
-            status: a.status
+            status: a.status,
+            // @ts-ignore
+            arrivedAt: a.arrivedAt || undefined,
         };
     });
 };
@@ -297,6 +316,17 @@ export const updateAppointment = async (id: string, data: { startAt?: Date, memo
         data: {
             ...data, // Prisma handles undefined as "skip" and null as "set null"
             status: 'scheduled'
+        }
+    });
+};
+
+export const checkInAppointment = async (id: string) => {
+    return await prisma.appointment.update({
+        where: { id },
+        data: {
+            status: 'arrived',
+            // @ts-ignore
+            arrivedAt: new Date()
         }
     });
 };
