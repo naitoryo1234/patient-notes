@@ -377,3 +377,44 @@ export const checkInAppointment = async (id: string) => {
         }
     });
 };
+
+// Get all unresolved admin memos (not limited to today)
+export const getUnresolvedAdminMemos = async (): Promise<Appointment[]> => {
+    const appointments = await prisma.appointment.findMany({
+        where: {
+            adminMemo: { not: null },
+            isMemoResolved: false,
+            status: { not: 'cancelled' }
+        },
+        include: {
+            patient: {
+                include: {
+                    _count: { select: { records: true } }
+                }
+            },
+            staff: true,
+        },
+        orderBy: { startAt: 'desc' }
+    });
+
+    return appointments.map((a: AppointmentWithRel) => {
+        const visitCount = a.patient._count.records + 1;
+        return {
+            id: a.id,
+            patientId: a.patientId,
+            patientName: a.patient.name,
+            patientKana: a.patient.kana,
+            visitDate: a.startAt,
+            duration: a.duration,
+            visitCount,
+            tags: a.patient.tags ? JSON.parse(a.patient.tags as string) : [],
+            memo: a.memo || undefined,
+            adminMemo: a.adminMemo || undefined,
+            isMemoResolved: a.isMemoResolved ?? false,
+            staffName: a.staff?.name,
+            staffId: a.staffId || undefined,
+            status: a.status,
+            arrivedAt: a.arrivedAt || undefined,
+        };
+    });
+};
