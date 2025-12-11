@@ -143,22 +143,12 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                 onClick={() => setDetailAppointment(apt)}
             >
                 <div className="block p-3">
-                    {/* Row 1: Time + Visit Count */}
+                    {/* Row 1: Time + Status Badge + Visit Count */}
                     <div className="flex justify-between items-center mb-2">
-                        <span className={`text-lg font-bold font-mono ${isCancelled ? 'text-slate-400 line-through' : isUpcoming ? 'text-yellow-700' : isJustNow ? 'text-emerald-700' : 'text-slate-700'}`}>
-                            {format(aptTime, 'HH:mm')}-{format(new Date(aptTime.getTime() + apt.duration * 60000), 'HH:mm')}
-                        </span>
-                        <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
-                            {apt.visitCount}回目
-                        </span>
-                    </div>
-
-                    {/* Row 2: Patient Name + Status Badges + Duration */}
-                    <div className="flex justify-between items-center mb-1">
-                        <div className={`font-bold text-base transition-colors ${isCancelled ? 'text-slate-400 line-through' : 'text-slate-800 group-hover:text-blue-600'}`}>
-                            {apt.patientName} <span className="text-xs font-normal text-slate-500 ml-1 decoration-auto">{apt.patientKana}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
+                            <span className={`text-lg font-bold font-mono ${isCancelled ? 'text-slate-400 line-through' : isUpcoming ? 'text-yellow-700' : isJustNow ? 'text-emerald-700' : 'text-slate-700'}`}>
+                                {format(aptTime, 'HH:mm')}-{format(new Date(aptTime.getTime() + apt.duration * 60000), 'HH:mm')}
+                            </span>
                             {isArrived && (
                                 <span className="bg-indigo-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5">
                                     <UserCheck className="w-3 h-3" />
@@ -185,10 +175,20 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                                     完了
                                 </span>
                             )}
-                            <span className="text-[10px] text-slate-400 font-normal">
-                                {apt.duration}分
-                            </span>
                         </div>
+                        <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+                            {apt.visitCount}回目
+                        </span>
+                    </div>
+
+                    {/* Row 2: Patient Name + Duration Badge */}
+                    <div className="flex justify-between items-center mb-1">
+                        <div className={`font-bold text-base transition-colors ${isCancelled ? 'text-slate-400 line-through' : 'text-slate-800 group-hover:text-blue-600'}`}>
+                            {apt.patientName} <span className="text-xs font-normal text-slate-500 ml-1 decoration-auto">{apt.patientKana}</span>
+                        </div>
+                        <span className="text-[10px] bg-slate-50 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
+                            {apt.duration}分
+                        </span>
                     </div>
 
                     {/* Row 3+: Staff and Tags */}
