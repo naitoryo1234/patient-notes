@@ -1,15 +1,23 @@
 'use client';
 
+import { useState } from 'react';
 import { ClinicalRecord, Staff } from '@prisma/client';
 import { format } from 'date-fns';
 import { Trash2, User } from 'lucide-react';
 import { deleteRecord } from '@/actions/recordActions';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface RecordListProps {
     records: (ClinicalRecord & { staff?: Staff | null })[];
 }
 
 export function RecordList({ records }: RecordListProps) {
+    const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; recordId: string; patientId: string }>({
+        open: false,
+        recordId: '',
+        patientId: '',
+    });
+
     if (records.length === 0) {
         return (
             <div className="text-center py-12 text-slate-400 border-2 border-dashed border-slate-100 rounded-lg">
@@ -18,12 +26,10 @@ export function RecordList({ records }: RecordListProps) {
         );
     }
 
-    const handleDelete = async (recordId: string, patientId: string) => {
-        if (window.confirm('この記録を完全に削除してもよろしいですか？\n※この操作は取り消せません。')) {
-            const result = await deleteRecord(recordId, patientId);
-            if (!result.success) {
-                alert('削除に失敗しました');
-            }
+    const handleDelete = async () => {
+        const result = await deleteRecord(deleteConfirm.recordId, deleteConfirm.patientId);
+        if (!result.success) {
+            alert('削除に失敗しました');
         }
     };
 
@@ -56,7 +62,7 @@ export function RecordList({ records }: RecordListProps) {
                             </div>
                             <div>
                                 <button
-                                    onClick={() => handleDelete(record.id, record.patientId)}
+                                    onClick={() => setDeleteConfirm({ open: true, recordId: record.id, patientId: record.patientId })}
                                     className="p-1 text-slate-300 hover:text-red-500 transition-colors"
                                     title="記録を削除"
                                 >
@@ -86,6 +92,16 @@ export function RecordList({ records }: RecordListProps) {
                     </div>
                 );
             })}
+
+            <ConfirmDialog
+                open={deleteConfirm.open}
+                onOpenChange={(open) => setDeleteConfirm(prev => ({ ...prev, open }))}
+                title="この記録を削除しますか？"
+                description="この操作は取り消せません。施術記録が完全に削除されます。"
+                confirmLabel="削除する"
+                variant="danger"
+                onConfirm={handleDelete}
+            />
         </div>
     );
 }
