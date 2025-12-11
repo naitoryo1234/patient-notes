@@ -118,6 +118,7 @@ async function main() {
     })
 
     // === CLINICAL RECORDS (一部患者に履歴追加) ===
+    // Patient 1 (山田): 2回の履歴
     await prisma.clinicalRecord.create({
         data: {
             patientId: patient1.id,
@@ -141,6 +142,48 @@ async function main() {
             assessment: '経過良好',
             plan: '継続治療',
             staffId: director.id
+        }
+    })
+
+    // Patient 2 (予約多杉): 1回の履歴
+    await prisma.clinicalRecord.create({
+        data: {
+            patientId: patient2.id,
+            visitDate: subDays(new Date(), 14),
+            visitCount: 1,
+            subjective: '首から肩にかけてこりがひどい',
+            objective: '僧帽筋緊張',
+            assessment: '肩こり症',
+            plan: 'マッサージ + 温熱療法',
+            staffId: therapist.id
+        }
+    })
+
+    // Patient 3 (田中): 初診記録
+    await prisma.clinicalRecord.create({
+        data: {
+            patientId: patient3.id,
+            visitDate: subDays(new Date(), 5),
+            visitCount: 1,
+            subjective: '頭痛が続いている',
+            objective: '首の可動域制限あり',
+            assessment: '緊張型頭痛',
+            plan: '鍼治療 + 生活指導',
+            staffId: director.id
+        }
+    })
+
+    // Patient 5 (佐藤): 膝痛の履歴
+    await prisma.clinicalRecord.create({
+        data: {
+            patientId: patient5.id,
+            visitDate: subDays(new Date(), 10),
+            visitCount: 1,
+            subjective: '階段の上り下りで膝が痛い',
+            objective: '右膝内側圧痛、腫脹あり',
+            assessment: '変形性膝関節症の疑い',
+            plan: '電気治療 + 膝周囲筋強化',
+            staffId: therapist.id
         }
     })
 
@@ -245,7 +288,7 @@ async function main() {
         }
     })
 
-    // 9. 14:00 - 午後の予約
+    // 9. 14:00 - 午後の予約（申し送りあり・未確認）
     await prisma.appointment.create({
         data: {
             patientId: patient3.id,
@@ -253,11 +296,13 @@ async function main() {
             duration: 90,
             status: 'scheduled',
             memo: '初診。問診票記入あり。時間多めに確保。',
+            adminMemo: '初診のため、問診票の記入時間を考慮してください。',
+            isMemoResolved: false,
             staffId: director.id
         }
     })
 
-    // 10. 15:30 - 午後の予約（長文メモテスト）
+    // 10. 15:30 - 午後の予約（長文メモテスト、申し送りあり・確認済み）
     await prisma.appointment.create({
         data: {
             patientId: patient6.id,
@@ -265,6 +310,8 @@ async function main() {
             duration: 60,
             status: 'scheduled',
             memo: 'この患者は非常に詳細なメモを持っています。例えば、初診時の様子から、趣味、家族構成、ペットの名前（ポチ、タマ、ミケ）、好きな食べ物（カレーライス、特に辛口）、嫌いな食べ物（ピーマン、ニンジン）、過去の病歴（幼少期に水疱瘡、20代で骨折）、最近の旅行先（北海道、沖縄、グアム）、休日の過ごし方（読書、映画鑑賞、ハイキング）、仕事の内容（IT企業のプロジェクトマネージャー、最近は残業が多い）、ストレスの要因（上司との人間関係、満員電車）、睡眠時間（平均6時間、最近は不眠気味）、運動習慣（週に1回のジョギング、ジム通いは続かなかった）、サプリメントの摂取状況（ビタミンC、亜鉛）、アレルギーの有無（花粉症、ハウスダスト）、等々、ありとあらゆる情報がここに記載されています。これにより、UI上でメモ欄がどのように表示されるか、折り返しが正しく行われるか、スクロールが発生するか、レイアウト崩れが起きないかなどを検証することが可能です。',
+            adminMemo: '長文患者のため、カウンセリング時間を長めに確保済み。',
+            isMemoResolved: true,
             staffId: director.id
         }
     })
@@ -353,7 +400,7 @@ async function main() {
     console.log('📊 Created:')
     console.log('   - 2 Staff members')
     console.log('   - 6 Patients (various cases)')
-    console.log('   - 2 Clinical Records')
+    console.log('   - 5 Clinical Records (with visit history)')
     console.log('   - 18 Appointments (12 today, 6 other days)')
     console.log('')
     console.log('⏰ Current simulation time: 2025-12-11 10:13')
@@ -363,6 +410,7 @@ async function main() {
     console.log('   - Upcoming (within 1 hour)')
     console.log('   - Cancelled')
     console.log('   - Unassigned (要対応)')
+    console.log('   - Admin Memos (confirmed + unconfirmed)')
     console.log('   - Various durations (15/30/45/60/90 mins)')
     console.log('   - Long memo test')
     console.log('   - 🔥 Same time slot with different staff (13:00)')

@@ -155,7 +155,7 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
                         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg shadow-sm hover:shadow flex items-center justify-center gap-2 transition-all"
                     >
                         <ExternalLink className="w-4 h-4" />
-                        詳細・カルテを開く
+                        カルテ記入
                     </button>
 
                     <div className="grid grid-cols-2 gap-2 mt-1">
