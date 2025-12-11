@@ -9,7 +9,7 @@ import { AiUsageGuidePatient } from '@/components/guide/AiUsageGuidePatient';
 
 import { checkDuplicates } from '@/actions/patientActions';
 import Link from 'next/link';
-import { TERMS } from '@/config/labels';
+import { TERMS, LABELS } from '@/config/labels';
 
 interface PatientFormContainerProps {
     action: (formData: FormData) => Promise<any>;
@@ -27,7 +27,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
     const handleParse = async () => {
         setIsChecking(true);
         const parsed = parseAiText(aiText);
-        console.log('AI Parsed Result (Patient):', parsed);
+        // console.log('AI Parsed Result (Patient):', parsed);
 
         // Merge parsed data into form state
         // Note: ConfigForm uses "name", "kana", "birthDate" etc matching the ParsedRecord keys.
@@ -77,9 +77,9 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                 {duplicates.length > 0 && (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 animate-in fade-in slide-in-from-top-1">
                         <div className="flex items-center gap-2 mb-2 text-yellow-800 font-bold">
-                            <span>⚠️</span> 似ている{TERMS.PATIENT}が見つかりました
+                            <span>⚠️</span> {LABELS.VALIDATION.DUPLICATE_TITLE}
                         </div>
-                        <p className="text-sm text-yellow-700 mb-3">以下の{TERMS.PATIENT}は既に登録されています。同一人物の可能性があります。</p>
+                        <p className="text-sm text-yellow-700 mb-3">{LABELS.VALIDATION.DUPLICATE_DESC}</p>
                         <ul className="space-y-2">
                             {duplicates.map((d: any) => (
                                 <li key={d.id} className="bg-white border border-yellow-100 rounded-md p-3 text-sm flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
@@ -100,15 +100,15 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                             ))}
                         </ul>
                         <div className="mt-3 text-xs text-yellow-600 font-medium text-right">
-                            ※ 別人の場合は、そのまま新規登録を行ってください
+                            {LABELS.VALIDATION.DUPLICATE_IGNORE}
                         </div>
                     </div>
                 )}
 
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-xs text-slate-500 font-bold">氏名</label>
+                            <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.NAME}</label>
                             <input
                                 type="text"
                                 value={formValues.name || ''}
@@ -117,7 +117,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs text-slate-500 font-bold">ふりがな</label>
+                            <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.KANA}</label>
                             <input
                                 type="text"
                                 value={formValues.kana || ''}
@@ -126,7 +126,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs text-slate-500 font-bold">生年月日</label>
+                            <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.BIRTHDATE}</label>
                             <input
                                 type="text"
                                 placeholder="YYYY-MM-DD"
@@ -136,7 +136,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs text-slate-500 font-bold">電話番号</label>
+                            <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.PHONE}</label>
                             <input
                                 type="text"
                                 value={formValues.phone || ''}
@@ -145,21 +145,21 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs text-slate-500 font-bold">性別</label>
+                            <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.GENDER}</label>
                             <select
                                 value={formValues.gender || ''}
                                 onChange={(e) => setFormValues({ ...formValues, gender: e.target.value })}
                                 className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
                             >
-                                <option value="">選択してください</option>
-                                <option value="男性">男性</option>
-                                <option value="女性">女性</option>
-                                <option value="その他">その他</option>
+                                <option value="">{LABELS.PATIENT_FORM.GENDER_OPTIONS.SELECT}</option>
+                                <option value={LABELS.PATIENT_FORM.GENDER_OPTIONS.MALE}>{LABELS.PATIENT_FORM.GENDER_OPTIONS.MALE}</option>
+                                <option value={LABELS.PATIENT_FORM.GENDER_OPTIONS.FEMALE}>{LABELS.PATIENT_FORM.GENDER_OPTIONS.FEMALE}</option>
+                                <option value={LABELS.PATIENT_FORM.GENDER_OPTIONS.OTHER}>{LABELS.PATIENT_FORM.GENDER_OPTIONS.OTHER}</option>
                             </select>
                         </div>
                     </div>
                     <div className="pt-2 border-t border-slate-200 space-y-1">
-                        <label className="text-xs text-slate-500 font-bold">メモ</label>
+                        <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.MEMO}</label>
                         <textarea
                             value={formValues.memo || ''}
                             onChange={(e) => setFormValues({ ...formValues, memo: e.target.value })}
@@ -169,8 +169,8 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                 </div>
 
                 <div className="flex justify-end gap-2">
-                    <Button variant="ghost" onClick={handleBackToAi}>テキストに戻る</Button>
-                    <Button onClick={handleConfirm} className="bg-blue-600 text-white">この内容でフォームを作成</Button>
+                    <Button variant="ghost" onClick={handleBackToAi}>{LABELS.PATIENT_FORM.BACK_TO_TEXT}</Button>
+                    <Button onClick={handleConfirm} className="bg-blue-600 text-white">{LABELS.PATIENT_FORM.CONFIRM_CREATE_MODE}</Button>
                 </div>
             </div>
         );
@@ -186,14 +186,14 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                         className={`text-xs px-3 py-1.5 rounded-md transition-all ${mode === 'manual' ? 'bg-white shadow-sm text-slate-900 font-medium' : 'text-slate-500 hover:text-slate-700'
                             }`}
                     >
-                        通常入力
+                        {LABELS.PATIENT_FORM.MANUAL_MODE}
                     </button>
                     <button
                         onClick={() => setMode('ai')}
                         className={`text-xs px-3 py-1.5 rounded-md transition-all flex items-center gap-1 ${mode === 'ai' ? 'bg-indigo-50 text-indigo-700 font-medium shadow-sm' : 'text-slate-500 hover:text-slate-700'
                             }`}
                     >
-                        <span>✨</span> AI取込 (Beta)
+                        <span>✨</span> {LABELS.PATIENT_FORM.AI_MODE_BTN}
                     </button>
                 </div>
             </div>
@@ -201,8 +201,8 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
             {mode === 'ai' ? (
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="bg-indigo-50 border border-indigo-100 rounded-md p-4 text-sm text-indigo-800">
-                        <p className="font-bold mb-2">💡 {TERMS.PATIENT}データをテキストから取り込む</p>
-                        <p className="mb-2">既存のカルテやExcelなどから、以下の形式でテキストを貼り付けると自動入力できます。</p>
+                        <p className="font-bold mb-2">💡 {LABELS.AI_MODE.TITLE}</p>
+                        <p className="mb-2">{LABELS.AI_MODE.DESC}</p>
                         <pre className="bg-white/50 p-2 rounded text-xs font-mono border border-indigo-100/50">
                             {`氏名: 山田 太郎
 かな: やまだ たろう
@@ -219,14 +219,14 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                     </div>
                     <textarea
                         className="w-full h-64 p-3 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono"
-                        placeholder="ここにテキストを貼り付けてください..."
+                        placeholder={LABELS.AI_MODE.PLACEHOLDER}
                         value={aiText}
                         onChange={(e) => setAiText(e.target.value)}
                     />
                     <div className="flex justify-end gap-2">
-                        <Button variant="ghost" onClick={() => setMode('manual')}>キャンセル</Button>
+                        <Button variant="ghost" onClick={() => setMode('manual')}>{LABELS.DIALOG.DEFAULT_CANCEL}</Button>
                         <Button onClick={handleParse} disabled={!aiText.trim()} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                            解析して確認
+                            {LABELS.AI_MODE.ANALYZE_BUTTON}
                         </Button>
                     </div>
                 </div>

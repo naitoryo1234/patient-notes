@@ -1,5 +1,15 @@
 # INIT_ROUTER_TEAM_HARU.md
 
+<!--
+<!--
+AI AGENT INSTRUCTION:
+This file is a "Router" to load necessary context.
+You MUST read all documents marked as **(必須)** or **(Mandatory)** immediately upon opening this file.
+Other documents (e.g. implementation guides) are for "Reference on Demand" - read them only when relevant to your current task.
+Do NOT skip reading the Mandatory files. Creating a robust context is your first priority.
+-->
+-->
+
 **Team HARU（Fullstack Development: UI/Backend/DB）** のエージェント用・初期化ルーターです。
 「やさしいミニCRM」を実現するため、以下の手順に従って情報をロードし、自身のモードと役割を確立してください。
 

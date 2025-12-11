@@ -1,17 +1,25 @@
+import { LABELS } from './labels';
+
 // Config-Driven Form Definitions
 
 export const PatientFormConfig = [
-    { name: 'name', label: '氏名', type: 'text', required: true, placeholder: '山田 太郎' },
-    { name: 'kana', label: 'ふりがな', type: 'text', required: true, placeholder: 'やまだ たろう' },
-    { name: 'phone', label: '電話番号', type: 'tel', placeholder: '090-1234-5678' },
-    { name: 'birthDate', label: '生年月日', type: 'date' },
-    { name: 'gender', label: '性別', type: 'select', options: ['男性', '女性', 'その他'] },
-    { name: 'memo', label: 'メモ (特徴など)', type: 'textarea', rows: 3 },
+    { name: 'name', label: LABELS.PATIENT_FORM.NAME, type: 'text', required: true, placeholder: LABELS.PATIENT_FORM.PLACEHOLDER_NAME },
+    { name: 'kana', label: LABELS.PATIENT_FORM.KANA, type: 'text', required: true, placeholder: LABELS.PATIENT_FORM.PLACEHOLDER_KANA },
+    { name: 'phone', label: LABELS.PATIENT_FORM.PHONE, type: 'tel', placeholder: LABELS.PATIENT_FORM.PLACEHOLDER_PHONE },
+    { name: 'birthDate', label: LABELS.PATIENT_FORM.BIRTHDATE, type: 'date' },
+    {
+        name: 'gender', label: LABELS.PATIENT_FORM.GENDER, type: 'select', options: [
+            LABELS.PATIENT_FORM.GENDER_OPTIONS.MALE,
+            LABELS.PATIENT_FORM.GENDER_OPTIONS.FEMALE,
+            LABELS.PATIENT_FORM.GENDER_OPTIONS.OTHER
+        ]
+    },
+    { name: 'memo', label: LABELS.PATIENT_FORM.MEMO, type: 'textarea', rows: 3 },
     {
         name: 'tags',
-        label: 'タグ',
+        label: LABELS.PATIENT_FORM.TAGS,
         type: 'tags',
-        placeholder: 'Enterで追加 (例: 腰痛)',
+        placeholder: LABELS.PATIENT_FORM.TAGS_PLACEHOLDER,
         options: []
     }
 ];

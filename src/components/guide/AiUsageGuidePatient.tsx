@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Copy, Sparkles } from "lucide-react"
+import { LABELS } from '@/config/labels';
 
 export function AiUsageGuidePatient() {
     const promptTemplate = `以下の患者情報を抽出して形式を整えてください。
@@ -36,17 +37,17 @@ Memo:
             <DialogTrigger asChild>
                 <button className="flex items-center gap-2 text-indigo-600 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-full text-xs transition-colors mb-2">
                     <Sparkles className="w-4 h-4" />
-                    <span className="font-bold">プロンプトをコピー</span>
+                    <span className="font-bold">{LABELS.AI_MODE.GUIDE.BUTTON}</span>
                 </button>
             </DialogTrigger>
             <DialogContent className="max-w-xl">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-indigo-500" />
-                        新規登録用プロンプト
+                        {LABELS.AI_MODE.GUIDE.TITLE}
                     </DialogTitle>
                     <DialogDescription>
-                        LINEやメールでの問い合わせ文章から、患者登録データを抽出するためのプロンプトです。AIチャットツールに貼り付けてご使用ください。
+                        {LABELS.AI_MODE.GUIDE.DESC}
                     </DialogDescription>
                 </DialogHeader>
 
