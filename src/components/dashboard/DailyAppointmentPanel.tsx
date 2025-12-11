@@ -176,7 +176,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                                 </span>
                             )}
                         </div>
-                        <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] bg-slate-50 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
                             {apt.visitCount}回目
                         </span>
                     </div>
@@ -207,11 +207,16 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                             <div className="text-xs text-slate-300 mb-1">-</div>
                         )}
                         <div className="flex flex-wrap gap-1 mt-1">
-                            {apt.tags.slice(0, 3).map((tag, i) => (
+                            {apt.tags.slice(0, 2).map((tag, i) => (
                                 <span key={i} className="text-[10px] px-1.5 py-0.5 bg-white border border-slate-200 text-slate-500 rounded text-xs">
                                     {tag}
                                 </span>
                             ))}
+                            {apt.tags.length > 2 && (
+                                <span className="text-[10px] px-1.5 py-0.5 text-slate-400">
+                                    +{apt.tags.length - 2}
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>
