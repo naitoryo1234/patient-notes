@@ -146,7 +146,10 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                     <div className="flex justify-between items-start mb-1">
                         <div className="flex items-center gap-2">
                             <span className={`text-lg font-bold font-mono ${isCancelled ? 'text-slate-400 line-through' : isUpcoming ? 'text-yellow-700' : isJustNow ? 'text-emerald-700' : 'text-slate-700'}`}>
-                                {format(aptTime, 'HH:mm')}
+                                {format(aptTime, 'HH:mm')} - {format(new Date(aptTime.getTime() + apt.duration * 60000), 'HH:mm')}
+                            </span>
+                            <span className="text-xs text-slate-500 font-normal">
+                                ({apt.duration}分)
                             </span>
                             {isArrived && (
                                 <span className="bg-indigo-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5">
