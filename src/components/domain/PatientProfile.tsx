@@ -8,6 +8,7 @@ import { Pencil, Check, X, Trash2, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { updatePatientMemo, updatePatientTags, deletePatient } from '@/actions/patientActions';
 import { useRouter } from 'next/navigation';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface PatientProfileProps {
     patient: Patient;
@@ -17,6 +18,8 @@ export function PatientProfile({ patient }: PatientProfileProps) {
     const router = useRouter();
     const [isEditingMemo, setIsEditingMemo] = useState(false);
     const [isEditingTags, setIsEditingTags] = useState(false);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
 
     // Initial State from Props
     const [memo, setMemo] = useState(patient.memo || '');
@@ -64,10 +67,6 @@ export function PatientProfile({ patient }: PatientProfileProps) {
     };
 
     const handleDelete = async () => {
-        if (!confirm('本当にこの患者を削除しますか？\n※未来の予約は自動的にキャンセルされます。')) {
-            return;
-        }
-
         const result = await deletePatient(patient.id);
         if (result.success) {
             router.push('/');
@@ -127,7 +126,7 @@ export function PatientProfile({ patient }: PatientProfileProps) {
                 <Button
                     variant="ghost"
                     size="icon"
-                    onClick={handleDelete}
+                    onClick={() => setDeleteConfirmOpen(true)}
                     className="h-8 w-8 text-slate-500 hover:text-red-600 bg-slate-50 hover:bg-red-50 border border-slate-200 hover:border-red-200 shadow-sm transition-all ml-1"
                     title="患者を削除"
                 >
@@ -236,6 +235,16 @@ export function PatientProfile({ patient }: PatientProfileProps) {
                     </div>
                 )}
             </div>
+
+            <ConfirmDialog
+                open={deleteConfirmOpen}
+                onOpenChange={setDeleteConfirmOpen}
+                title="この患者を削除しますか？"
+                description="この操作は取り消せません。患者情報と関連する全ての記録が削除され、未来の予約は自動的にキャンセルされます。"
+                confirmLabel="削除する"
+                variant="danger"
+                onConfirm={handleDelete}
+            />
         </div>
     );
 }
