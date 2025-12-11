@@ -46,13 +46,11 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
     // Filter Logic
     // Memos are from today's appointments (history kept for day)
     const memoAppointments = appointments.filter(a => {
-        // @ts-ignore
         return a.adminMemo && a.status !== 'cancelled';
     });
 
     // Counts
     const unresolvedMemoCount = memoAppointments.filter(a => {
-        // @ts-ignore
         return !a.isMemoResolved;
     }).length;
 
@@ -314,7 +312,6 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                                             </h3>
                                             <ul className="space-y-1">
                                                 {memoAppointments.map(apt => {
-                                                    // @ts-ignore
                                                     const isResolved = apt.isMemoResolved;
 
                                                     const handleResolveClick = async (e: React.MouseEvent) => {
@@ -353,7 +350,6 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                                                                 ? 'text-slate-500 bg-slate-100'
                                                                 : 'text-red-800 bg-red-50'
                                                                 }`}>
-                                                                {/* @ts-ignore */}
                                                                 {apt.adminMemo}
                                                             </p>
                                                             {!isResolved && (

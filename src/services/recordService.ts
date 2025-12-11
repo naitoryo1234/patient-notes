@@ -13,6 +13,11 @@ export const getRecordsByPatientId = async (patientId: string) => {
 };
 
 export const createRecord = async (data: RecordInput, patientId: string) => {
+    // Validate staffId is provided (required by schema)
+    if (!data.staffId) {
+        throw new Error('担当者の選択は必須です');
+    }
+
     // Auto-increment visit count
     const count = await prisma.clinicalRecord.count({
         where: { patientId },
@@ -30,7 +35,7 @@ export const createRecord = async (data: RecordInput, patientId: string) => {
             tags: JSON.stringify(data.tags || []),
             metadata: '{}',
             rawText: '', // Future use
-            staffId: data.staffId || null,
+            staffId: data.staffId,
         },
     });
 };

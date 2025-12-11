@@ -81,7 +81,6 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
     const pendingAssignments = appointments.filter(a => !a.staffId && a.status !== 'cancelled').length;
 
     const pendingMemos = appointments.filter(a => {
-        // @ts-ignore
         return a.adminMemo && !a.isMemoResolved && a.status !== 'cancelled';
     }).length;
 

@@ -95,7 +95,6 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
     const pendingAssignments = initialAppointments.filter(a => !a.staffId && a.status !== 'cancelled').length;
 
     const pendingMemos = initialAppointments.filter(a => {
-        // @ts-ignore
         return a.adminMemo && !a.isMemoResolved && a.status !== 'cancelled';
     }).length;
 
@@ -326,37 +325,27 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                                 )}
                                             </div>
 
-
                                             {/* Admin Memo Display */}
-                                            {/* @ts-ignore */}
                                             {apt.adminMemo && (
                                                 <div
-                                                    className={`mt-2 p-2 rounded text-xs border cursor-pointer transition-colors flex items-start gap-1.5 ${
-                                                        // @ts-ignore
-                                                        !apt.isMemoResolved && !isCancelled
+                                                    className={`mt-2 p-2 rounded text-xs border cursor-pointer transition-colors flex items-start gap-1.5 ${!apt.isMemoResolved && !isCancelled
                                                             ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
                                                             : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 opacity-80'
                                                         }`}
                                                     onClick={async (e) => {
                                                         e.stopPropagation();
-                                                        // @ts-ignore
                                                         if (!confirm(apt.isMemoResolved ? '申し送り事項を未確認に戻しますか？' : '申し送り事項を確認済みにしますか？')) return;
-                                                        // @ts-ignore
                                                         await toggleAdminMemoResolutionAction(apt.id, !apt.isMemoResolved);
                                                         router.refresh();
                                                     }}
                                                     title="クリックして確認状態を切り替え"
                                                 >
-                                                    <AlertTriangle className={`w-3.5 h-3.5 mt-0.5 min-w-[14px] ${
-                                                        // @ts-ignore
-                                                        !apt.isMemoResolved && !isCancelled ? 'text-red-500' : 'text-slate-400'
+                                                    <AlertTriangle className={`w-3.5 h-3.5 mt-0.5 min-w-[14px] ${!apt.isMemoResolved && !isCancelled ? 'text-red-500' : 'text-slate-400'
                                                         }`} />
                                                     <div className="flex-1 leading-snug">
                                                         <span className="font-bold mr-1 block text-[10px] opacity-70">事務用申し送り:</span>
-                                                        {/* @ts-ignore */}
                                                         {apt.adminMemo}
                                                     </div>
-                                                    {/* @ts-ignore */}
                                                     {(apt.isMemoResolved || isCancelled) && <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 ml-1 text-slate-400" />}
                                                 </div>
                                             )}

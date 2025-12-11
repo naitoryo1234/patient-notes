@@ -155,10 +155,8 @@ export function AppointmentEditModal({ appointment, staffList, isOpen, onClose }
                             ⚠️ 申し送り事項 (管理者メモ)
                         </label>
                         <textarea
-                            // @ts-ignore
                             name="adminMemo"
                             rows={2}
-                            // @ts-ignore
                             defaultValue={appointment.adminMemo || ''}
                             className="w-full border-red-200 rounded-md focus:ring-red-500 text-sm bg-white mb-2"
                             placeholder="スタッフ間での注意事項など（右カラムの要確認に表示されます）"
@@ -168,7 +166,6 @@ export function AppointmentEditModal({ appointment, staffList, isOpen, onClose }
                                 type="checkbox"
                                 name="isMemoResolved"
                                 value="true"
-                                // @ts-ignore
                                 defaultChecked={appointment.isMemoResolved}
                                 className="rounded border-red-300 text-red-600 focus:ring-red-500"
                             />

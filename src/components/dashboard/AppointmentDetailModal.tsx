@@ -105,7 +105,6 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
                     )}
 
                     {/* Admin Memo (Alert) */}
-                    {/* @ts-ignore: adminMemo not yet showing in lint maybe */}
                     {appointment.adminMemo && !appointment.isMemoResolved && (
                         <div className="bg-red-50 border border-red-100 rounded-md p-3">
                             <div className="flex items-center gap-2 text-red-700 font-bold text-sm mb-1">
@@ -113,7 +112,7 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
                                 <span>申し送り事項</span>
                             </div>
                             <p className="text-sm text-red-800 mb-2">
-                                {(appointment as any).adminMemo}
+                                {appointment.adminMemo}
                             </p>
 
                             <button

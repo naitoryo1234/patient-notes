@@ -26,6 +26,8 @@ const hasOverlap = (start1: number, end1: number, start2: number, end2: number) 
 };
 
 // Define the Prisma return type
+// Note: adminMemo, isMemoResolved, arrivedAt are already in the Prisma schema
+// so AppointmentGetPayload correctly includes them.
 type AppointmentWithRel = Prisma.AppointmentGetPayload<{
     include: {
         patient: {
@@ -35,7 +37,7 @@ type AppointmentWithRel = Prisma.AppointmentGetPayload<{
         },
         staff: true,
     }
-}> & { arrivedAt?: Date | null; adminMemo?: string | null; isMemoResolved?: boolean | null }; // Relaxed types for nullable DB fields
+}>;
 
 export const getTodaysAppointments = async (date: Date = new Date()): Promise<Appointment[]> => {
     const start = startOfDay(date);
@@ -75,14 +77,11 @@ export const getTodaysAppointments = async (date: Date = new Date()): Promise<Ap
             visitCount: visitCount,
             tags: a.patient.tags ? JSON.parse(a.patient.tags) : [],
             memo: a.memo || a.patient.memo || '',
-            // @ts-ignore
             adminMemo: a.adminMemo || undefined,
-            // @ts-ignore
-            isMemoResolved: a.isMemoResolved || false,
+            isMemoResolved: a.isMemoResolved ?? false,
             staffName: a.staff?.name,
             staffId: a.staffId || undefined,
             status: a.status,
-            // @ts-ignore
             arrivedAt: a.arrivedAt || undefined,
         };
     });
@@ -136,14 +135,11 @@ export const findAllAppointments = async (options?: { includePast?: boolean; inc
             visitCount: visitCount,
             tags: a.patient.tags ? JSON.parse(a.patient.tags) : [],
             memo: a.memo || a.patient.memo || '',
-            // @ts-ignore
             adminMemo: a.adminMemo || undefined,
-            // @ts-ignore
-            isMemoResolved: a.isMemoResolved || false,
+            isMemoResolved: a.isMemoResolved ?? false,
             staffName: a.staff?.name,
             staffId: a.staffId || undefined,
             status: a.status,
-            // @ts-ignore
             arrivedAt: a.arrivedAt || undefined,
         };
     });
@@ -151,7 +147,6 @@ export const findAllAppointments = async (options?: { includePast?: boolean; inc
 
 export const getUnassignedFutureAppointments = async (): Promise<Appointment[]> => {
     const now = new Date();
-    // Start of "future" should probably include today? Yes, "gte: now" does that.
 
     // We want all unassigned valid appointments from now.
     const appointments = await prisma.appointment.findMany({
@@ -162,14 +157,7 @@ export const getUnassignedFutureAppointments = async (): Promise<Appointment[]> 
         },
         include: {
             patient: {
-                select: {
-                    id: true,
-                    name: true,
-                    kana: true,
-                    birthDate: true,
-                    gender: true,
-                    tags: true,
-                    memo: true,
+                include: {
                     _count: { select: { records: true } }
                 }
             },
@@ -178,7 +166,7 @@ export const getUnassignedFutureAppointments = async (): Promise<Appointment[]> 
         orderBy: { startAt: 'asc' },
     });
 
-    return appointments.map((a: AppointmentWithRel) => {
+    return appointments.map((a) => {
         return {
             id: a.id,
             patientId: a.patientId,
@@ -186,17 +174,14 @@ export const getUnassignedFutureAppointments = async (): Promise<Appointment[]> 
             patientKana: a.patient.kana,
             visitDate: a.startAt,
             duration: a.duration || 60,
-            visitCount: (a.patient._count.records || 0) + 1, // Simplified count logic for search list
+            visitCount: (a.patient._count.records || 0) + 1,
             tags: a.patient.tags ? JSON.parse(a.patient.tags) : [],
             memo: a.memo || a.patient.memo || '',
-            // @ts-ignore
             adminMemo: a.adminMemo || undefined,
-            // @ts-ignore
-            isMemoResolved: a.isMemoResolved || false,
+            isMemoResolved: a.isMemoResolved ?? false,
             staffName: undefined,
             staffId: undefined,
             status: a.status,
-            // @ts-ignore
             arrivedAt: a.arrivedAt || undefined,
         };
     });
@@ -388,7 +373,6 @@ export const checkInAppointment = async (id: string) => {
         where: { id },
         data: {
             status: 'arrived',
-            // @ts-ignore
             arrivedAt: new Date()
         }
     });
