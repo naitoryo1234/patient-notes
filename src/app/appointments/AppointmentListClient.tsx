@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Pencil, Trash2, Calendar, User, History, CheckCircle2, XCircle, CalendarClock, AlertCircle, AlertTriangle, ChevronLeft, ChevronRight, X, FileText } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { LABELS } from '@/config/labels';
 
 interface AppointmentListClientProps {
     initialAppointments: Appointment[];
@@ -428,9 +429,9 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
             <ConfirmDialog
                 open={cancelConfirm.open}
                 onOpenChange={(open) => setCancelConfirm(prev => ({ ...prev, open }))}
-                title="この予約をキャンセルしますか？"
-                description="キャンセルした予約は予約一覧に「キャンセル」と表示されます。"
-                confirmLabel="キャンセルする"
+                title={LABELS.APPOINTMENT.CANCEL_CONFIRM_TITLE}
+                description={LABELS.APPOINTMENT.CANCEL_CONFIRM_DESC}
+                confirmLabel={LABELS.APPOINTMENT.CANCEL_EXECUTE}
                 variant="warning"
                 onConfirm={handleDelete}
             />
@@ -438,9 +439,9 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
             <ConfirmDialog
                 open={memoConfirm.open}
                 onOpenChange={(open) => setMemoConfirm(prev => ({ ...prev, open }))}
-                title={memoConfirm.resolved ? '申し送り事項を確認済みにしますか？' : '申し送り事項を未確認に戻しますか？'}
-                description={memoConfirm.resolved ? '確認済みにすると、この項目のアラート表示が解除されます。' : '未確認に戻すと、再度アラート表示になります。'}
-                confirmLabel="変更する"
+                title={memoConfirm.resolved ? LABELS.APPOINTMENT.MEMO_RESOLVE_TITLE : LABELS.APPOINTMENT.MEMO_UNRESOLVE_TITLE}
+                description={memoConfirm.resolved ? LABELS.APPOINTMENT.MEMO_RESOLVE_DESC : LABELS.APPOINTMENT.MEMO_UNRESOLVE_DESC}
+                confirmLabel={LABELS.APPOINTMENT.CHANGE_STATUS}
                 variant="primary"
                 onConfirm={handleMemoToggle}
             />

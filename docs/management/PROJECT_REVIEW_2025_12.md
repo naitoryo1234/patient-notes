@@ -71,3 +71,17 @@
 
 ## 4. 結論
 システムは堅牢であり、小規模クリニックのコア要件を十分に満たしています。開発の焦点は適切に「機能の量」から「機能の質（信頼性）」へとシフトしました。トップページの軽微なリファクタリングさえ行えば、自信を持って **Phase 10 (設定/エクスポート)** へと進むことができます。
+
+---
+
+## 5. Post-Review Updates (v1.2 Launch Pad)
+
+### ✅ Completed
+- **ConfirmDialog実装 (2025-12-11)**:
+    - モバイル/PCでの操作感を統一するため、既存の `window.confirm` を全てカスタムモーダル `ConfirmDialog` に置換完了。
+    - バリアント（Danger/Warning/Primary）により、操作の危険度を視覚的に伝達可能に改善。
+
+### 🚧 In Progress (Phase 10: v1.2 Launch Pad)
+- **Label Management (変数化)**:
+    - `src/config/labels.ts` を導入し、ハードコードされたテキスト（保存、キャンセル、確認メッセージ等）の集約を開始。
+    - `AppointmentListClient` および `ConfirmDialog` への適用完了。

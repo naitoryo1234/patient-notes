@@ -30,7 +30,7 @@ description: セッション完了時の引き継ぎレポート（完了タス�
    - 一時的な修正（`@ts-ignore` 等）があれば明記します。
 
 7. **引き継ぎメッセージの生成 (Generate Handover Message)**:
-   - 以下の形式に従い、**メッセージ全体を Markdown のコードブロック (```markdown ... ```) で囲んで**出力してください。
+   - 以下の形式に従い、メッセージ全体を Markdown のコードブロック (markdown ... ) で囲んで出力してください。【重要】ファイルパスを出力する際は、cci:// などの内部リンクやMarkdownリンク形式を使わず、単なるプレーンテキスト（例: src/App.tsx）として出力してください。
    - これにより、ユーザーは出力全体をコピーするだけで次回セッションへの引き継ぎ準備が完了します。
    
    - 出力フォーマット例:
@@ -52,17 +52,13 @@ description: セッション完了時の引き継ぎレポート（完了タス�
 
      ## ⚠️ 技術的な注意点
      - [DB、環境変数、再起動に関するメモなど]
-
-     ## 🤖 次回開始用プロンプト (Copy & Paste)
-     Ref: docs/ai-host/INIT_ROUTER_TEAM_HARU.md
-     Review: docs/management/IMPROVEMENT_PROPOSALS.md
      
-     > **SYSTEM INSTRUCTION**:
-     > Initialize the session context using INIT_ROUTER_TEAM_HARU.md.
-     > Language: JAPANESE ONLY (Response, Thinking, Confirmation).
+     > **システム指示 (SYSTEM INSTRUCTION)**:
+     > docs/ai-host/INIT_ROUTER_TEAM_HARU.md を使用してセッションを初期化してください。
+     > 言語: 日本語のみを使用してください（思考、応答、確認を含む）。
      >
-     > **USER OBJECTIVE**: [ここに次回のタスク概要、例: ダッシュボード改善]
+     > **ユーザーの目的 (USER OBJECTIVE)**: [ここに次回のタスク概要、例: ダッシュボード改善]
      >
-     > **MANDATORY CHECK**: Run /quality_check before marking any task as done.
+     > **必須チェック (MANDATORY CHECK)**: タスク完了とする前に必ず /quality_check を実行してください。
      ```
      ````

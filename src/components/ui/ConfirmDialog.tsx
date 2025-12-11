@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { AlertTriangle, Info, Trash2, X } from 'lucide-react';
 
+import { LABELS } from '@/config/labels';
+
 interface ConfirmDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -19,8 +21,8 @@ export function ConfirmDialog({
     onOpenChange,
     title,
     description,
-    confirmLabel = '確認',
-    cancelLabel = 'キャンセル',
+    confirmLabel = LABELS.DIALOG.DEFAULT_CONFIRM,
+    cancelLabel = LABELS.DIALOG.DEFAULT_CANCEL,
     variant = 'primary',
     onConfirm,
 }: ConfirmDialogProps) {
@@ -115,7 +117,7 @@ export function ConfirmDialog({
                             type="button"
                             className={`flex-1 px-4 py-2.5 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${config.buttonBg}`}
                         >
-                            {loading ? '処理中...' : confirmLabel}
+                            {loading ? LABELS.COMMON.PROCESSING : confirmLabel}
                         </button>
                     </div>
                 </div>
