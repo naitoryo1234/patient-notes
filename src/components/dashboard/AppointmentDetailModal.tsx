@@ -5,7 +5,8 @@ import { Appointment } from '@/services/appointmentService';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { UserCheck, Pencil, FileText, AlertTriangle, CheckCircle, ExternalLink, X } from 'lucide-react';
-import { updateAppointmentAction } from '@/actions/appointmentActions'; // Reuse update action for resolving memo
+import { updateAppointmentAction } from '@/actions/appointmentActions';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface AppointmentDetailModalProps {
     appointment: Appointment;
@@ -18,6 +19,7 @@ interface AppointmentDetailModalProps {
 export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, onCheckIn }: AppointmentDetailModalProps) {
     const router = useRouter();
     const [isResolving, setIsResolving] = useState(false);
+    const [confirmOpen, setConfirmOpen] = useState(false);
 
     if (!isOpen) return null;
 
@@ -30,30 +32,18 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
     };
 
     const handleResolveAdminMemo = async () => {
-        if (!confirm('申し送り事項を確認済みにしますか？（「要確認」から消えます）')) return;
         setIsResolving(true);
 
         const formData = new FormData();
         formData.append('id', appointment.id);
-        // We must provide required fields to avoid validation error in action if it checks strict requirements
-        // However, our action checks: if (!id || !dateStr || !timeStr)
-        // So we need to provide current date/time even if we don't change them.
         formData.append('visitDate', format(new Date(appointment.visitDate), 'yyyy-MM-dd'));
         formData.append('visitTime', format(new Date(appointment.visitDate), 'HH:mm'));
         formData.append('isMemoResolved', 'true');
-        // Include adminMemo to preserve it? update logic merges?
-        // Our service logic: {...data} merges. But if we don't send other fields, they might be undefined (no change).
-        // BUT action logic: "const duration = ...".
-        // Let's verify action. Action constructs `updateData`. It gets duration from formData.
-        // It converts staffId.
-        // We should send existing values to be safe, OR refactor action to allow partial updates more gracefully.
-        // For now, let's send necessary fields to pass the "required" check in action.
 
         try {
             const res = await updateAppointmentAction(formData);
             if (res.success) {
-                onClose(); // Close modal on success
-                // Router refresh is handled by action
+                onClose();
             } else {
                 alert('更新に失敗しました: ' + res.message);
             }
@@ -116,7 +106,7 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
                             </p>
 
                             <button
-                                onClick={handleResolveAdminMemo}
+                                onClick={() => setConfirmOpen(true)}
                                 disabled={isResolving}
                                 className="w-full text-xs bg-white border border-red-200 text-red-600 px-2 py-1.5 rounded shadow-sm hover:bg-red-50 font-bold flex items-center justify-center gap-1 transition-colors"
                             >
@@ -177,6 +167,16 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
                     </div>
                 </div>
             </div>
+
+            <ConfirmDialog
+                open={confirmOpen}
+                onOpenChange={setConfirmOpen}
+                title="申し送り事項を確認済みにしますか？"
+                description="確認済みにすると「要確認」タブから消え、アラートが解除されます。"
+                confirmLabel="確認済みにする"
+                variant="primary"
+                onConfirm={handleResolveAdminMemo}
+            />
         </div>
     );
 }
