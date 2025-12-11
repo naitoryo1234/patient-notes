@@ -140,13 +140,40 @@ export function AppointmentEditModal({ appointment, staffList, isOpen, onClose }
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">メモ</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">受付メモ</label>
                         <textarea
                             name="memo"
-                            rows={3}
+                            rows={2}
                             defaultValue={appointment.memo || ''}
                             className="w-full border-slate-300 rounded-md focus:ring-indigo-500 text-sm"
+                            placeholder="患者様からの要望など"
                         />
+                    </div>
+
+                    <div className="bg-red-50 p-3 rounded-md border border-red-100">
+                        <label className="block text-sm font-bold text-red-800 mb-1 flex items-center gap-1">
+                            ⚠️ 申し送り事項 (管理者メモ)
+                        </label>
+                        <textarea
+                            // @ts-ignore
+                            name="adminMemo"
+                            rows={2}
+                            // @ts-ignore
+                            defaultValue={appointment.adminMemo || ''}
+                            className="w-full border-red-200 rounded-md focus:ring-red-500 text-sm bg-white mb-2"
+                            placeholder="スタッフ間での注意事項など（右カラムの要確認に表示されます）"
+                        />
+                        <label className="flex items-center gap-2 text-sm text-red-800 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                name="isMemoResolved"
+                                value="true"
+                                // @ts-ignore
+                                defaultChecked={appointment.isMemoResolved}
+                                className="rounded border-red-300 text-red-600 focus:ring-red-500"
+                            />
+                            対応・確認済み (アラートを解除)
+                        </label>
                     </div>
 
                     <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 mt-4">

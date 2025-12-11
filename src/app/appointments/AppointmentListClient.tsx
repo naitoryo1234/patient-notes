@@ -5,13 +5,13 @@ import { Appointment } from '@/services/appointmentService';
 import { Staff } from '@/services/staffService';
 import { format, isBefore, isToday, differenceInMinutes, isSameDay, addDays, subDays, startOfDay } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { cancelAppointmentAction } from '@/actions/appointmentActions';
+import { cancelAppointmentAction, toggleAdminMemoResolutionAction } from '@/actions/appointmentActions';
 import { AppointmentEditModal } from '@/components/dashboard/AppointmentEditModal';
 import { NewAppointmentButton } from '@/components/dashboard/NewAppointmentButton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Pencil, Trash2, Calendar, User, History, CheckCircle2, XCircle, CalendarClock, AlertCircle, ChevronLeft, ChevronRight, X, FileText } from 'lucide-react';
+import { Pencil, Trash2, Calendar, User, History, CheckCircle2, XCircle, CalendarClock, AlertCircle, AlertTriangle, ChevronLeft, ChevronRight, X, FileText } from 'lucide-react';
 
 interface AppointmentListClientProps {
     initialAppointments: Appointment[];
@@ -28,7 +28,8 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
     const [filterPatient, setFilterPatient] = useState<string>(''); // 患者名検索
 
     const toggleHistory = () => {
-        const query = includePast ? '' : '?history=true';
+        // Default is TRUE (show past). So to hide, we send history=false. To show, we clear param.
+        const query = includePast ? '?history=false' : '';
         router.push(`/appointments${query}`);
     };
 
@@ -93,15 +94,29 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
 
     const pendingAssignments = initialAppointments.filter(a => !a.staffId && a.status !== 'cancelled').length;
 
+    const pendingMemos = initialAppointments.filter(a => {
+        // @ts-ignore
+        return a.adminMemo && !a.isMemoResolved && a.status !== 'cancelled';
+    }).length;
+
     return (
-        <div className="bg-white rounded-lg shadow border border-slate-200 overflow-hidden">
-            {/* Unassigned Warning */}
-            {pendingAssignments > 0 && (
-                <div className="bg-amber-50 border-b border-amber-100 p-2 flex items-center gap-2 text-xs text-amber-700 font-bold px-4 animate-in slide-in-from-top-1">
-                    <AlertCircle className="w-4 h-4 text-amber-600" />
-                    <span>担当未定の予約が {pendingAssignments} 件あります</span>
-                </div>
-            )}
+        <div className="bg-white rounded-lg shadow border border-slate-200 overflow-hidden h-full flex flex-col">
+            {/* Alerts */}
+            <div className="flex flex-col">
+                {pendingAssignments > 0 && (
+                    <div className="bg-amber-50 border-b border-amber-100 p-2 flex items-center gap-2 text-xs text-amber-700 font-bold px-4 animate-in slide-in-from-top-1">
+                        <AlertCircle className="w-4 h-4 text-amber-600" />
+                        <span>担当未定の予約が {pendingAssignments} 件あります</span>
+                    </div>
+                )}
+                {pendingMemos > 0 && (
+                    <div className="bg-red-50 border-b border-red-100 p-2 flex items-center gap-2 text-xs text-red-700 font-bold px-4 animate-in slide-in-from-top-1">
+                        <AlertTriangle className="w-4 h-4 text-red-600" />
+                        <span>未確認の申し送り事項が {pendingMemos} 件あります</span>
+                    </div>
+                )}
+            </div>
+
             {/* Toolbar - Redesigned */}
             <div className="border-b border-slate-100 bg-slate-50">
                 {/* Row 1: Filters */}
@@ -220,7 +235,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">
+            <div className="flex-1 overflow-auto">
                 <table className="w-full text-left text-sm text-slate-700">
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
                         <tr>
@@ -310,6 +325,41 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                                     </button>
                                                 )}
                                             </div>
+
+
+                                            {/* Admin Memo Display */}
+                                            {/* @ts-ignore */}
+                                            {apt.adminMemo && (
+                                                <div
+                                                    className={`mt-2 p-2 rounded text-xs border cursor-pointer transition-colors flex items-start gap-1.5 ${
+                                                        // @ts-ignore
+                                                        !apt.isMemoResolved && !isCancelled
+                                                            ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
+                                                            : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 opacity-80'
+                                                        }`}
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        // @ts-ignore
+                                                        if (!confirm(apt.isMemoResolved ? '申し送り事項を未確認に戻しますか？' : '申し送り事項を確認済みにしますか？')) return;
+                                                        // @ts-ignore
+                                                        await toggleAdminMemoResolutionAction(apt.id, !apt.isMemoResolved);
+                                                        router.refresh();
+                                                    }}
+                                                    title="クリックして確認状態を切り替え"
+                                                >
+                                                    <AlertTriangle className={`w-3.5 h-3.5 mt-0.5 min-w-[14px] ${
+                                                        // @ts-ignore
+                                                        !apt.isMemoResolved && !isCancelled ? 'text-red-500' : 'text-slate-400'
+                                                        }`} />
+                                                    <div className="flex-1 leading-snug">
+                                                        <span className="font-bold mr-1 block text-[10px] opacity-70">事務用申し送り:</span>
+                                                        {/* @ts-ignore */}
+                                                        {apt.adminMemo}
+                                                    </div>
+                                                    {/* @ts-ignore */}
+                                                    {(apt.isMemoResolved || isCancelled) && <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 ml-1 text-slate-400" />}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-4 py-3 text-right whitespace-nowrap">
                                             <div className="flex justify-end gap-2 text-right items-center">
@@ -346,36 +396,40 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                 </table>
             </div >
 
-            {editingAppointment && (
-                <AppointmentEditModal
-                    appointment={editingAppointment}
-                    staffList={staffList}
-                    isOpen={!!editingAppointment}
-                    onClose={() => {
-                        setEditingAppointment(null);
-                        router.refresh(); // Refresh after edit
-                    }}
-                />
-            )}
+            {
+                editingAppointment && (
+                    <AppointmentEditModal
+                        appointment={editingAppointment}
+                        staffList={staffList}
+                        isOpen={!!editingAppointment}
+                        onClose={() => {
+                            setEditingAppointment(null);
+                            router.refresh(); // Refresh after edit
+                        }}
+                    />
+                )
+            }
 
             {/* Memo View Dialog */}
-            {viewingMemo && (
-                <Dialog open={!!viewingMemo} onOpenChange={() => setViewingMemo(null)}>
-                    <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                <FileText className="w-5 h-5 text-indigo-600" />
-                                予約メモ - {viewingMemo.patient}
-                            </DialogTitle>
-                        </DialogHeader>
-                        <div className="mt-4 p-4 bg-slate-50 rounded-md border border-slate-200 max-h-[60vh] overflow-y-auto">
-                            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
-                                {viewingMemo.memo}
-                            </p>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-            )}
+            {
+                viewingMemo && (
+                    <Dialog open={!!viewingMemo} onOpenChange={() => setViewingMemo(null)}>
+                        <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                    <FileText className="w-5 h-5 text-indigo-600" />
+                                    予約メモ - {viewingMemo.patient}
+                                </DialogTitle>
+                            </DialogHeader>
+                            <div className="mt-4 p-4 bg-slate-50 rounded-md border border-slate-200 max-h-[60vh] overflow-y-auto">
+                                <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                                    {viewingMemo.memo}
+                                </p>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                )
+            }
         </div >
     );
 }

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getPatients } from '@/services/patientService';
-import { getTodaysAppointments } from '@/services/appointmentService';
+import { getTodaysAppointments, getUnassignedFutureAppointments } from '@/services/appointmentService';
 import { DailyAppointmentPanel } from '@/components/dashboard/DailyAppointmentPanel';
 import { Users, UserPlus } from 'lucide-react';
 import { Patient } from '@prisma/client';
@@ -15,6 +15,7 @@ export default async function Home(props: { searchParams: Promise<{ q?: string }
   const query = searchParams?.q || '';
   const patients = await getPatients(query);
   const todaysAppointments = await getTodaysAppointments(); // Fetch today's appointments
+  const unassignedAppointments = await getUnassignedFutureAppointments();
   const activeStaff = await getActiveStaff();
 
   return (
@@ -28,7 +29,9 @@ export default async function Home(props: { searchParams: Promise<{ q?: string }
       <div className="lg:col-span-3 h-full overflow-hidden">
         <PatientSearchPanel
           initialPatients={patients}
-          appointments={todaysAppointments}
+          appointments={todaysAppointments} // Still needed for memos
+          unassignedAppointments={unassignedAppointments} // New prop for unassigned list
+          activeStaff={activeStaff} // New prop for generic staff list
           searchQuery={query}
         />
       </div>

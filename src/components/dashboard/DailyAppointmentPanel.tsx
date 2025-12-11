@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react';
 import { Appointment } from '@/services/appointmentService';
 import { Staff } from '@/services/staffService';
 import { cancelAppointmentAction, checkInAppointmentAction } from '@/actions/appointmentActions';
+import { AppointmentDetailModal } from './AppointmentDetailModal';
 import { AppointmentEditModal } from './AppointmentEditModal';
 import { format, differenceInMinutes } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Bell, Clock, RefreshCw, Pencil, Trash2, AlertCircle, UserCheck } from 'lucide-react';
+import { Bell, Clock, RefreshCw, Pencil, Trash2, AlertCircle, AlertTriangle, UserCheck } from 'lucide-react';
 
 interface DailyAppointmentPanelProps {
     appointments: Appointment[]; // Initial server data
@@ -20,6 +21,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
     const [currentTime, setCurrentTime] = useState(new Date());
     const [appointments, setAppointments] = useState(initialData);
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+    const [detailAppointment, setDetailAppointment] = useState<Appointment | null>(null); // New state for mini panel
 
     const router = useRouter();
 
@@ -32,13 +34,13 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
-            if (!editingAppointment) {
+            if (!editingAppointment && !detailAppointment) { // Pause refresh if modal is open
                 router.refresh();
             }
         }, 60000); // 1 min
 
         return () => clearInterval(timer);
-    }, [router, editingAppointment]);
+    }, [router, editingAppointment, detailAppointment]);
 
     // Manual Refresh
     const handleRefresh = () => {
@@ -54,6 +56,11 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
         setAppointments(prev => prev.map(a =>
             a.id === aptId ? { ...a, status: 'arrived', arrivedAt: new Date() } : a
         ));
+
+        // Also update local detail/edit state if needed (though usually we close it)
+        if (detailAppointment && detailAppointment.id === aptId) {
+            setDetailAppointment(prev => prev ? { ...prev, status: 'arrived', arrivedAt: new Date() } : null);
+        }
 
         await checkInAppointmentAction(aptId);
         router.refresh(); // Sync with server
@@ -72,6 +79,11 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
     };
 
     const pendingAssignments = appointments.filter(a => !a.staffId && a.status !== 'cancelled').length;
+
+    const pendingMemos = appointments.filter(a => {
+        // @ts-ignore
+        return a.adminMemo && !a.isMemoResolved && a.status !== 'cancelled';
+    }).length;
 
     // Split appointments
     const activeAppointments = appointments.filter(a => {
@@ -125,8 +137,12 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
         }
 
         return (
-            <div key={apt.id} className={`relative rounded-lg border transition-all hover:shadow-md ${statusColor} group`}>
-                <Link href={`/patients/${apt.patientId}`} className="block p-3">
+            <div
+                key={apt.id}
+                className={`relative rounded-lg border transition-all hover:shadow-md cursor-pointer ${statusColor} group`}
+                onClick={() => setDetailAppointment(apt)}
+            >
+                <div className="block p-3">
                     <div className="flex justify-between items-start mb-1">
                         <div className="flex items-center gap-2">
                             <span className={`text-lg font-bold font-mono ${isCancelled ? 'text-slate-400 line-through' : isUpcoming ? 'text-yellow-700' : isJustNow ? 'text-emerald-700' : 'text-slate-700'}`}>
@@ -189,7 +205,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                             ))}
                         </div>
                     </div>
-                </Link>
+                </div>
 
                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                     {!isCancelled && !isDone && !isArrived && (
@@ -204,7 +220,6 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                             title="来院チェックイン"
                         >
                             <UserCheck className="w-3.5 h-3.5" />
-                            <span className="text-[10px]">受付</span>
                         </button>
                     )}
                     <button
@@ -255,6 +270,12 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                     <span>担当未定の予約が {pendingAssignments} 件あります</span>
                 </div>
             )}
+            {pendingMemos > 0 && (
+                <div className="bg-red-50 border-b border-red-100 p-2 flex items-center gap-2 text-xs text-red-700 font-bold px-4 animate-in slide-in-from-top-1">
+                    <AlertTriangle className="w-4 h-4 text-red-600" />
+                    <span>未確認の申し送り事項が {pendingMemos} 件あります</span>
+                </div>
+            )}
 
             <div className="flex-1 overflow-y-auto p-2 space-y-4 min-h-0">
                 {appointments.length === 0 ? (
@@ -272,7 +293,8 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                             )}
                         </div>
 
-                        {/* Past Appointments Separator */}
+                        {/* Past Appointments Separator - Hidden per user request */}
+                        {/* 
                         {pastAppointments.length > 0 && (
                             <div className="border-t border-slate-100 pt-2 mt-4 space-y-2">
                                 <h3 className="text-xs font-bold text-slate-400 px-2">完了・キャンセル</h3>
@@ -281,6 +303,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                                 </div>
                             </div>
                         )}
+                        */}
                     </>
                 )}
             </div>
@@ -288,12 +311,31 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
             <div className="p-2 border-t border-slate-100 bg-slate-50 text-[10px] text-center text-slate-400">
                 AI要約連携 (Beta) / 通知機能 (Coming Soon)
             </div>
+
+            {/* Edit Modal (Detailed Full Edit) */}
             {editingAppointment && (
                 <AppointmentEditModal
                     appointment={editingAppointment}
                     staffList={staffList}
                     isOpen={!!editingAppointment}
                     onClose={() => setEditingAppointment(null)}
+                />
+            )}
+
+            {/* Detail Mini Panel */}
+            {detailAppointment && (
+                <AppointmentDetailModal
+                    appointment={detailAppointment}
+                    isOpen={!!detailAppointment}
+                    onClose={() => setDetailAppointment(null)}
+                    onEdit={() => {
+                        setDetailAppointment(null);
+                        setEditingAppointment(detailAppointment);
+                    }}
+                    onCheckIn={() => {
+                        handleCheckIn(detailAppointment.id, detailAppointment.patientName);
+                        setDetailAppointment(null);
+                    }}
                 />
             )}
         </div>

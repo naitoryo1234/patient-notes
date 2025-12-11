@@ -12,6 +12,8 @@ export interface Appointment {
     visitCount: number;
     tags: string[];
     memo?: string; // patient memo
+    adminMemo?: string; // admin/handover memo
+    isMemoResolved?: boolean;
     staffName?: string;
     staffId?: string;
     status: string; // Changed to required string as per schema default
@@ -33,8 +35,7 @@ type AppointmentWithRel = Prisma.AppointmentGetPayload<{
         },
         staff: true,
     }
-}> & { arrivedAt?: Date }; // Temporarily extend for arrivedAt
-
+}> & { arrivedAt?: Date | null; adminMemo?: string | null; isMemoResolved?: boolean | null }; // Relaxed types for nullable DB fields
 
 export const getTodaysAppointments = async (date: Date = new Date()): Promise<Appointment[]> => {
     const start = startOfDay(date);
@@ -74,6 +75,10 @@ export const getTodaysAppointments = async (date: Date = new Date()): Promise<Ap
             visitCount: visitCount,
             tags: a.patient.tags ? JSON.parse(a.patient.tags) : [],
             memo: a.memo || a.patient.memo || '',
+            // @ts-ignore
+            adminMemo: a.adminMemo || undefined,
+            // @ts-ignore
+            isMemoResolved: a.isMemoResolved || false,
             staffName: a.staff?.name,
             staffId: a.staffId || undefined,
             status: a.status,
@@ -131,8 +136,65 @@ export const findAllAppointments = async (options?: { includePast?: boolean; inc
             visitCount: visitCount,
             tags: a.patient.tags ? JSON.parse(a.patient.tags) : [],
             memo: a.memo || a.patient.memo || '',
+            // @ts-ignore
+            adminMemo: a.adminMemo || undefined,
+            // @ts-ignore
+            isMemoResolved: a.isMemoResolved || false,
             staffName: a.staff?.name,
             staffId: a.staffId || undefined,
+            status: a.status,
+            // @ts-ignore
+            arrivedAt: a.arrivedAt || undefined,
+        };
+    });
+};
+
+export const getUnassignedFutureAppointments = async (): Promise<Appointment[]> => {
+    const now = new Date();
+    // Start of "future" should probably include today? Yes, "gte: now" does that.
+
+    // We want all unassigned valid appointments from now.
+    const appointments = await prisma.appointment.findMany({
+        where: {
+            startAt: { gte: now },
+            staffId: null,
+            status: { not: 'cancelled' }
+        },
+        include: {
+            patient: {
+                select: {
+                    id: true,
+                    name: true,
+                    kana: true,
+                    birthDate: true,
+                    gender: true,
+                    tags: true,
+                    memo: true,
+                    _count: { select: { records: true } }
+                }
+            },
+            staff: true,
+        },
+        orderBy: { startAt: 'asc' },
+    });
+
+    return appointments.map((a: AppointmentWithRel) => {
+        return {
+            id: a.id,
+            patientId: a.patientId,
+            patientName: a.patient.name,
+            patientKana: a.patient.kana,
+            visitDate: a.startAt,
+            duration: a.duration || 60,
+            visitCount: (a.patient._count.records || 0) + 1, // Simplified count logic for search list
+            tags: a.patient.tags ? JSON.parse(a.patient.tags) : [],
+            memo: a.memo || a.patient.memo || '',
+            // @ts-ignore
+            adminMemo: a.adminMemo || undefined,
+            // @ts-ignore
+            isMemoResolved: a.isMemoResolved || false,
+            staffName: undefined,
+            staffId: undefined,
             status: a.status,
             // @ts-ignore
             arrivedAt: a.arrivedAt || undefined,
@@ -245,7 +307,7 @@ export const getNextAppointment = async (patientId: string) => {
     };
 };
 
-export const createAppointment = async (patientId: string, startAt: Date, memo?: string, staffId?: string, duration: number = 60) => {
+export const createAppointment = async (patientId: string, startAt: Date, memo?: string, staffId?: string, duration: number = 60, adminMemo?: string) => {
     // 1. Check Staff Availability
     const isStaffOk = await checkStaffAvailability(startAt, duration, staffId);
     if (!isStaffOk) {
@@ -264,7 +326,8 @@ export const createAppointment = async (patientId: string, startAt: Date, memo?:
             startAt,
             memo,
             staffId,
-            duration
+            duration,
+            adminMemo
         }
     });
 };
@@ -276,7 +339,7 @@ export const cancelAppointment = async (id: string) => {
     });
 };
 
-export const updateAppointment = async (id: string, data: { startAt?: Date, memo?: string, staffId?: string | null, duration?: number }) => {
+export const updateAppointment = async (id: string, data: { startAt?: Date, memo?: string, staffId?: string | null, duration?: number, adminMemo?: string | null, isMemoResolved?: boolean }) => {
     const current = await prisma.appointment.findUnique({ where: { id } });
     if (!current) throw new Error('Appointment not found');
 

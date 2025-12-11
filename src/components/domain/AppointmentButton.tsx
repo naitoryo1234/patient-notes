@@ -130,13 +130,21 @@ export function AppointmentButton({ patientId, staffList }: { patientId: string,
                 </div>
 
                 {/* Memo */}
-                <div>
+                <div className="space-y-2">
                     <input
                         type="text"
                         name="memo"
-                        placeholder="メモ (任意)"
+                        placeholder="受付メモ (患者要望など)"
                         className="border rounded px-2 py-1 text-sm w-full"
                     />
+                    <div className="bg-red-50 p-2 rounded border border-red-100">
+                        <input
+                            type="text"
+                            name="adminMemo"
+                            placeholder="⚠️ 申し送り (管理者メモ)"
+                            className="border border-red-200 rounded px-2 py-1 text-sm w-full bg-white placeholder:text-red-300 text-red-700"
+                        />
+                    </div>
                 </div>
 
                 <div className="flex gap-2 pt-2">

@@ -1,12 +1,22 @@
 'use client';
 
+// Imports updated
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Users, History, AlertCircle, Search, User, Clock } from 'lucide-react';
+import { Users, History, AlertCircle, Search, User, Clock, CheckCircle, AlertTriangle } from 'lucide-react'; // Added icons
 import { format } from 'date-fns';
 import { Appointment } from '@/services/appointmentService';
-import { Patient } from '@prisma/client';
+import { updateAppointmentAction, toggleAdminMemoResolutionAction } from '@/actions/appointmentActions'; // Needs server action to resolve
+
+// Helper icons required
+import { UserCheck } from 'lucide-react';
+// import { AppointmentDetailModal } from './AppointmentDetailModal'; // Reuse if needed, or just Edit
+import { AppointmentEditModal } from './AppointmentEditModal';
+import { Staff } from '@/services/staffService';
+import { checkInAppointmentAction } from '@/actions/appointmentActions';
+
+
 
 // Minimal patient type for Recent History (stored in localStorage)
 export interface RecentPatient {
@@ -18,19 +28,38 @@ export interface RecentPatient {
 
 interface PatientSearchPanelProps {
     initialPatients: any[]; // Using any for now to match flexible Prisma return type, ideally defined properly
-    appointments: Appointment[];
+    appointments: Appointment[]; // For memos (today's)
+    unassignedAppointments?: Appointment[]; // Future unassigned
+    activeStaff?: Staff[];
     searchQuery: string;
 }
 
-export function PatientSearchPanel({ initialPatients, appointments, searchQuery }: PatientSearchPanelProps) {
+export function PatientSearchPanel({ initialPatients, appointments, unassignedAppointments = [], activeStaff = [], searchQuery }: PatientSearchPanelProps) {
     const router = useRouter();
     const [query, setQuery] = useState(searchQuery);
     const [activeTab, setActiveTab] = useState<'recent' | 'search' | 'attention'>('recent');
     const [recentPatients, setRecentPatients] = useState<RecentPatient[]>([]);
 
-    // Determine attention items (e.g. unassigned appointments)
-    const unassignedAppointments = appointments.filter(a => !a.staffId && a.status !== 'cancelled');
-    const attentionCount = unassignedAppointments.length;
+    // Modal State
+    const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+
+    // Filter Logic
+    // Memos are from today's appointments (history kept for day)
+    const memoAppointments = appointments.filter(a => {
+        // @ts-ignore
+        return a.adminMemo && a.status !== 'cancelled';
+    });
+
+    // Counts
+    const unresolvedMemoCount = memoAppointments.filter(a => {
+        // @ts-ignore
+        return !a.isMemoResolved;
+    }).length;
+
+    const unassignedCount = unassignedAppointments.length;
+    const totalAttention = unresolvedMemoCount + unassignedCount;
+    // Show list if there are ANY unassigned OR ANY memos (even resolved ones)
+    const hasAnyAttentionItems = unassignedCount > 0 || memoAppointments.length > 0;
 
     // Load recent patients from localStorage
     useEffect(() => {
@@ -76,7 +105,17 @@ export function PatientSearchPanel({ initialPatients, appointments, searchQuery 
     };
 
     return (
-        <div className="flex flex-col h-full space-y-4">
+        <div className="flex flex-col h-full space-y-4 relative">
+            {/* Edit Modal */}
+            {editingAppointment && (
+                <AppointmentEditModal
+                    appointment={editingAppointment}
+                    staffList={activeStaff}
+                    isOpen={!!editingAppointment}
+                    onClose={() => setEditingAppointment(null)}
+                />
+            )}
+
             {/* Context/Tab Switcher Header */}
             <div className="bg-white rounded-lg shadow-sm border border-slate-200 shrink-0 overflow-hidden">
                 {/* Search Bar Area */}
@@ -113,13 +152,20 @@ export function PatientSearchPanel({ initialPatients, appointments, searchQuery 
                         onClick={() => setActiveTab('attention')}
                         className={`flex-1 py-3 flex items-center justify-center gap-2 border-b-2 transition-colors ${activeTab === 'attention' ? 'border-amber-500 text-amber-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
                     >
-                        <AlertCircle className={`w-4 h-4 ${attentionCount > 0 ? 'text-amber-500' : ''}`} />
+                        <AlertCircle className={`w-4 h-4 ${totalAttention > 0 ? 'text-amber-500' : ''}`} />
                         要確認
-                        {attentionCount > 0 && (
-                            <span className="bg-amber-100 text-amber-700 text-xs px-1.5 rounded-full ml-0.5">
-                                {attentionCount}
-                            </span>
-                        )}
+                        <div className="flex gap-1 ml-1">
+                            {unassignedCount > 0 && (
+                                <span className="bg-amber-100 text-amber-700 text-xs px-1.5 rounded-full" title="担当未定">
+                                    {unassignedCount}
+                                </span>
+                            )}
+                            {unresolvedMemoCount > 0 && (
+                                <span className="bg-red-100 text-red-700 text-xs px-1.5 rounded-full" title="未読メモ">
+                                    {unresolvedMemoCount}
+                                </span>
+                            )}
+                        </div>
                     </button>
                 </div>
             </div>
@@ -213,7 +259,7 @@ export function PatientSearchPanel({ initialPatients, appointments, searchQuery 
                     {/* Attention Tab */}
                     {activeTab === 'attention' && (
                         <div>
-                            {unassignedAppointments.length === 0 ? (
+                            {!hasAnyAttentionItems ? (
                                 <div className="p-8 text-center text-slate-400 text-sm">
                                     <div className="flex justify-center mb-2">
                                         <span className="bg-green-100 p-2 rounded-full text-green-500">
@@ -224,27 +270,102 @@ export function PatientSearchPanel({ initialPatients, appointments, searchQuery 
                                 </div>
                             ) : (
                                 <div className="space-y-4">
+                                    {/* Unassigned List */}
                                     {unassignedAppointments.length > 0 && (
                                         <div className="space-y-2">
-                                            <h3 className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded">担当未定の予約</h3>
+                                            <h3 className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded">
+                                                担当未定の予約 ({unassignedAppointments.length}件)
+                                            </h3>
                                             <ul className="space-y-1">
                                                 {unassignedAppointments.map(apt => (
-                                                    <li key={apt.id} className="p-3 bg-white border border-amber-100 rounded-md shadow-sm flex items-center justify-between">
+                                                    <li
+                                                        key={apt.id}
+                                                        className="p-3 bg-white border border-amber-100 rounded-md shadow-sm flex items-center justify-between cursor-pointer hover:shadow-md hover:border-amber-300 transition-all group"
+                                                        onClick={() => setEditingAppointment(apt)} // Open Modal to set staff
+                                                    >
                                                         <div className="flex items-center gap-3">
-                                                            <div className="text-center">
-                                                                <div className="text-lg font-bold text-slate-700">{format(new Date(apt.visitDate), 'HH:mm')}</div>
+                                                            <div className="text-center bg-slate-50 p-1 rounded min-w-[3.5rem]">
+                                                                <div className="text-[10px] text-slate-500">{format(new Date(apt.visitDate), 'MM/dd')}</div>
+                                                                <div className="text-sm font-bold text-slate-700">{format(new Date(apt.visitDate), 'HH:mm')}</div>
                                                             </div>
                                                             <div>
-                                                                <div className="font-bold text-slate-800">{apt.patientName}</div>
-                                                                <div className="text-xs text-amber-600 font-bold flex items-center gap-1">
+                                                                <div className="font-bold text-slate-800 text-sm">{apt.patientName}</div>
+                                                                <div className="text-xs text-amber-600 font-bold flex items-center gap-1 group-hover:underline">
                                                                     <AlertCircle className="w-3 h-3" />
                                                                     担当スタッフ未定
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        {/* In future, link to assign actions */}
+                                                        <div className="text-xs text-slate-300">
+                                                            編集 &gt;
+                                                        </div>
                                                     </li>
                                                 ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {/* Memos List */}
+                                    {memoAppointments.length > 0 && (
+                                        <div className="space-y-2">
+                                            <h3 className="text-xs font-bold text-red-700 bg-red-50 px-2 py-1 rounded flex items-center gap-2">
+                                                <AlertTriangle className="w-3 h-3" />
+                                                申し送り事項
+                                            </h3>
+                                            <ul className="space-y-1">
+                                                {memoAppointments.map(apt => {
+                                                    // @ts-ignore
+                                                    const isResolved = apt.isMemoResolved;
+
+                                                    const handleResolveClick = async (e: React.MouseEvent) => {
+                                                        e.stopPropagation();
+                                                        if (isResolved) return; // Already resolved
+                                                        if (!confirm('この申し送り事項を確認済みにしますか？')) return;
+
+                                                        try {
+                                                            await toggleAdminMemoResolutionAction(apt.id, true);
+                                                        } catch (e) {
+                                                            console.error(e);
+                                                            alert('更新に失敗しました');
+                                                        }
+                                                    };
+
+                                                    return (
+                                                        <li
+                                                            key={apt.id}
+                                                            onClick={handleResolveClick}
+                                                            className={`p-3 border rounded-md shadow-sm transition-all cursor-pointer ${isResolved
+                                                                ? 'bg-slate-50 border-slate-200 opacity-60'
+                                                                : 'bg-white border-red-100 hover:shadow-md hover:border-red-300'
+                                                                }`}>
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <div className={`text-sm font-bold ${isResolved ? 'text-slate-500' : 'text-slate-700'}`}>
+                                                                    {format(new Date(apt.visitDate), 'HH:mm')} {apt.patientName}
+                                                                </div>
+                                                                {isResolved && (
+                                                                    <div className="flex items-center gap-1 text-xs text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
+                                                                        <CheckCircle className="w-3 h-3" />
+                                                                        確認済
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <p className={`text-sm p-2 rounded mb-2 ${isResolved
+                                                                ? 'text-slate-500 bg-slate-100'
+                                                                : 'text-red-800 bg-red-50'
+                                                                }`}>
+                                                                {/* @ts-ignore */}
+                                                                {apt.adminMemo}
+                                                            </p>
+                                                            {!isResolved && (
+                                                                <div className="text-right">
+                                                                    <span className="text-xs text-blue-600 font-bold hover:underline">
+                                                                        クリックで確認済みにする
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </li>
+                                                    );
+                                                })}
                                             </ul>
                                         </div>
                                     )}
@@ -258,5 +379,4 @@ export function PatientSearchPanel({ initialPatients, appointments, searchQuery 
     );
 }
 
-// Helper icons required
-import { UserCheck } from 'lucide-react';
+

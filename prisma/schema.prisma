@@ -118,6 +118,8 @@ model Appointment {
   status      String   @default("scheduled") // scheduled, arrived, completed, cancelled
   arrivedAt   DateTime? // Check-in time
   memo        String?  // 予約メモ (電話受付など)
+  adminMemo   String?  // 管理者メモ (申し送り事項・注意点)
+  isMemoResolved Boolean @default(false) // 申し送り確認済みフラグ
   
   staff       Staff?   @relation(fields: [staffId], references: [id])
   staffId     String?

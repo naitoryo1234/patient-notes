@@ -9,7 +9,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function AppointmentsPage({ searchParams }: { searchParams: Promise<{ history?: string }> }) {
     const params = await searchParams;
-    const includePast = params?.history === 'true';
+    // Default to SHOWING past appointments (Ledger mode)
+    const includePast = params?.history !== 'false';
     // Include cancelled to show them in list (greyed out)
     const appointments = await findAllAppointments({ includePast, includeCancelled: true });
     const todaysAppointments = await getTodaysAppointments();

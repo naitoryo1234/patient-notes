@@ -16,10 +16,11 @@ export async function scheduleAppointment(formData: FormData) {
     }
 
     const startAt = new Date(`${dateStr}T${timeStr}`);
+    const adminMemo = formData.get('adminMemo') as string | undefined;
     const duration = formData.get('duration') ? parseInt(formData.get('duration') as string) : 60;
 
     try {
-        await createAppointment(patientId, startAt, memo, staffId || undefined, duration);
+        await createAppointment(patientId, startAt, memo, staffId || undefined, duration, adminMemo);
         revalidatePath('/');
         revalidatePath(`/patients/${patientId}`);
         return { success: true };
@@ -55,10 +56,13 @@ export async function updateAppointmentAction(formData: FormData) {
     const startAt = new Date(`${dateStr}T${timeStr}`);
     const duration = formData.get('duration') ? parseInt(formData.get('duration') as string) : undefined;
 
+    const adminMemo = formData.get('adminMemo') as string | null;
+    const isMemoResolved = formData.get('isMemoResolved') === 'true'; // Checkbox value
+
     // Convert staffId: "" -> null (unassign), string -> string (assign), null/undefined -> undefined (no change, but form always sends something)
     // Actually, form data "staffId" will be "" if "Unassigned" is selected.
     // So:
-    const updateData: any = { startAt, memo, duration };
+    const updateData: any = { startAt, memo, duration, adminMemo, isMemoResolved };
 
     if (staffId === "") {
         updateData.staffId = null; // Unassign
@@ -86,5 +90,18 @@ export async function checkInAppointmentAction(appointmentId: string) {
     } catch (e: any) {
         console.error(e);
         return { success: false, message: e.message || 'チェックインに失敗しました' };
+    }
+}
+
+export async function toggleAdminMemoResolutionAction(appointmentId: string, isResolved: boolean) {
+    if (!appointmentId) return { success: false, message: 'IDが不足しています' };
+    try {
+        await import('@/services/appointmentService').then(s => s.updateAppointment(appointmentId, { isMemoResolved: isResolved }));
+        revalidatePath('/');
+        revalidatePath('/appointments');
+        return { success: true };
+    } catch (e: any) {
+        console.error(e);
+        return { success: false, message: e.message || '更新に失敗しました' };
     }
 }
