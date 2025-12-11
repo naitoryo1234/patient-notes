@@ -4,14 +4,23 @@ import { PatientInput } from '@/config/schema';
 // Pure Service Functions
 
 export const getPatients = async (query?: string) => {
-    const where = query
-        ? {
-            OR: [
-                { name: { contains: query } },
-                { kana: { contains: query } },
-            ],
+    // Check if query is numeric for ID search
+    const isNumeric = query && /^\d+$/.test(query);
+
+    const where: any = {
+        deletedAt: null, // Always exclude deleted patients
+    };
+
+    if (query) {
+        where.OR = [
+            { name: { contains: query } },
+            { kana: { contains: query } },
+        ];
+
+        if (isNumeric) {
+            where.OR.push({ pId: parseInt(query) });
         }
-        : {};
+    }
 
     return await prisma.patient.findMany({
         where,

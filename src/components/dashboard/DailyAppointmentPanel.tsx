@@ -7,6 +7,7 @@ import { cancelAppointmentAction } from '@/actions/appointmentActions';
 import { AppointmentEditModal } from './AppointmentEditModal';
 import { format, differenceInMinutes } from 'date-fns';
 import { ja } from 'date-fns/locale';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Bell, Clock, RefreshCw, Pencil, Trash2, AlertCircle } from 'lucide-react';
 
@@ -20,26 +21,31 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
     const [appointments, setAppointments] = useState(initialData);
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
 
+    const router = useRouter();
+
     // Sync with props if revalidated
     useEffect(() => {
         setAppointments(initialData);
     }, [initialData]);
 
-    // Update time every minute
+    // Update time and fetch latest data every minute
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
+            // Refresh server data to show new appointments
+            // Only refresh if not editing to avoid disrupting UI state (though Next.js preserves client state)
+            if (!editingAppointment) {
+                router.refresh();
+            }
         }, 60000); // 1 min
 
         return () => clearInterval(timer);
-    }, []);
+    }, [router, editingAppointment]);
 
-    // Manual Refresh (Simulated for MVP, ideally re-fetches server data)
+    // Manual Refresh
     const handleRefresh = () => {
-        // In a real app, optimize this to fetch new data via Server Action or API.
-        // For now just update 'now' to force re-render checks.
         setCurrentTime(new Date());
-        // Could also allow routing.refresh() here.
+        router.refresh();
     };
 
     const pendingAssignments = appointments.filter(a => !a.staffId && a.status !== 'cancelled').length;
@@ -67,19 +73,13 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                 </div>
             )}
 
-            <div className="flex-1 overflow-y-auto p-2 space-y-2 max-h-[500px] lg:max-h-none">
+            <div className="flex-1 overflow-y-auto p-2 space-y-2 min-h-0">
                 {appointments.length === 0 ? (
                     <div className="p-8 text-center text-slate-400 text-sm">
                         予定はありません
                     </div>
                 ) : (
-                    appointments.filter(apt => {
-                        const aptTime = new Date(apt.visitDate);
-                        const diff = differenceInMinutes(aptTime, currentTime);
-                        const duration = apt.duration || 60;
-                        // Show until the duration has passed
-                        return diff >= -duration;
-                    }).map(apt => {
+                    appointments.map(apt => {
                         const aptTime = new Date(apt.visitDate);
                         const diff = differenceInMinutes(aptTime, currentTime);
                         const duration = apt.duration || 60;
@@ -95,15 +95,27 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                         const isJustNow = !isCancelled && diff <= 0 && diff >= -15;
 
                         // In Progress: 15 mins after start until End (duration)
-                        // Note: If duration is < 15, isJustNow covers it, this won't trigger.
                         const isInProgress = !isCancelled && diff < -15 && diff >= -duration;
 
+                        // Done: After duration
+                        const isDone = !isCancelled && diff < -duration;
+
+                        // Unassigned: Future or Active, but no staff
+                        const isUnassigned = !isCancelled && !isDone && !apt.staffId;
+
                         let statusColor = "bg-white border-slate-200";
-                        if (isCancelled) statusColor = "bg-slate-50 border-slate-100 opacity-60 grayscale"; // Cancelled (Greyed out)
+                        if (isCancelled) statusColor = "bg-slate-50 border-slate-100 opacity-60 grayscale"; // Cancelled
+                        else if (isDone) statusColor = "bg-slate-50 border-slate-200 opacity-75"; // Done (Past)
+                        else if (isUnassigned) statusColor = "bg-red-50 border-red-200 shadow-sm ring-1 ring-red-100"; // Unassigned (Alert)
                         else if (isUpcoming) statusColor = "bg-yellow-50 border-yellow-300 shadow-sm ring-1 ring-yellow-200";
                         else if (isJustNow) statusColor = "bg-emerald-50 border-emerald-300 shadow-sm ring-1 ring-emerald-200";
-                        else if (isInProgress) statusColor = "bg-white border-slate-300 shadow-md ring-1 ring-slate-100"; // Active but standard color
-                        // Default fallback is white/slate-200 (for > 60 mins future)
+                        else if (isInProgress) statusColor = "bg-white border-slate-300 shadow-md ring-1 ring-slate-100";
+
+                        // Check for Important/Caution tags to add subtle visual cue
+                        const isImportant = apt.tags.some(t => ['重要', '禁忌', '要注意'].includes(t));
+                        if (isImportant && !isCancelled && !isDone && !isUnassigned) {
+                            statusColor += " border-l-4 border-l-red-400"; // Add accent to important active appointments
+                        }
 
                         return (
                             <div key={apt.id} className={`relative rounded-lg border transition-all hover:shadow-md ${statusColor} group`}>
@@ -131,6 +143,11 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                                                     キャンセル
                                                 </span>
                                             )}
+                                            {isDone && (
+                                                <span className="bg-slate-200 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                                                    完了
+                                                </span>
+                                            )}
                                         </div>
                                         <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
                                             {apt.visitCount}回目
@@ -141,12 +158,22 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                                         <div className={`font-bold text-base mb-0.5 transition-colors ${isCancelled ? 'text-slate-400 line-through' : 'text-slate-800 group-hover:text-blue-600'}`}>
                                             {apt.patientName} <span className="text-xs font-normal text-slate-500 ml-1 decoration-auto">{apt.patientKana}</span>
                                         </div>
-                                        {apt.staffName && (
+
+                                        {/* Staff Display */}
+                                        {apt.staffName ? (
                                             <div className="text-xs text-slate-500 flex items-center gap-1 mb-1">
                                                 <span className="bg-slate-100 px-1 rounded text-[10px]">担</span>
                                                 {apt.staffName}
                                             </div>
+                                        ) : !isCancelled && !isDone ? (
+                                            <div className="text-xs text-red-600 flex items-center gap-1 mb-1 font-bold animate-pulse">
+                                                <AlertCircle className="w-3 h-3" />
+                                                <span>担当未定</span>
+                                            </div>
+                                        ) : (
+                                            <div className="text-xs text-slate-300 mb-1">-</div>
                                         )}
+
                                         <div className="flex flex-wrap gap-1 mt-1">
                                             {apt.tags.slice(0, 3).map((tag, i) => (
                                                 <span key={i} className="text-[10px] px-1.5 py-0.5 bg-white border border-slate-200 text-slate-500 rounded text-xs">

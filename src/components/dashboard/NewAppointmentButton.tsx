@@ -32,6 +32,7 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
     const [searchResults, setSearchResults] = useState<PatientResult[]>([]);
     const [selectedPatient, setSelectedPatient] = useState<PatientResult | null>(null);
     const [isSearching, setIsSearching] = useState(false);
+    const [isPending, setIsPending] = useState(false);
 
     // Form State
     const [date, setDate] = useState(initialDate ? format(initialDate, 'yyyy-MM-dd') : format(addDays(new Date(), 1), 'yyyy-MM-dd'));
@@ -77,12 +78,17 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
     };
 
     const handleSubmit = async (formData: FormData) => {
-        const result = await scheduleAppointment(formData);
-        if (result.success) {
-            setIsOpen(false);
-            router.refresh();
-        } else {
-            alert(result.message || '予約の作成に失敗しました');
+        setIsPending(true);
+        try {
+            const result = await scheduleAppointment(formData);
+            if (result.success) {
+                setIsOpen(false);
+                router.refresh();
+            } else {
+                alert(result.message || '予約の作成に失敗しました');
+            }
+        } finally {
+            setIsPending(false);
         }
     };
 
@@ -229,7 +235,7 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
                                     className="border rounded px-3 py-2 text-sm w-full bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
                                     defaultValue=""
                                 >
-                                    <option value="">担当者 (任意)</option>
+                                    <option value="">担当者 (未定)</option>
                                     {staffList.map(s => (
                                         <option key={s.id} value={s.id}>{s.name}</option>
                                     ))}
@@ -247,8 +253,10 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
                             </div>
 
                             <div className="flex justify-end gap-2 pt-2">
-                                <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>キャンセル</Button>
-                                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white">予約を確定</Button>
+                                <Button type="button" variant="ghost" onClick={() => setIsOpen(false)} disabled={isPending}>キャンセル</Button>
+                                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={isPending}>
+                                    {isPending ? '予約中...' : '予約を確定'}
+                                </Button>
                             </div>
                         </form>
                     </div>

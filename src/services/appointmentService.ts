@@ -257,23 +257,35 @@ export const cancelAppointment = async (id: string) => {
     });
 };
 
-export const updateAppointment = async (id: string, data: { startAt?: Date, memo?: string, staffId?: string, duration?: number }) => {
+export const updateAppointment = async (id: string, data: { startAt?: Date, memo?: string, staffId?: string | null, duration?: number }) => {
     const current = await prisma.appointment.findUnique({ where: { id } });
     if (!current) throw new Error('Appointment not found');
 
-    if (data.startAt || data.staffId !== undefined || data.duration) {
-        const targetStart = data.startAt || current.startAt;
-        const targetStaffId = data.staffId !== undefined ? data.staffId : current.staffId;
-        const targetDuration = data.duration || current.duration;
+    // staffId logic:
+    // undefined -> no change (use current)
+    // null -> unassign (use null)
+    // string -> assign (use string)
 
-        // 1. Check Staff
-        const isStaffOk = await checkStaffAvailability(targetStart, targetDuration, targetStaffId, id);
-        if (!isStaffOk) {
-            throw new Error('担当者の予定が重複しています');
+    // Check constraints if time or staff changes
+    // Condition: Time changed OR Duration changed OR Staff changed (undefined means no change)
+    const isTimeChanged = (data.startAt && data.startAt.getTime() !== current.startAt.getTime()) || (data.duration && data.duration !== current.duration);
+    const isStaffChanged = data.staffId !== undefined && data.staffId !== current.staffId;
+
+    if (isTimeChanged || isStaffChanged) {
+        const targetStart = data.startAt || current.startAt;
+        const targetDuration = data.duration || current.duration;
+        // If data.staffId is undefined, use current. If null or string, use it.
+        const targetStaffId = data.staffId !== undefined ? data.staffId : current.staffId;
+
+        // 1. Check Staff (Only if a staff is assigned)
+        if (targetStaffId) {
+            const isStaffOk = await checkStaffAvailability(targetStart, targetDuration, targetStaffId, id);
+            if (!isStaffOk) {
+                throw new Error('担当者の予定が重複しています');
+            }
         }
 
         // 2. Check Patient
-        // Only need to check if time changed, but checking always is safer
         const isPatientOk = await checkPatientAvailability(current.patientId, targetStart, targetDuration, id);
         if (!isPatientOk) {
             throw new Error('この患者は同じ時間帯に既に予約があります');
@@ -283,7 +295,7 @@ export const updateAppointment = async (id: string, data: { startAt?: Date, memo
     return await prisma.appointment.update({
         where: { id },
         data: {
-            ...data,
+            ...data, // Prisma handles undefined as "skip" and null as "set null"
             status: 'scheduled'
         }
     });

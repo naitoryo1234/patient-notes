@@ -130,7 +130,7 @@ export function AppointmentEditModal({ appointment, staffList, isOpen, onClose }
                             defaultValue={appointment.staffId || ''}
                             className="w-full border-slate-300 rounded-md focus:ring-indigo-500"
                         >
-                            <option value="">-- 指定なし --</option>
+                            <option value="">-- 指定なし (未定) --</option>
                             {staffList.map(staff => (
                                 <option key={staff.id} value={staff.id}>
                                     {staff.name} ({staff.role})

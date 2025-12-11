@@ -245,8 +245,11 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                 const diff = differenceInMinutes(visitDate, new Date());
                                 const isExpired = diff < -60; // 1 hour passed
                                 const isCancelled = apt.status === 'cancelled';
+                                const isUnassigned = !isCancelled && !isExpired && !apt.staffId;
 
-                                const rowClass = isCancelled ? 'bg-slate-50 opacity-60' : (isExpired ? 'bg-slate-50' : 'bg-white');
+                                let rowClass = isCancelled ? 'bg-slate-50 opacity-60' : (isExpired ? 'bg-slate-50' : 'bg-white');
+                                if (isUnassigned) rowClass = 'bg-red-50 hover:bg-red-100 border-l-[3px] border-l-red-400';
+
                                 const textClass = isCancelled ? 'text-slate-400 line-through' : (isExpired ? 'text-slate-400' : 'text-slate-700');
 
                                 return (
@@ -281,7 +284,14 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                                     {apt.staffName}
                                                 </span>
                                             ) : (
-                                                <span className="text-slate-300">-</span>
+                                                !isCancelled && !isExpired ? (
+                                                    <span className="inline-flex items-center gap-1 text-red-600 font-bold text-xs animate-pulse">
+                                                        <AlertCircle className="w-3.5 h-3.5" />
+                                                        担当未定
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-slate-300">-</span>
+                                                )
                                             )}
                                         </td>
                                         <td className={`px-4 py-3 ${textClass} max-w-xs`}>

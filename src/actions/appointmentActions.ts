@@ -55,8 +55,20 @@ export async function updateAppointmentAction(formData: FormData) {
     const startAt = new Date(`${dateStr}T${timeStr}`);
     const duration = formData.get('duration') ? parseInt(formData.get('duration') as string) : undefined;
 
+    // Convert staffId: "" -> null (unassign), string -> string (assign), null/undefined -> undefined (no change, but form always sends something)
+    // Actually, form data "staffId" will be "" if "Unassigned" is selected.
+    // So:
+    const updateData: any = { startAt, memo, duration };
+
+    if (staffId === "") {
+        updateData.staffId = null; // Unassign
+    } else if (staffId) {
+        updateData.staffId = staffId; // Assign
+    }
+    // If we wanted "no change", we wouldn't include staffId in the updateData, but here we always get it from form.
+
     try {
-        await updateAppointment(id, { startAt, memo, staffId: staffId || undefined, duration });
+        await updateAppointment(id, updateData);
         revalidatePath('/');
         return { success: true };
     } catch (e: any) {
