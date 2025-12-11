@@ -172,7 +172,7 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
                 open={confirmOpen}
                 onOpenChange={setConfirmOpen}
                 title="申し送り事項を確認済みにしますか？"
-                description="確認済みにすると「要確認」タブから消え、アラートが解除されます。"
+                description="確認済みにすると、アラート表示が解除され、未解決リストから除外されます。"
                 confirmLabel="確認済みにする"
                 variant="primary"
                 onConfirm={handleResolveAdminMemo}
