@@ -9,6 +9,20 @@
 ## 🕒 バージョン履歴 (Version History)
 
 
+### v1.1.4: 型定義整理 & コード品質向上
+**日付**: 2025-12-11
+**ステータス**: 実装完了
+
+#### 変更内容
+*   **@ts-ignore の完全排除**:
+    *   `appointmentService.ts`, `AppointmentListClient.tsx`, `DailyAppointmentPanel.tsx` 等、計10箇所以上に残っていた `@ts-ignore` を全て削除。
+    *   Prismaスキーマに正式に定義されている `adminMemo`, `isMemoResolved`, `arrivedAt` フィールドを、型定義に正しく反映。
+*   **recordService.ts の修正**:
+    *   カルテ作成時の `staffId` が必須であることをサービスレイヤーで明示的にバリデート。
+
+#### 変更の背景 / 意思決定
+*   型安全性を高め、TypeScriptコンパイラによるエラー検出を最大限に活用するため。
+*   `@ts-ignore` は一時的なワークアラウンドとして使用されていたが、スキーマが確定したため正式に解消した。
 
 ### v1.1.3: 事務用申し送り強化 & リスト操作性改善
 **日付**: 2025-12-11
