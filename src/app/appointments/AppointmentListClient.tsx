@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Pencil, Trash2, Calendar, User, History, CheckCircle2, XCircle, CalendarClock, AlertCircle, AlertTriangle, ChevronLeft, ChevronRight, X, FileText } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface AppointmentListClientProps {
     initialAppointments: Appointment[];
@@ -24,8 +25,10 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
     const [viewingMemo, setViewingMemo] = useState<{ patient: string; memo: string } | null>(null);
     const [filterStaffId, setFilterStaffId] = useState<string>('all');
-    const [filterDate, setFilterDate] = useState<Date | null>(null); // null = all dates
-    const [filterPatient, setFilterPatient] = useState<string>(''); // 患者名検索
+    const [filterDate, setFilterDate] = useState<Date | null>(null);
+    const [filterPatient, setFilterPatient] = useState<string>('');
+    const [cancelConfirm, setCancelConfirm] = useState<{ open: boolean; id: string }>({ open: false, id: '' });
+    const [memoConfirm, setMemoConfirm] = useState<{ open: boolean; id: string; resolved: boolean }>({ open: false, id: '', resolved: false });
 
     const toggleHistory = () => {
         // Default is TRUE (show past). So to hide, we send history=false. To show, we clear param.
@@ -33,14 +36,18 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
         router.push(`/appointments${query}`);
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('本当にこの予約をキャンセルしますか？')) return;
-        const res = await cancelAppointmentAction(id);
+    const handleDelete = async () => {
+        const res = await cancelAppointmentAction(cancelConfirm.id);
         if (res.success) {
             router.refresh();
         } else {
             alert(res.message);
         }
+    };
+
+    const handleMemoToggle = async () => {
+        await toggleAdminMemoResolutionAction(memoConfirm.id, memoConfirm.resolved);
+        router.refresh();
     };
 
     const getStatusIcon = (status: string | undefined) => {
@@ -332,11 +339,9 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                                         ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
                                                         : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 opacity-80'
                                                         }`}
-                                                    onClick={async (e) => {
+                                                    onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (!confirm(apt.isMemoResolved ? '申し送り事項を未確認に戻しますか？' : '申し送り事項を確認済みにしますか？')) return;
-                                                        await toggleAdminMemoResolutionAction(apt.id, !apt.isMemoResolved);
-                                                        router.refresh();
+                                                        setMemoConfirm({ open: true, id: apt.id, resolved: !apt.isMemoResolved });
                                                     }}
                                                     title="クリックして確認状態を切り替え"
                                                 >
@@ -368,7 +373,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                                 </button>
                                                 {!isCancelled && (
                                                     <button
-                                                        onClick={() => handleDelete(apt.id)}
+                                                        onClick={() => setCancelConfirm({ open: true, id: apt.id })}
                                                         className="p-1.5 bg-white border border-slate-200 rounded hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors text-slate-500"
                                                         title="キャンセル"
                                                     >
@@ -419,6 +424,26 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                     </Dialog>
                 )
             }
+
+            <ConfirmDialog
+                open={cancelConfirm.open}
+                onOpenChange={(open) => setCancelConfirm(prev => ({ ...prev, open }))}
+                title="この予約をキャンセルしますか？"
+                description="キャンセルした予約は予約一覧に「キャンセル」と表示されます。"
+                confirmLabel="キャンセルする"
+                variant="warning"
+                onConfirm={handleDelete}
+            />
+
+            <ConfirmDialog
+                open={memoConfirm.open}
+                onOpenChange={(open) => setMemoConfirm(prev => ({ ...prev, open }))}
+                title={memoConfirm.resolved ? '申し送り事項を確認済みにしますか？' : '申し送り事項を未確認に戻しますか？'}
+                description={memoConfirm.resolved ? '確認済みにすると「要確認」タブから消えます。' : '未確認に戻すと「要確認」タブに再表示されます。'}
+                confirmLabel="変更する"
+                variant="primary"
+                onConfirm={handleMemoToggle}
+            />
         </div >
     );
 }
