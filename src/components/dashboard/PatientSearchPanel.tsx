@@ -388,7 +388,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                 open={memoConfirm.open}
                 onOpenChange={(open) => setMemoConfirm(prev => ({ ...prev, open }))}
                 title="この申し送り事項を確認済みにしますか？"
-                description="確認済みにすると「要確認」タブから消えます。"
+                description="確認済みにすると、一覧上でグレーアウト表示になります。"
                 confirmLabel="確認済みにする"
                 variant="primary"
                 onConfirm={handleMemoResolve}

@@ -439,7 +439,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                 open={memoConfirm.open}
                 onOpenChange={(open) => setMemoConfirm(prev => ({ ...prev, open }))}
                 title={memoConfirm.resolved ? '申し送り事項を確認済みにしますか？' : '申し送り事項を未確認に戻しますか？'}
-                description={memoConfirm.resolved ? '確認済みにすると「要確認」タブから消えます。' : '未確認に戻すと「要確認」タブに再表示されます。'}
+                description={memoConfirm.resolved ? '確認済みにすると、この項目のアラート表示が解除されます。' : '未確認に戻すと、再度アラート表示になります。'}
                 confirmLabel="変更する"
                 variant="primary"
                 onConfirm={handleMemoToggle}
