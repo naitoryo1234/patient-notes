@@ -9,6 +9,7 @@ import { parseAiText } from '@/services/aiParser';
 import { format } from 'date-fns';
 import { Staff } from '@/services/staffService';
 import { FormFieldConfig } from '@/components/form/ConfigForm';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface RecordFormContainerProps {
     action: (formData: FormData) => Promise<any>;
@@ -39,6 +40,7 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
     const [aiText, setAiText] = useState('');
     const [formValues, setFormValues] = useState(initialValues);
     const [errors, setErrors] = useState<Record<string, string[]> | null>(null);
+    const [copyConfirmOpen, setCopyConfirmOpen] = useState(false);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -152,10 +154,13 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
         const hasContent = formValues.subjective || formValues.objective || formValues.assessment || formValues.plan;
 
         if (hasContent) {
-            const confirmed = window.confirm('現在入力中の内容が上書きされますがよろしいですか？');
-            if (!confirmed) return;
+            setCopyConfirmOpen(true);
+        } else {
+            executeCopy();
         }
+    };
 
+    const executeCopy = () => {
         setFormValues(prev => ({
             ...prev,
             subjective: lastRecord.subjective || '',
@@ -364,6 +369,16 @@ P: `);
                     />
                 </div>
             )}
+
+            <ConfirmDialog
+                open={copyConfirmOpen}
+                onOpenChange={setCopyConfirmOpen}
+                title="\u73fe\u5728\u306e\u5165\u529b\u5185\u5bb9\u3092\u4e0a\u66f8\u304d\u3057\u307e\u3059\u304b\uff1f"
+                description="\u524d\u56de\u306e\u8a18\u9332\u3092\u30b3\u30d4\u30fc\u3059\u308b\u3068\u3001\u73fe\u5728\u5165\u529b\u4e2d\u306eS/O/A/P\u306e\u5185\u5bb9\u304c\u4e0a\u66f8\u304d\u3055\u308c\u307e\u3059\u3002"
+                confirmLabel="\u30b3\u30d4\u30fc\u3059\u308b"
+                variant="warning"
+                onConfirm={executeCopy}
+            />
         </div>
     );
 }

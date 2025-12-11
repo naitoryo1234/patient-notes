@@ -4,21 +4,19 @@ import { useState } from 'react';
 import { Staff } from '@/services/staffService';
 import { createStaff, toggleStaffStatus, updateStaff } from '@/actions/staffActions';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface StaffManagerProps {
     initialStaff: Staff[];
 }
 
 export function StaffManager({ initialStaff }: StaffManagerProps) {
-    // Note: Since we use revalidatePath in actions, the page will reload with new data.
-    // However, optimistic updates could satisfy UX better. For now, we rely on page reload (Next.js default behavior).
-    // Assuming the parent page passes fresher data upon simple re-render triggers.
-
     // Form State
     const [name, setName] = useState('');
     const [role, setRole] = useState('Director');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [toggleConfirm, setToggleConfirm] = useState<{ open: boolean; id: string; active: boolean; name: string }>({ open: false, id: '', active: false, name: '' });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -60,9 +58,8 @@ export function StaffManager({ initialStaff }: StaffManagerProps) {
         setRole('Director');
     };
 
-    const handleToggle = async (id: string, currentStatus: boolean) => {
-        if (!confirm(`${currentStatus ? '無効' : '有効'}にしますか？`)) return;
-        await toggleStaffStatus(id, currentStatus);
+    const handleToggle = async () => {
+        await toggleStaffStatus(toggleConfirm.id, toggleConfirm.active);
     };
 
     return (
@@ -157,7 +154,7 @@ export function StaffManager({ initialStaff }: StaffManagerProps) {
                                         編集
                                     </button>
                                     <button
-                                        onClick={() => handleToggle(staff.id, staff.active)}
+                                        onClick={() => setToggleConfirm({ open: true, id: staff.id, active: staff.active, name: staff.name })}
                                         className={`text-xs font-medium px-3 py-1 rounded border transition-colors ${staff.active
                                             ? 'text-red-600 border-red-200 hover:bg-red-50'
                                             : 'text-green-600 border-green-200 hover:bg-green-50'
@@ -178,6 +175,16 @@ export function StaffManager({ initialStaff }: StaffManagerProps) {
                     </tbody>
                 </table>
             </div>
+
+            <ConfirmDialog
+                open={toggleConfirm.open}
+                onOpenChange={(open) => setToggleConfirm(prev => ({ ...prev, open }))}
+                title={`${toggleConfirm.name}\u3055\u3093\u3092${toggleConfirm.active ? '\u7121\u52b9' : '\u6709\u52b9'}\u306b\u3057\u307e\u3059\u304b\uff1f`}
+                description={toggleConfirm.active ? '\u7121\u52b9\u306b\u3059\u308b\u3068\u3001\u62c5\u5f53\u8005\u9078\u629e\u30ea\u30b9\u30c8\u304b\u3089\u975e\u8868\u793a\u306b\u306a\u308a\u307e\u3059\u3002' : '\u6709\u52b9\u306b\u3059\u308b\u3068\u3001\u62c5\u5f53\u8005\u9078\u629e\u30ea\u30b9\u30c8\u306b\u518d\u8868\u793a\u3055\u308c\u307e\u3059\u3002'}
+                confirmLabel={toggleConfirm.active ? '\u7121\u52b9\u306b\u3059\u308b' : '\u6709\u52b9\u306b\u3059\u308b'}
+                variant="warning"
+                onConfirm={handleToggle}
+            />
         </div>
     );
 }
