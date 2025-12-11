@@ -89,7 +89,7 @@ export const getTodaysAppointments = async (date: Date = new Date()): Promise<Ap
 
 export const findAllAppointments = async (options?: { includePast?: boolean; includeCancelled?: boolean }) => {
     const now = new Date();
-    const where: any = {};
+    const where: { startAt?: { gte: Date }; status?: { not: string } } = {};
 
     if (!options?.includePast) {
         where.startAt = { gte: startOfDay(now) };
@@ -324,7 +324,7 @@ export const cancelAppointment = async (id: string) => {
     });
 };
 
-export const updateAppointment = async (id: string, data: { startAt?: Date, memo?: string, staffId?: string | null, duration?: number, adminMemo?: string | null, isMemoResolved?: boolean }) => {
+export const updateAppointment = async (id: string, data: { startAt?: Date, memo?: string, staffId?: string | null, duration?: number, adminMemo?: string | null, isMemoResolved?: boolean, status?: string }) => {
     const current = await prisma.appointment.findUnique({ where: { id } });
     if (!current) throw new Error('Appointment not found');
 
@@ -363,7 +363,6 @@ export const updateAppointment = async (id: string, data: { startAt?: Date, memo
         where: { id },
         data: {
             ...data, // Prisma handles undefined as "skip" and null as "set null"
-            status: 'scheduled'
         }
     });
 };
@@ -382,7 +381,7 @@ export const checkInAppointment = async (id: string) => {
 export const getUnresolvedAdminMemos = async (): Promise<Appointment[]> => {
     const appointments = await prisma.appointment.findMany({
         where: {
-            adminMemo: { not: null },
+            adminMemo: { not: null, notIn: [''] }, // Exclude null AND empty strings
             status: { not: 'cancelled' },
             OR: [
                 { isMemoResolved: false },

@@ -1,9 +1,10 @@
-import { findAllAppointments, getTodaysAppointments } from '@/services/appointmentService';
+import { findAllAppointments, getTodaysAppointments, getUnresolvedAdminMemos } from '@/services/appointmentService';
 import { getActiveStaff } from '@/services/staffService';
 import { AppointmentListClient } from './AppointmentListClient';
 import { DailyAppointmentPanel } from '@/components/dashboard/DailyAppointmentPanel';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
+import { LABELS } from '@/config/labels';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,7 @@ export default async function AppointmentsPage({ searchParams }: { searchParams:
     // Include cancelled to show them in list (greyed out)
     const appointments = await findAllAppointments({ includePast, includeCancelled: true });
     const todaysAppointments = await getTodaysAppointments();
+    const unresolvedMemos = await getUnresolvedAdminMemos();
     const staffList = await getActiveStaff();
 
     return (
@@ -23,15 +25,19 @@ export default async function AppointmentsPage({ searchParams }: { searchParams:
                     <ChevronLeft className="w-6 h-6" />
                 </Link>
                 <div className="flex-1">
-                    <h1 className="text-2xl font-bold text-slate-800">予約管理</h1>
-                    <p className="text-slate-500 text-sm">全ての予約の確認・変更・キャンセルを行えます</p>
+                    <h1 className="text-2xl font-bold text-slate-800">{LABELS.APPOINTMENT.MANAGER_TITLE}</h1>
+                    <p className="text-slate-500 text-sm">{LABELS.APPOINTMENT.MANAGER_DESC}</p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-180px)]">
                 {/* Left Column: Today's Schedule (Fixed Panel) */}
                 <div className="lg:col-span-1 h-full">
-                    <DailyAppointmentPanel appointments={todaysAppointments} staffList={staffList} />
+                    <DailyAppointmentPanel
+                        appointments={todaysAppointments}
+                        staffList={staffList}
+                        unresolvedMemos={unresolvedMemos}
+                    />
                 </div>
 
                 {/* Right Column: All Appointments */}

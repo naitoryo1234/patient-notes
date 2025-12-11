@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Bell, Clock, RefreshCw, Pencil, Trash2, AlertCircle, AlertTriangle, UserCheck } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { TERMS, LABELS } from '@/config/labels';
 
 interface DailyAppointmentPanelProps {
     appointments: Appointment[]; // Initial server data
@@ -160,27 +161,27 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                             {isArrived && (
                                 <span className="bg-indigo-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5">
                                     <UserCheck className="w-3 h-3" />
-                                    来院済み
+                                    {LABELS.STATUS.ARRIVED}
                                 </span>
                             )}
                             {isUpcoming && (
                                 <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse font-bold">
-                                    あと{diff}分
+                                    {LABELS.STATUS.COMING_SOON(diff)}
                                 </span>
                             )}
                             {isJustNow && (
                                 <span className="bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                                    来院時刻
+                                    {LABELS.STATUS.JUST_NOW}
                                 </span>
                             )}
                             {isCancelled && (
                                 <span className="bg-slate-200 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                                    キャンセル
+                                    {LABELS.STATUS.CANCELLED}
                                 </span>
                             )}
                             {isDone && (
                                 <span className="bg-slate-200 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                                    完了
+                                    {LABELS.STATUS.DONE}
                                 </span>
                             )}
                         </div>
@@ -191,7 +192,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
 
                     {/* Row 2: Patient Name + Duration Badge */}
                     <div className="flex justify-between items-center mb-1">
-                        <div className={`font-bold text-base transition-colors ${isCancelled ? 'text-slate-400 line-through' : 'text-slate-800 group-hover:text-blue-600'}`}>
+                        <div className={`font-bold text-base transition-colors line-clamp-2 ${isCancelled ? 'text-slate-400 line-through' : 'text-slate-800 group-hover:text-blue-600'}`}>
                             {apt.patientName} <span className="text-xs font-normal text-slate-500 ml-1 decoration-auto">{apt.patientKana}</span>
                         </div>
                         <span className="text-[10px] bg-slate-50 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
@@ -209,7 +210,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                         ) : !isCancelled && !isDone ? (
                             <div className="text-xs text-red-600 flex items-center gap-1 mb-1 font-bold animate-pulse">
                                 <AlertCircle className="w-3 h-3" />
-                                <span>担当未定</span>
+                                <span>{LABELS.STATUS.UNASSIGNED}</span>
                             </div>
                         ) : (
                             <div className="text-xs text-slate-300 mb-1">-</div>
@@ -250,7 +251,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                                 setCheckInConfirm({ open: true, id: apt.id, name: apt.patientName });
                             }}
                             className="p-1.5 bg-white text-slate-500 hover:text-emerald-600 rounded-md shadow-sm border border-slate-200 hover:border-emerald-300 transition-all font-bold flex items-center gap-1 cursor-pointer"
-                            title="来院チェックイン"
+                            title={`${LABELS.STATUS.ARRIVED}記録`}
                         >
                             <UserCheck className="w-3.5 h-3.5" />
                         </button>
@@ -287,10 +288,10 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
             <div className="bg-slate-800 text-white p-4 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-emerald-400" />
-                    <h2 className="font-bold text-lg">本日の来院予定</h2>
+                    <h2 className="font-bold text-lg">{LABELS.DASHBOARD.TITLE}</h2>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-400">
-                    <span>{format(currentTime, 'HH:mm')} 更新</span>
+                    <span>{format(currentTime, 'HH:mm')} {LABELS.COMMON.UPDATE}</span>
                     <button onClick={handleRefresh} className="hover:text-white transition-colors">
                         <RefreshCw className="w-4 h-4" />
                     </button>
@@ -300,20 +301,20 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
             {pendingAssignments > 0 && (
                 <div className="bg-amber-50 border-b border-amber-100 p-2 flex items-center gap-2 text-xs text-amber-700 font-bold px-4 animate-in slide-in-from-top-1">
                     <AlertCircle className="w-4 h-4 text-amber-600" />
-                    <span>担当未定の予約が {pendingAssignments} 件あります</span>
+                    <span>{LABELS.DASHBOARD.UNASSIGNED_ALERT(pendingAssignments)}</span>
                 </div>
             )}
             {pendingMemos > 0 && (
                 <div className="bg-red-50 border-b border-red-100 p-2 flex items-center gap-2 text-xs text-red-700 font-bold px-4 animate-in slide-in-from-top-1">
                     <AlertTriangle className="w-4 h-4 text-red-600" />
-                    <span>本日の未確認申し送り: {pendingMemos}件</span>
+                    <span>{LABELS.DASHBOARD.MEMO_ALERT(pendingMemos)}</span>
                 </div>
             )}
 
             <div className="flex-1 overflow-y-auto p-2 space-y-4 min-h-0">
                 {appointments.length === 0 ? (
                     <div className="p-8 text-center text-slate-400 text-sm">
-                        予定はありません
+                        {LABELS.DASHBOARD.NO_APPOINTMENTS}
                     </div>
                 ) : (
                     <>
@@ -322,7 +323,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                             {activeAppointments.length > 0 ? (
                                 activeAppointments.map(apt => renderCard(apt))
                             ) : (
-                                <p className="text-sm text-slate-400 text-center py-4">これからの予約はありません</p>
+                                <p className="text-sm text-slate-400 text-center py-4">{LABELS.DASHBOARD.NO_UPCOMING_APPOINTMENTS}</p>
                             )}
                         </div>
 
@@ -380,8 +381,8 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
             <ConfirmDialog
                 open={checkInConfirm.open}
                 onOpenChange={(open) => setCheckInConfirm(prev => ({ ...prev, open }))}
-                title={`${checkInConfirm.name}様の来院を記録しますか？`}
-                confirmLabel="記録する"
+                title={LABELS.APPOINTMENT.CHECKIN_CONFIRM_TITLE(checkInConfirm.name)}
+                confirmLabel={LABELS.APPOINTMENT.CHECKIN_EXECUTE}
                 variant="primary"
                 onConfirm={handleCheckIn}
             />
@@ -389,9 +390,9 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
             <ConfirmDialog
                 open={cancelConfirm.open}
                 onOpenChange={(open) => setCancelConfirm(prev => ({ ...prev, open }))}
-                title="この予約をキャンセルしますか？"
-                description="キャンセルした予約は予約一覧に「キャンセル」と表示されます。"
-                confirmLabel="キャンセルする"
+                title={LABELS.APPOINTMENT.CANCEL_CONFIRM_TITLE}
+                description={LABELS.APPOINTMENT.CANCEL_CONFIRM_DESC}
+                confirmLabel={LABELS.APPOINTMENT.CANCEL_EXECUTE}
                 variant="warning"
                 onConfirm={handleCancel}
             />

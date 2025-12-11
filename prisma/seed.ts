@@ -1,10 +1,10 @@
 import { PrismaClient } from '@prisma/client'
-import { subDays } from 'date-fns'
+import { subDays, addMinutes, setHours, setMinutes, startOfDay, addDays } from 'date-fns'
 
 const prisma = new PrismaClient()
 
 async function main() {
-    console.log('🌱 Start seeding with realistic test data...')
+    console.log('🌱 Start seeding with comprehensive test data...')
 
     // Clean up
     await prisma.appointment.deleteMany({})
@@ -12,7 +12,9 @@ async function main() {
     await prisma.patient.deleteMany({})
     await prisma.staff.deleteMany({})
 
-    // === STAFF SETUP ===
+    // ==========================================
+    // 1. STAFF SETUP
+    // ==========================================
     const director = await prisma.staff.create({
         data: {
             id: 'staff-001',
@@ -31,243 +33,251 @@ async function main() {
         }
     })
 
-    // === PATIENTS ===
+    const trainee = await prisma.staff.create({
+        data: {
+            id: 'staff-003',
+            name: '研修生 佐藤',
+            role: 'Other',
+            active: false // Inactive staff for testing filters
+        }
+    })
 
-    // Patient 1: VIP常連（腰痛）
-    const patient1 = await prisma.patient.create({
+    // Helper for date manipulation (relative to NOW)
+    const today = new Date();
+    const setTime = (date: Date, hours: number, minutes: number) => setMinutes(setHours(date, hours), minutes);
+
+    // ==========================================
+    // 2. PATIENTS & SCENARIOS
+    // ==========================================
+
+    // Scenario A: The "Ideal" Regular Patient
+    // - Has consistent history
+    // - Currently scheduled
+    const patientRegular = await prisma.patient.create({
         data: {
             pId: 1001,
             name: '山田 太郎',
             kana: 'やまだ たろう',
-            birthDate: new Date('1975-05-15'),
+            birthDate: new Date('1980-01-01'),
             gender: '男性',
-            phone: '090-1234-5678',
-            memo: '常連のVIP患者。IT企業経営者。話好き。',
-            tags: JSON.stringify(['腰痛', 'VIP', '定期'])
+            phone: '090-1111-1111',
+            memo: '典型的な定期通院患者。',
+            tags: JSON.stringify(['腰痛', '定期'])
         }
     })
 
-    // Patient 2: 新患（肩こり）
-    const patient2 = await prisma.patient.create({
+    // Scenario B: The "Edge Case" Limit Tester
+    // - Extremely long name
+    // - Long kana
+    // - Max length tags
+    const patientEdge = await prisma.patient.create({
         data: {
-            pId: 1002,
-            name: '予約 多杉',
-            kana: 'よやく おおすぎ',
-            birthDate: new Date('1990-08-20'),
+            pId: 9999,
+            name: '寿限無寿限無五劫の擦り切れ海砂利水魚の水行末雲来末風来末食う寝る処に住む処やぶら小路の藪柑子パイポパイポパイポのシューリンガンシューリンガンのグーリンダイグーリンダイのポンポコピーのポンポコナーの長久命の長助',
+            kana: 'じゅげむじゅげむごこうのすりきれかいじゃりすいぎょのすいぎょうまつうんらいまつふうらいまつくうねるところにすむところでやぶらこうじのやぶこうじぱいぽぱいぽぱいぽのしゅーりんがんしゅーりんがんのぐーりんだいぐーりんだいのぽんぽこぴーのぽんぽこなーのちょうきゅうめいのちょうすけ',
+            birthDate: new Date('1900-01-01'),
+            gender: 'その他',
+            phone: '000-0000-0000',
+            memo: '名前表示のUI崩れ確認用。',
+            tags: JSON.stringify(['名前長過', '要注意', 'テスト', 'VIP', 'クレーマー', '特別対応'])
+        }
+    })
+
+    // Scenario C: The "Problematic" One (Verification Target)
+    // - Specific setup for the "Cancelled but Unresolved Memo" bug
+    const patientProblem = await prisma.patient.create({
+        data: {
+            pId: 2001,
+            name: '検証 健太',
+            kana: 'けんしょう けんた',
+            birthDate: new Date('1995-05-05'),
             gender: '男性',
-            phone: '080-9876-5432',
-            memo: '予約テスト用患者。今日の予約が多め。',
-            tags: JSON.stringify(['肩こり', '新患'])
+            phone: '090-2222-2222',
+            memo: 'システム検証用。',
+            tags: JSON.stringify(['検証'])
         }
     })
 
-    // Patient 3: 初診予定
-    const patient3 = await prisma.patient.create({
+    // Scenario D: The "Busy Bee"
+    // - Many appointments today
+    // - Mixed statuses
+    const patientBusy = await prisma.patient.create({
         data: {
-            pId: 1003,
-            name: '田中 花子',
-            kana: 'たなか はなこ',
-            birthDate: new Date('1988-03-10'),
+            pId: 3001,
+            name: '多忙 道子',
+            kana: 'たぼう みちこ',
+            birthDate: new Date('1988-08-08'),
             gender: '女性',
-            phone: '070-1111-2222',
-            memo: '友人の紹介。初診予定。',
-            tags: JSON.stringify(['紹介', '初診'])
+            phone: '090-3333-3333',
+            memo: '1日に複数回予約を入れる患者。',
+            tags: JSON.stringify(['集中治療'])
         }
     })
 
-    // Patient 4: キャンセル常習
-    const patient4 = await prisma.patient.create({
+    // Scenario E: The "Gap" History
+    // - Came once long ago, then huge gap
+    const patientGap = await prisma.patient.create({
         data: {
-            pId: 1004,
-            name: '高橋 愛子',
-            kana: 'たかはし あいこ',
-            birthDate: new Date('1995-12-25'),
-            gender: '女性',
-            phone: '090-5555-7777',
-            memo: '電話あり。急用のためキャンセル。',
-            tags: JSON.stringify(['要注意'])
-        }
-    })
-
-    // Patient 5: スタッフ未定のケース用
-    const patient5 = await prisma.patient.create({
-        data: {
-            pId: 1005,
-            name: '佐藤 次郎',
-            kana: 'さとう じろう',
-            birthDate: new Date('1982-07-07'),
+            pId: 4001,
+            name: '久々 久し',
+            kana: 'ひさびさ ひさし',
+            birthDate: new Date('1970-10-10'),
             gender: '男性',
-            phone: '080-3333-4444',
-            memo: '担当者指定なし。',
-            tags: JSON.stringify(['膝痛'])
+            phone: '090-4444-4444',
+            memo: '5年ぶりの来院。',
+            tags: JSON.stringify(['再診'])
         }
     })
 
-    // Patient 6: 長文メモテスト
-    const patient6 = await prisma.patient.create({
-        data: {
-            pId: 1006,
-            name: '長文 好き子',
-            kana: 'ちょうぶん すきこ',
-            birthDate: new Date('1985-05-05'),
-            gender: '女性',
-            phone: '070-8888-9999',
-            memo: 'この患者は非常に詳細なメモを持っています。例えば、初診時の様子から、趣味、家族構成、ペットの名前（ポチ、タマ、ミケ）、好きな食べ物（カレーライス、特に辛口）、嫌いな食べ物（ピーマン、ニンジン）、過去の病歴（幼少期に水疱瘡、20代で骨折）、最近の旅行先（北海道、沖縄、グアム）、休日の過ごし方（読書、映画鑑賞、ハイキング）、仕事の内容（IT企業のプロジェクトマネージャー、最近は残業が多い）、ストレスの要因（上司との人間関係、満員電車）、睡眠時間（平均6時間、最近は不眠気味）等々、ありとあらゆる情報がここに記載されています。',
-            tags: JSON.stringify(['頭痛', 'ストレス'])
-        }
-    })
+    // ==========================================
+    // 3. APPOINTMENTS (Dynamic Time)
+    // ==========================================
 
-    // === CLINICAL RECORDS (一部患者に履歴追加) ===
-    // Patient 1 (山田): 2回の履歴
-    await prisma.clinicalRecord.create({
-        data: {
-            patientId: patient1.id,
-            visitDate: subDays(new Date(), 7),
-            visitCount: 1,
-            subjective: '腰が重い。朝起きるのがつらい。',
-            objective: 'L4/L5圧痛あり。可動域制限。',
-            assessment: '腰痛症（筋筋膜性）',
-            plan: '鍼治療 + ストレッチ指導',
-            staffId: director.id
-        }
-    })
+    console.log('📅 Generating Appointments relative to:', today.toLocaleString())
 
-    await prisma.clinicalRecord.create({
-        data: {
-            patientId: patient1.id,
-            visitDate: subDays(new Date(), 3),
-            visitCount: 2,
-            subjective: '少し楽になった。',
-            objective: '圧痛軽減。',
-            assessment: '経過良好',
-            plan: '継続治療',
-            staffId: director.id
-        }
-    })
+    // --- TODAY'S SCHEDULE ---
 
-    // Patient 2 (予約多杉): 1回の履歴
-    await prisma.clinicalRecord.create({
-        data: {
-            patientId: patient2.id,
-            visitDate: subDays(new Date(), 14),
-            visitCount: 1,
-            subjective: '首から肩にかけてこりがひどい',
-            objective: '僧帽筋緊張',
-            assessment: '肩こり症',
-            plan: 'マッサージ + 温熱療法',
-            staffId: therapist.id
-        }
-    })
-
-    // Patient 3 (田中): 初診記録
-    await prisma.clinicalRecord.create({
-        data: {
-            patientId: patient3.id,
-            visitDate: subDays(new Date(), 5),
-            visitCount: 1,
-            subjective: '頭痛が続いている',
-            objective: '首の可動域制限あり',
-            assessment: '緊張型頭痛',
-            plan: '鍼治療 + 生活指導',
-            staffId: director.id
-        }
-    })
-
-    // Patient 5 (佐藤): 膝痛の履歴
-    await prisma.clinicalRecord.create({
-        data: {
-            patientId: patient5.id,
-            visitDate: subDays(new Date(), 10),
-            visitCount: 1,
-            subjective: '階段の上り下りで膝が痛い',
-            objective: '右膝内側圧痛、腫脹あり',
-            assessment: '変形性膝関節症の疑い',
-            plan: '電気治療 + 膝周囲筋強化',
-            staffId: therapist.id
-        }
-    })
-
-    // === APPOINTMENTS ===
-    // 基準時刻: 2025-12-11 21:30 (夜間テスト用)
-
-    // 1. 21:40 - 直近の未来 (未解決メモあり)
+    // 1. Morning - Completed (Busy Bee)
     await prisma.appointment.create({
         data: {
-            patientId: patient1.id,
-            startAt: new Date('2025-12-11T21:40:00+09:00'),
-            duration: 30,
-            status: 'scheduled',
-            memo: '夜間診療テスト',
-            adminMemo: '【重要】夜間料金の適用について説明すること。',
-            isMemoResolved: false,
-            staffId: director.id
-        }
-    })
-
-    // 2. 22:00 - 少し先の未来 (メモなし)
-    await prisma.appointment.create({
-        data: {
-            patientId: patient2.id,
-            startAt: new Date('2025-12-11T22:00:00+09:00'),
-            duration: 60,
-            status: 'scheduled',
-            memo: '遅い時間の予約',
-            staffId: therapist.id
-        }
-    })
-
-    // 3. 23:00 - 深夜 (未解決メモ - 長文)
-    await prisma.appointment.create({
-        data: {
-            patientId: patient3.id,
-            startAt: new Date('2025-12-11T23:00:00+09:00'),
-            duration: 30,
-            status: 'scheduled',
-            memo: '深夜枠',
-            adminMemo: '深夜対応のため、入り口の施錠に注意してください。患者様には裏口から入っていただくよう案内済みです。',
-            isMemoResolved: false,
-            staffId: director.id
-        }
-    })
-
-    // 4. 23:30 - 深夜 (解決済みメモ) -> ここがトグルテストの肝
-    await prisma.appointment.create({
-        data: {
-            patientId: patient5.id,
-            startAt: new Date('2025-12-11T23:30:00+09:00'),
-            duration: 30,
-            status: 'scheduled',
-            memo: '最終枠',
-            adminMemo: 'この時間帯はスタッフ1名体制です。',
-            isMemoResolved: true, // 最初から解決済みになっている
-            staffId: director.id
-        }
-    })
-
-    // 過去の予約（本日）
-    await prisma.appointment.create({
-        data: {
-            patientId: patient4.id,
-            startAt: new Date('2025-12-11T16:00:00+09:00'),
+            patientId: patientBusy.id,
+            startAt: setTime(today, 9, 0),
             duration: 60,
             status: 'completed',
-            memo: '日中の予約（完了済み）',
-            staffId: therapist.id
-        }
-    })
-
-    // --- 12/12（明日）の予約 ---
-    await prisma.appointment.create({
-        data: {
-            patientId: patient2.id,
-            startAt: new Date('2025-12-12T10:00:00+09:00'),
-            duration: 60,
-            status: 'scheduled',
+            memo: '朝一番の施術',
             staffId: director.id
         }
     })
 
-    console.log('✅ Seeding completed with Night Scenarios!')
+    // 2. Noon - Cancelled (Regular)
+    await prisma.appointment.create({
+        data: {
+            patientId: patientRegular.id,
+            startAt: setTime(today, 12, 0),
+            duration: 30,
+            status: 'cancelled',
+            memo: '昼休みに来たかったがキャンセル',
+            staffId: therapist.id
+        }
+    })
+
+    // 3. Afternoon - Active/Unassigned (Gap) - "Coming Soon" or "Just Now" depending on run time
+    // Let's make it fixed relative to 'now' to ensure it's visible as "Upcoming" or "Recent"
+    // If run at night, these might be "past" but "scheduled" (status checks usually handle this)
+    // We'll place one near "NOW" to test the time indicator
+    const nearFuture = addMinutes(today, 30);
+    await prisma.appointment.create({
+        data: {
+            patientId: patientGap.id,
+            startAt: nearFuture,
+            duration: 45,
+            status: 'scheduled',
+            memo: '久しぶりの来院枠。担当未定。',
+            staffId: null // Unassigned
+        }
+    })
+
+    // 4. Evening - The BUG VERIFICATION Case (Problem Patient)
+    // Cancelled Appointment with UNRESOLVED Admin Memo
+    // This tests if the system incorrectly shows it or if toggling memo reverts status
+    await prisma.appointment.create({
+        data: {
+            patientId: patientProblem.id,
+            startAt: setTime(today, 18, 0),
+            duration: 30,
+            status: 'cancelled',
+            memo: '直前キャンセル',
+            adminMemo: '【重要検証】キャンセル済みだが、この申し送りは未確認(Unresolved)のまま。これをResolvedにしても復活してはいけない。',
+            isMemoResolved: false,
+            staffId: director.id
+        }
+    })
+
+    // 5. Night - Long Name Test
+    await prisma.appointment.create({
+        data: {
+            patientId: patientEdge.id,
+            startAt: setTime(today, 20, 0),
+            duration: 90,
+            status: 'scheduled',
+            memo: '名前によるレイアウト崩れを確認。',
+            adminMemo: 'VIP対応必須。お茶は熱めで。',
+            isMemoResolved: false,
+            staffId: director.id
+        }
+    })
+
+    // 6. Night - Detailed Memo (Resolved)
+    await prisma.appointment.create({
+        data: {
+            patientId: patientBusy.id,
+            startAt: setTime(today, 21, 0),
+            duration: 30,
+            status: 'scheduled',
+            memo: '本日2回目の来院。',
+            adminMemo: '前回の施術（朝）の経過を聞くこと。申し送りは確認済み。',
+            isMemoResolved: true,
+            staffId: therapist.id
+        }
+    })
+
+    // --- FUTURE ---
+    await prisma.appointment.create({
+        data: {
+            patientId: patientRegular.id,
+            startAt: addDays(setTime(today, 10, 0), 1), // Tomorrow 10am
+            duration: 60,
+            status: 'scheduled',
+            memo: '明日の予約',
+            staffId: director.id
+        }
+    })
+
+    // ==========================================
+    // 4. CLINICAL RECORDS
+    // ==========================================
+
+    // Regular Patient: Consistent history
+    await prisma.clinicalRecord.create({
+        data: {
+            patientId: patientRegular.id,
+            visitDate: subDays(today, 14),
+            visitCount: 1,
+            subjective: '腰が痛い',
+            objective: 'L4圧痛',
+            assessment: '腰痛症',
+            plan: '経過観察',
+            staffId: director.id
+        }
+    })
+    await prisma.clinicalRecord.create({
+        data: {
+            patientId: patientRegular.id,
+            visitDate: subDays(today, 7),
+            visitCount: 2,
+            subjective: 'だいぶ良い',
+            objective: '可動域改善',
+            assessment: '回復期',
+            plan: '継続',
+            staffId: director.id
+        }
+    })
+
+    // Gap Patient: One old record
+    await prisma.clinicalRecord.create({
+        data: {
+            patientId: patientGap.id,
+            visitDate: subDays(today, 1800), // ~5 years ago
+            visitCount: 1,
+            subjective: '若い頃の怪我',
+            objective: '古傷',
+            assessment: '捻挫後遺症',
+            plan: '完治',
+            staffId: director.id
+        }
+    })
+
+    console.log('✅ Seeding completed with Comprehensive Stress Test Data!')
 }
 
 main()

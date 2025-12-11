@@ -10,11 +10,12 @@ import { Staff } from '@/services/staffService';
 import { format, addDays } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
-import { TERMS } from '@/config/labels';
+import { TERMS, LABELS } from '@/config/labels';
 
 interface NewAppointmentButtonProps {
     staffList: Staff[];
     initialDate?: Date; // Current filtered date
+    className?: string;
 }
 
 type PatientResult = {
@@ -25,7 +26,7 @@ type PatientResult = {
     birthDate: string | null;
 };
 
-export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentButtonProps) {
+export function NewAppointmentButton({ staffList, initialDate, className }: NewAppointmentButtonProps) {
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [step, setStep] = useState<'search' | 'form'>('search');
@@ -108,14 +109,14 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-[#6366f1] hover:bg-[#4f46e5] text-white shadow-md gap-3 px-6 h-11 rounded-lg text-base font-bold transition-all hover:shadow-lg">
+                <Button className={`bg-[#6366f1] hover:bg-[#4f46e5] text-white shadow-md gap-3 px-6 h-11 rounded-lg text-base font-bold transition-all hover:shadow-lg ${className}`}>
                     <CalendarPlus className="w-5 h-5" />
-                    新規{TERMS.APPOINTMENT}
+                    {LABELS.COMMON.NEW}{TERMS.APPOINTMENT}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>新規{TERMS.APPOINTMENT}を作成</DialogTitle>
+                    <DialogTitle>{LABELS.COMMON.NEW}{TERMS.APPOINTMENT}を作成</DialogTitle>
                 </DialogHeader>
 
                 {step === 'search' ? (
@@ -123,7 +124,7 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
                         <div className="relative">
                             <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                             <input
-                                placeholder={`${TERMS.PATIENT}名・フリガナ・No.で検索...`}
+                                placeholder={LABELS.DASHBOARD.SEARCH_PLACEHOLDER}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-9 flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
@@ -134,7 +135,7 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
                         <div className="min-h-[200px] max-h-[300px] overflow-y-auto border rounded-md p-1 bg-slate-50">
                             {searchResults.length === 0 ? (
                                 <div className="p-4 text-center text-slate-400 text-sm">
-                                    {searchQuery.length < 1 ? '検索してください' : `該当する${TERMS.PATIENT}がいません`}
+                                    {searchQuery.length < 1 ? LABELS.DASHBOARD.PLEASE_SEARCH : LABELS.DASHBOARD.NO_SEARCH_RESULT(searchQuery)}
                                 </div>
                             ) : (
                                 <div className="space-y-1">
@@ -171,7 +172,7 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
                                 </div>
                             </div>
                             <Button variant="ghost" size="sm" onClick={() => setStep('search')} className="text-xs h-7">
-                                変更
+                                {LABELS.COMMON.CHANGE}
                             </Button>
                         </div>
 
@@ -179,7 +180,7 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
                             <input type="hidden" name="patientId" value={selectedPatient?.id} />
 
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 block">日時・時間</label>
+                                <label className="text-sm font-bold text-slate-700 block">{LABELS.FORM.DATE_TIME}</label>
                                 <div className="flex gap-2">
                                     <input
                                         type="date"
@@ -230,13 +231,13 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 block">担当者</label>
+                                <label className="text-sm font-bold text-slate-700 block">{TERMS.STAFF}</label>
                                 <select
                                     name="staffId"
                                     className="border rounded px-3 py-2 text-sm w-full bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
                                     defaultValue=""
                                 >
-                                    <option value="">担当者 (未定)</option>
+                                    <option value="">{LABELS.FORM.SELECT_STAFF(TERMS.STAFF)}</option>
                                     {staffList.map(s => (
                                         <option key={s.id} value={s.id}>{s.name}</option>
                                     ))}
@@ -244,19 +245,19 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 block">メモ</label>
+                                <label className="text-sm font-bold text-slate-700 block">{LABELS.PATIENT_FORM.MEMO.split(' ')[0]}</label>
                                 <input
                                     type="text"
                                     name="memo"
-                                    placeholder="例: 電話予約 抜糸希望"
+                                    placeholder={LABELS.FORM.MEMO_PLACEHOLDER}
                                     className="border rounded px-3 py-2 text-sm w-full focus:ring-2 focus:ring-indigo-500 outline-none"
                                 />
                             </div>
 
                             <div className="flex justify-end gap-2 pt-2">
-                                <Button type="button" variant="ghost" onClick={() => setIsOpen(false)} disabled={isPending}>キャンセル</Button>
+                                <Button type="button" variant="ghost" onClick={() => setIsOpen(false)} disabled={isPending}>{LABELS.DIALOG.DEFAULT_CANCEL}</Button>
                                 <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={isPending}>
-                                    {isPending ? `${TERMS.APPOINTMENT}中...` : `${TERMS.APPOINTMENT}を確定`}
+                                    {isPending ? LABELS.FORM.SUBMIT_CREATING(TERMS.APPOINTMENT) : LABELS.FORM.SUBMIT_CONFIRM(TERMS.APPOINTMENT)}
                                 </Button>
                             </div>
                         </form>

@@ -11,7 +11,7 @@ import { NewAppointmentButton } from '@/components/dashboard/NewAppointmentButto
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Pencil, Trash2, Calendar, User, History, CheckCircle2, XCircle, CalendarClock, AlertCircle, AlertTriangle, ChevronLeft, ChevronRight, X, FileText } from 'lucide-react';
+import { Pencil, Trash2, Calendar, User, History, CheckCircle2, XCircle, CalendarClock, AlertCircle, AlertTriangle, ChevronLeft, ChevronRight, X, FileText, Search } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { LABELS, TERMS } from '@/config/labels';
 
@@ -28,6 +28,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
     const [filterStaffId, setFilterStaffId] = useState<string>('all');
     const [filterDate, setFilterDate] = useState<Date | null>(null);
     const [filterPatient, setFilterPatient] = useState<string>('');
+    const [filterUnresolved, setFilterUnresolved] = useState<boolean>(false);
     const [cancelConfirm, setCancelConfirm] = useState<{ open: boolean; id: string }>({ open: false, id: '' });
     const [memoConfirm, setMemoConfirm] = useState<{ open: boolean; id: string; resolved: boolean }>({ open: false, id: '', resolved: false });
 
@@ -97,6 +98,10 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
             const kanaMatch = apt.patientKana.toLowerCase().includes(query);
             if (!nameMatch && !kanaMatch) return false;
         }
+        // Unresolved Memo filter
+        if (filterUnresolved) {
+            if (!apt.adminMemo || apt.isMemoResolved) return false;
+        }
         return true;
     });
 
@@ -111,15 +116,40 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
             {/* Alerts */}
             <div className="flex flex-col">
                 {pendingAssignments > 0 && (
-                    <div className="bg-amber-50 border-b border-amber-100 p-2 flex items-center gap-2 text-xs text-amber-700 font-bold px-4 animate-in slide-in-from-top-1">
+                    <div
+                        onClick={() => {
+                            setFilterStaffId('unassigned');
+                            setFilterUnresolved(false);
+                        }}
+                        className="bg-amber-50 border-b border-amber-100 p-2 flex items-center gap-2 text-xs text-amber-700 font-bold px-4 animate-in slide-in-from-top-1 cursor-pointer hover:bg-amber-100 transition-colors"
+                        title="クリックして担当者未定のみ表示"
+                    >
                         <AlertCircle className="w-4 h-4 text-amber-600" />
-                        <span>担当未定の予約が {pendingAssignments} 件あります</span>
+                        <span>{LABELS.DASHBOARD.UNASSIGNED_ALERT(pendingAssignments)}</span>
                     </div>
                 )}
                 {pendingMemos > 0 && (
-                    <div className="bg-red-50 border-b border-red-100 p-2 flex items-center gap-2 text-xs text-red-700 font-bold px-4 animate-in slide-in-from-top-1">
+                    <div
+                        onClick={() => {
+                            setFilterUnresolved(true);
+                            setFilterStaffId('all');
+                        }}
+                        className="bg-red-50 border-b border-red-100 p-2 flex items-center gap-2 text-xs text-red-700 font-bold px-4 animate-in slide-in-from-top-1 cursor-pointer hover:bg-red-100 transition-colors"
+                        title="クリックして未確認申し送りのみ表示"
+                    >
                         <AlertTriangle className="w-4 h-4 text-red-600" />
-                        <span>すべての未確認申し送り: {pendingMemos}件</span>
+                        <span>{LABELS.DASHBOARD.MEMO_ALERT_ALL(pendingMemos)}</span>
+                        {filterUnresolved && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFilterUnresolved(false);
+                                }}
+                                className="ml-auto bg-white/50 hover:bg-white text-red-700 rounded-full p-0.5"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
@@ -143,7 +173,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                             type="text"
                             value={filterPatient}
                             onChange={(e) => setFilterPatient(e.target.value)}
-                            placeholder={`${TERMS.PATIENT}名・カナで検索...`}
+                            placeholder={LABELS.DASHBOARD.SEARCH_PLACEHOLDER}
                             className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         />
                         {filterPatient && (
@@ -162,11 +192,11 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                         onChange={(e) => setFilterStaffId(e.target.value)}
                         className="px-2 py-1.5 border border-slate-300 rounded text-sm text-slate-700 bg-white focus:ring-2 focus:ring-indigo-500 min-w-[120px]"
                     >
-                        <option value="all">担当: 全員</option>
+                        <option value="all">{LABELS.APPOINTMENT.FILTER_STAFF_ALL}</option>
                         {staffList.map(staff => (
                             <option key={staff.id} value={staff.id}>{staff.name}</option>
                         ))}
-                        <option value="unassigned">未定</option>
+                        <option value="unassigned">{LABELS.STATUS.UNASSIGNED}</option>
                     </select>
 
                     {/* Include Past Toggle Button */}
@@ -176,15 +206,15 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                             ? 'bg-slate-700 text-white border-slate-700 shadow-inner'
                             : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50 shadow-sm'
                             }`}
-                        title="過去の予約を表示するか切り替えます"
+                        title={LABELS.APPOINTMENT.FILTER_PAST_TOOLTIP}
                     >
                         <History className={`w-4 h-4 ${includePast ? 'text-slate-300' : 'text-slate-500'}`} />
-                        <span>過去含</span>
+                        <span>{LABELS.APPOINTMENT.FILTER_PAST}</span>
                     </button>
 
                     {/* Result Count */}
                     <div className="ml-auto text-sm text-slate-500 font-medium">
-                        全 {filteredAppointments.length} 件
+                        {LABELS.COMMON.TOTAL_COUNT(filteredAppointments.length)}
                     </div>
                 </div>
 
@@ -196,7 +226,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                         <button
                             onClick={() => navigateDate(-1)}
                             className="p-1 hover:bg-slate-100 rounded text-slate-500 transition-colors"
-                            title="前日"
+                            title={LABELS.COMMON.NAV_PREV}
                         >
                             <ChevronLeft className="w-4 h-4" />
                         </button>
@@ -208,74 +238,148 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                         {format(filterDate, 'M/d (EEE)', { locale: ja })}
                                     </span>
                                     {isToday(filterDate) && (
-                                        <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded font-medium">今日</span>
+                                        <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded font-medium">{LABELS.COMMON.NAV_TODAY}</span>
                                     )}
                                 </div>
                             ) : (
-                                <span className="text-sm text-slate-400">全期間</span>
+                                <span className="text-sm text-slate-400">{LABELS.COMMON.NAV_ALL_PERIOD}</span>
                             )}
                         </div>
 
                         <button
                             onClick={() => navigateDate(1)}
                             className="p-1 hover:bg-slate-100 rounded text-slate-500 transition-colors"
-                            title="翌日"
+                            title={LABELS.COMMON.NAV_NEXT}
                         >
                             <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
 
                     {/* Quick Jump */}
-                    <button onClick={() => setSpecificDate(0)} className="text-xs px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded transition-colors">今日</button>
-                    <button onClick={() => setSpecificDate(1)} className="text-xs px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded transition-colors">明日</button>
-                    <button onClick={() => navigateDate(7)} className="text-xs px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded transition-colors">+1週</button>
+                    <button onClick={() => setSpecificDate(0)} className="text-xs px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded transition-colors">{LABELS.COMMON.NAV_TODAY}</button>
+                    <button onClick={() => setSpecificDate(1)} className="text-xs px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded transition-colors">{LABELS.COMMON.NAV_TOMORROW}</button>
+                    <button onClick={() => navigateDate(7)} className="text-xs px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded transition-colors">{LABELS.COMMON.NAV_WEEK}</button>
+                    <button onClick={() => setFilterDate(null)} className={`text-xs px-2.5 py-1.5 border rounded transition-colors ${!filterDate ? 'bg-slate-800 text-white border-slate-800' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>{LABELS.COMMON.NAV_ALL_PERIOD}</button>
 
-                    {filterDate && (
-                        <button
-                            onClick={() => setFilterDate(null)}
-                            className="ml-1 text-xs px-2.5 py-1.5 text-red-600 hover:bg-red-50 rounded flex items-center gap-1 transition-colors"
-                        >
-                            <X className="w-3 h-3" /> 解除
-                        </button>
-                    )}
+
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="flex-1 overflow-auto">
+            {/* Search Status Bar */}
+            {(filterDate || filterStaffId !== 'all' || filterPatient || filterUnresolved) && (
+                <div className="bg-indigo-50 border-b border-indigo-100 px-4 py-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-indigo-900 animate-in slide-in-from-top-1">
+                    <div className="flex items-center gap-2 font-bold">
+                        <span>🔍 検索条件:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 items-center text-xs">
+                        {filterDate && (
+                            <span className="bg-white border border-indigo-200 px-2 py-0.5 rounded text-indigo-700">
+                                📅 {format(filterDate, 'yyyy/MM/dd (eee)', { locale: ja })}
+                            </span>
+                        )}
+                        {!filterDate && (
+                            <span className="bg-white border text-slate-400 border-slate-200 px-2 py-0.5 rounded">
+                                📅 全期間
+                            </span>
+                        )}
+
+                        {filterStaffId !== 'all' && (
+                            <span className="bg-white border border-indigo-200 px-2 py-0.5 rounded text-indigo-700 font-bold">
+                                👤 {filterStaffId === 'unassigned' ? LABELS.STATUS.UNASSIGNED : staffList.find(s => s.id === filterStaffId)?.name}
+                            </span>
+                        )}
+
+                        {filterPatient && (
+                            <span className="bg-white border border-indigo-200 px-2 py-0.5 rounded text-indigo-700 font-bold">
+                                🔡 "{filterPatient}"
+                            </span>
+                        )}
+
+                        {filterUnresolved && (
+                            <span className="bg-red-100 border border-red-200 px-2 py-0.5 rounded text-red-700 font-bold">
+                                ⚠️ 未確認のみ
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="h-4 w-px bg-indigo-200 hidden sm:block"></div>
+
+                    <div className="font-bold flex items-center gap-2 text-indigo-800">
+                        <span>📊 結果:</span>
+                        <span className={`text-lg ${filteredAppointments.length === 0 ? 'text-red-500' : ''}`}>
+                            {filteredAppointments.length}
+                        </span>
+                        <span className="text-xs font-normal">件</span>
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            setFilterDate(null);
+                            setFilterStaffId('all');
+                            setFilterPatient('');
+                            setFilterUnresolved(false);
+                        }}
+                        className="ml-auto text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100 px-2 py-1 rounded transition-colors"
+                    >
+                        条件をクリア
+                    </button>
+                </div>
+            )
+            }
+
+            {/* Desktop Table */}
+            <div className="hidden md:block flex-1 overflow-auto">
                 <table className="w-full text-left text-sm text-slate-700">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold sticky top-0 z-10">
                         <tr>
-                            <th className="px-4 py-3 whitespace-nowrap w-14 text-center">状態</th>
-                            <th className="px-4 py-3 whitespace-nowrap">日時</th>
+                            <th className="px-4 py-3 whitespace-nowrap w-14 text-center">{LABELS.COMMON.STATUS}</th>
+                            <th className="px-4 py-3 whitespace-nowrap">{LABELS.FORM.DATE_TIME}</th>
                             <th className="px-4 py-3 whitespace-nowrap">{TERMS.PATIENT}名</th>
-                            <th className="px-4 py-3 whitespace-nowrap">担当</th>
-                            <th className="px-4 py-3 whitespace-nowrap w-1/3">メモ</th>
-                            <th className="px-4 py-3 whitespace-nowrap text-right">操作</th>
+                            <th className="px-4 py-3 whitespace-nowrap">{TERMS.STAFF}</th>
+                            <th className="px-4 py-3 whitespace-nowrap w-[240px]">{LABELS.PATIENT_FORM.MEMO.split(' ')[0]}</th>
+                            <th className="px-4 py-3 whitespace-nowrap text-right w-[100px]">{LABELS.COMMON.OPERATION}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {filteredAppointments.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="p-8 text-center text-slate-400">
-                                    表示する予約はありません
+                                <td colSpan={6} className="p-12 text-center text-slate-400">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <Search className="w-8 h-8 text-slate-200" />
+                                        <p>{(filterDate || filterStaffId !== 'all' || filterPatient || filterUnresolved)
+                                            ? "条件に一致する予約は見つかりませんでした。"
+                                            : LABELS.APPOINTMENT.MSG_NO_DISPLAY_DATA}</p>
+                                        {(filterDate || filterStaffId !== 'all' || filterPatient || filterUnresolved) && (
+                                            <button
+                                                onClick={() => {
+                                                    setFilterDate(null);
+                                                    setFilterStaffId('all');
+                                                    setFilterPatient('');
+                                                    setFilterUnresolved(false);
+                                                }}
+                                                className="mt-2 text-sm text-indigo-600 hover:underline"
+                                            >
+                                                条件をリセットしてすべて表示
+                                            </button>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         ) : (
                             filteredAppointments.map((apt) => {
                                 const visitDate = new Date(apt.visitDate);
                                 const diff = differenceInMinutes(visitDate, new Date());
-                                const isExpired = diff < -60; // 1 hour passed
+                                const isExpired = diff < -60;
                                 const isCancelled = apt.status === 'cancelled';
                                 const isUnassigned = !isCancelled && !isExpired && !apt.staffId;
 
-                                let rowClass = isCancelled ? 'bg-slate-50 opacity-60' : (isExpired ? 'bg-slate-50' : 'bg-white');
+                                let rowClass = isCancelled ? 'bg-slate-50 opacity-60 hover:bg-slate-100' : (isExpired ? 'bg-slate-50 hover:bg-slate-100' : 'bg-white hover:bg-indigo-50');
                                 if (isUnassigned) rowClass = 'bg-red-50 hover:bg-red-100 border-l-[3px] border-l-red-400';
 
                                 const textClass = isCancelled ? 'text-slate-400 line-through' : (isExpired ? 'text-slate-400' : 'text-slate-700');
 
                                 return (
-                                    <tr key={apt.id} className={`${rowClass} group hover:bg-slate-50 transition-colors`}>
+                                    <tr key={apt.id} className={`${rowClass} group transition-colors`}>
                                         <td className="px-4 py-3 text-center">
                                             <div className="flex justify-center" title={apt.status}>
                                                 {getStatusIcon(apt.status)}
@@ -289,12 +393,21 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                                 {format(visitDate, 'HH:mm')}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 whitespace-nowrap">
-                                            <Link href={`/patients/${apt.patientId}`} className="hover:underline flex flex-col">
-                                                <span className={`font-bold text-base ${isCancelled ? 'text-slate-400 line-through' : (isExpired ? '' : 'text-indigo-900')}`}>
-                                                    {apt.patientName}
-                                                </span>
-                                                <span className="text-xs text-slate-400">
+                                        <td className="px-4 py-3 max-w-[280px]">
+                                            <Link
+                                                href={`/patients/${apt.patientId}`}
+                                                className="hover:underline flex flex-col"
+                                                title={isCancelled ? "キャンセル済み：詳細を確認して再予約" : "患者詳細を表示"}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`font-bold text-base truncate block ${isCancelled ? 'text-slate-400 line-through' : (isExpired ? '' : 'text-indigo-900')}`}>
+                                                        {apt.patientName}
+                                                    </span>
+                                                    <span className="text-[10px] bg-slate-50 text-slate-500 border border-slate-200 px-1.5 rounded-full whitespace-nowrap">
+                                                        {apt.visitCount}回目
+                                                    </span>
+                                                </div>
+                                                <span className="text-xs text-slate-400 truncate block">
                                                     {apt.patientKana}
                                                 </span>
                                             </Link>
@@ -309,26 +422,26 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                                 !isCancelled && !isExpired ? (
                                                     <span className="inline-flex items-center gap-1 text-red-600 font-bold text-xs animate-pulse">
                                                         <AlertCircle className="w-3.5 h-3.5" />
-                                                        担当未定
+                                                        {LABELS.STATUS.UNASSIGNED}
                                                     </span>
                                                 ) : (
                                                     <span className="text-slate-300">-</span>
                                                 )
                                             )}
                                         </td>
-                                        <td className={`px-4 py-3 ${textClass} max-w-xs`}>
+                                        <td className={`px-4 py-3 ${textClass} max-w-[240px]`}>
                                             <div className="relative group/memo">
                                                 <div className="line-clamp-3 text-sm leading-snug">
-                                                    {apt.memo || <span className="text-slate-300 italic">なし</span>}
+                                                    {apt.memo || <span className="text-slate-300 italic">{LABELS.COMMON.NONE}</span>}
                                                 </div>
                                                 {apt.memo && apt.memo.length > 50 && (
                                                     <button
                                                         onClick={() => setViewingMemo({ patient: apt.patientName, memo: apt.memo || '' })}
                                                         className="absolute bottom-0 right-0 text-xs text-indigo-600 hover:text-indigo-800 bg-white px-1 rounded opacity-0 group-hover/memo:opacity-100 transition-opacity flex items-center gap-1"
-                                                        title="全文を表示"
+                                                        title={`${LABELS.COMMON.FULL_TEXT}を表示`}
                                                     >
                                                         <FileText className="w-3 h-3" />
-                                                        全文
+                                                        {LABELS.COMMON.FULL_TEXT}
                                                     </button>
                                                 )}
                                             </div>
@@ -336,47 +449,64 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                             {/* Admin Memo Display */}
                                             {apt.adminMemo && (
                                                 <div
-                                                    className={`mt-2 p-2 rounded text-xs border cursor-pointer transition-colors flex items-start gap-1.5 ${!apt.isMemoResolved && !isCancelled
-                                                        ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
-                                                        : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 opacity-80'
+                                                    className={`mt-2 p-2 rounded text-xs border transition-colors flex items-start gap-1.5 ${!apt.isMemoResolved && !isCancelled
+                                                        ? 'bg-red-50 border-red-200 text-red-700'
+                                                        : 'bg-slate-50 border-slate-200 text-slate-500 opacity-80'
                                                         }`}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setMemoConfirm({ open: true, id: apt.id, resolved: !apt.isMemoResolved });
-                                                    }}
-                                                    title="クリックして確認状態を切り替え"
                                                 >
                                                     <AlertTriangle className={`w-3.5 h-3.5 mt-0.5 min-w-[14px] ${!apt.isMemoResolved && !isCancelled ? 'text-red-500' : 'text-slate-400'
                                                         }`} />
-                                                    <div className="flex-1 leading-snug">
-                                                        <span className="font-bold mr-1 block text-[10px] opacity-70">事務用申し送り:</span>
+                                                    <div
+                                                        className="flex-1 leading-snug truncate cursor-pointer hover:underline"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setViewingMemo({ patient: apt.patientName, memo: apt.adminMemo || '' });
+                                                        }}
+                                                        title="クリックして全文を表示"
+                                                    >
+                                                        <span className="font-bold mr-1 inline-block text-[10px] opacity-70">{LABELS.APPOINTMENT.ADMIN_MEMO_PREFIX}</span>
                                                         {apt.adminMemo}
                                                     </div>
-                                                    {(apt.isMemoResolved || isCancelled) && <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 ml-1 text-slate-400" />}
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setMemoConfirm({ open: true, id: apt.id, resolved: !apt.isMemoResolved });
+                                                        }}
+                                                        className={`p-1 rounded transition-colors ${!apt.isMemoResolved && !isCancelled
+                                                            ? 'hover:bg-red-100 text-red-600'
+                                                            : 'hover:bg-slate-200 text-slate-400'
+                                                            }`}
+                                                        title={apt.isMemoResolved ? '未確認に戻す' : '確認済みにする'}
+                                                    >
+                                                        <CheckCircle2 className="w-4 h-4" />
+                                                    </button>
                                                 </div>
                                             )}
                                         </td>
                                         <td className="px-4 py-3 text-right whitespace-nowrap">
                                             <div className="flex justify-end gap-2 text-right items-center">
-                                                <Link
-                                                    href={`/patients/${apt.patientId}#new-record`}
-                                                    className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1 font-bold no-underline mr-auto md:mr-0"
-                                                >
-                                                    <Pencil className="w-3 h-3" />
-                                                    {TERMS.RECORD}作成
-                                                </Link>
+                                                {!isCancelled && (
+                                                    <Link
+                                                        href={`/patients/${apt.patientId}#new-record`}
+                                                        className="bg-indigo-600 text-white px-3 py-1.5 rounded-md text-xs font-bold shadow hover:bg-indigo-700 transition-colors flex items-center gap-1 whitespace-nowrap"
+                                                    >
+                                                        <Pencil className="w-3 h-3" />
+                                                        {TERMS.RECORD}作成
+                                                    </Link>
+                                                )}
                                                 <button
                                                     onClick={() => setEditingAppointment(apt)}
-                                                    className="p-1.5 bg-white border border-slate-200 rounded hover:bg-slate-50 transition-colors text-slate-500"
-                                                    title="予約編集"
+                                                    className="bg-white text-slate-600 border border-slate-200 px-3 py-1.5 rounded-md text-xs font-bold shadow-sm hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-1"
+                                                    title={LABELS.COMMON.MENU_EDIT}
                                                 >
-                                                    <CalendarClock className="w-4 h-4" />
+                                                    <CalendarClock className="w-3.5 h-3.5" />
+                                                    編集
                                                 </button>
                                                 {!isCancelled && (
                                                     <button
                                                         onClick={() => setCancelConfirm({ open: true, id: apt.id })}
                                                         className="p-1.5 bg-white border border-slate-200 rounded hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors text-slate-500"
-                                                        title="キャンセル"
+                                                        title={LABELS.DIALOG.DEFAULT_CANCEL}
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
@@ -389,7 +519,121 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                         )}
                     </tbody>
                 </table>
-            </div >
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden flex-1 overflow-auto p-4 space-y-4 bg-slate-50">
+                {filteredAppointments.length === 0 ? (
+                    <div className="text-center text-slate-400 py-8">
+                        {LABELS.APPOINTMENT.MSG_NO_DISPLAY_DATA}
+                    </div>
+                ) : (
+                    filteredAppointments.map((apt) => {
+                        const visitDate = new Date(apt.visitDate);
+                        const diff = differenceInMinutes(visitDate, new Date());
+                        const isExpired = diff < -60;
+                        const isCancelled = apt.status === 'cancelled';
+                        const isUnassigned = !isCancelled && !isExpired && !apt.staffId;
+
+                        let cardClass = isCancelled ? 'bg-slate-100 opacity-70' : (isExpired ? 'bg-slate-50' : 'bg-white');
+                        let borderClass = isUnassigned ? 'border-l-4 border-l-red-400' : 'border-l-4 border-l-indigo-400';
+                        if (isCancelled) borderClass = 'border-l-4 border-l-slate-300';
+
+                        return (
+                            <div key={apt.id} className={`${cardClass} ${borderClass} rounded-lg shadow-sm border border-slate-200 p-4 space-y-3`}>
+                                <div className="flex justify-between items-start">
+                                    <div className="flex items-center gap-2">
+                                        <div className="font-mono font-bold text-lg text-slate-700">
+                                            {format(visitDate, 'HH:mm')}
+                                        </div>
+                                        <div className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                            {format(visitDate, 'MM/dd')}
+                                        </div>
+                                    </div>
+                                    <div>{getStatusIcon(apt.status)}</div>
+                                </div>
+
+                                <div>
+                                    <Link href={`/patients/${apt.patientId}`} className="block">
+                                        <div className="font-bold text-lg text-indigo-900 line-clamp-2">{apt.patientName}</div>
+                                        <div className="text-xs text-slate-500">{apt.patientKana}</div>
+                                    </Link>
+                                </div>
+
+                                <div className="flex items-center gap-2 text-sm">
+                                    <span className="text-slate-500 text-xs">{TERMS.STAFF}:</span>
+                                    {apt.staffName ? (
+                                        <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-700 text-xs flex items-center gap-1">
+                                            <User className="w-3 h-3" /> {apt.staffName}
+                                        </span>
+                                    ) : (
+                                        !isCancelled && !isExpired ? (
+                                            <span className="text-red-600 font-bold text-xs flex items-center gap-1 animate-pulse">
+                                                <AlertCircle className="w-3 h-3" /> {LABELS.STATUS.UNASSIGNED}
+                                            </span>
+                                        ) : (
+                                            <span className="text-slate-300">-</span>
+                                        )
+                                    )}
+                                </div>
+
+                                {(apt.memo || apt.adminMemo) && (
+                                    <div className="border-t border-slate-100 pt-2 space-y-2">
+                                        {apt.memo && (
+                                            <div className="text-sm text-slate-600 bg-slate-50 p-2 rounded">
+                                                {apt.memo}
+                                            </div>
+                                        )}
+                                        {apt.adminMemo && (
+                                            <div
+                                                className={`text-xs p-2 rounded border flex items-start gap-2 ${!apt.isMemoResolved && !isCancelled
+                                                    ? 'bg-red-50 border-red-200 text-red-700'
+                                                    : 'bg-slate-50 border-slate-200 text-slate-500 opacity-80'
+                                                    }`}
+                                                onClick={() => setMemoConfirm({ open: true, id: apt.id, resolved: !apt.isMemoResolved })}
+                                            >
+                                                <AlertTriangle className="w-3.5 h-3.5 mt-0.5" />
+                                                <span className="flex-1">{apt.adminMemo}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                                    {!isCancelled && (
+                                        <button
+                                            onClick={() => setCancelConfirm({ open: true, id: apt.id })}
+                                            className="p-2 text-slate-400 hover:text-red-600 bg-slate-50 hover:bg-red-50 rounded-full transition-colors"
+                                            title={LABELS.DIALOG.DEFAULT_CANCEL}
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => setEditingAppointment(apt)}
+                                        className="bg-white text-slate-600 border border-slate-200 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-1"
+                                        title={LABELS.COMMON.MENU_EDIT}
+                                    >
+                                        <CalendarClock className="w-3.5 h-3.5" />
+                                        編集
+                                    </button>
+
+                                    {/* Create Record - Only if not cancelled */}
+                                    {!isCancelled && (
+                                        <Link
+                                            href={`/patients/${apt.patientId}#new-record`}
+                                            className="bg-indigo-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow hover:bg-indigo-700 transition-colors flex items-center gap-1"
+                                        >
+                                            <Pencil className="w-3 h-3" />
+                                            {TERMS.RECORD}作成
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })
+                )}
+            </div>
 
             {
                 editingAppointment && (
@@ -399,7 +643,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                         isOpen={!!editingAppointment}
                         onClose={() => {
                             setEditingAppointment(null);
-                            router.refresh(); // Refresh after edit
+                            router.refresh();
                         }}
                     />
                 )
@@ -413,7 +657,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                             <DialogHeader>
                                 <DialogTitle className="flex items-center gap-2">
                                     <FileText className="w-5 h-5 text-indigo-600" />
-                                    予約メモ - {viewingMemo.patient}
+                                    {LABELS.APPOINTMENT.MEMO_TITLE} - {viewingMemo.patient}
                                 </DialogTitle>
                             </DialogHeader>
                             <div className="mt-4 p-4 bg-slate-50 rounded-md border border-slate-200 max-h-[60vh] overflow-y-auto">

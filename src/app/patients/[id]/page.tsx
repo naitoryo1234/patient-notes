@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { AiUsageGuide } from '@/components/guide/AiUsageGuide';
+import { RecentPatientTracker } from '@/components/RecentPatientTracker';
 
 interface PageProps {
     params: { id: string };
@@ -57,6 +58,13 @@ export default async function PatientDetailPage(props: PageProps) {
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Track patient view for "Recently Viewed" feature */}
+            <RecentPatientTracker
+                patientId={patient.id}
+                patientName={patient.name}
+                patientKana={patient.kana}
+            />
+
             {/* Left Column: Profile & Navigation */}
             <div className="lg:col-span-1">
                 <PatientDetailSidebar patient={patient} nextAppt={nextAppt} staffList={staffList} />

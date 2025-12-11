@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { UserPlus, Calendar, Settings } from 'lucide-react';
 import { TERMS } from '@/config/labels';
+import { getActiveStaff } from '@/services/staffService';
+import { NewAppointmentButton } from '@/components/dashboard/NewAppointmentButton';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -13,11 +15,13 @@ export const metadata: Metadata = {
   description: 'A simple CRM for private clinics.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const staffList = await getActiveStaff();
+
   return (
     <html lang="ja">
       <body className={inter.className}>
@@ -35,10 +39,15 @@ export default function RootLayout({
                 >
                   <Calendar className="w-4 h-4" />
                   {TERMS.APPOINTMENT}一覧
+
                 </Link>
+                <NewAppointmentButton
+                  staffList={staffList}
+                  className="bg-indigo-600 hover:bg-indigo-700 h-10 px-4 text-sm"
+                />
                 <Link
                   href="/patients/new"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-bold flex items-center gap-2 transition-colors shadow-sm"
+                  className="hidden md:flex bg-white hover:bg-slate-50 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-md text-sm font-bold items-center gap-2 transition-colors shadow-sm"
                 >
                   <UserPlus className="w-4 h-4" />
                   新規{TERMS.PATIENT}
@@ -57,7 +66,7 @@ export default function RootLayout({
             {children}
           </main>
         </div>
-      </body>
-    </html>
+      </body >
+    </html >
   );
 }

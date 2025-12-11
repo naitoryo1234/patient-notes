@@ -235,7 +235,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                     key={JSON.stringify(formValues)}
                     config={PatientFormConfig}
                     action={action}
-                    submitLabel="登録する"
+                    submitLabel={LABELS.PATIENT_FORM.SUBMIT}
                     initialValues={formValues}
                 />
             )
