@@ -227,13 +227,20 @@ P: `);
                         </div>
                     </div>
 
+                    {/* Validation hint */}
+                    {!formValues.subjective && !formValues.objective && !formValues.assessment && !formValues.plan && (
+                        <div className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-md border border-amber-200 flex items-center gap-2">
+                            <span>⚠️</span> S/O/A/Pのいずれかを入力してください
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-red-400 block">S (Subjective)</label>
                             <textarea
                                 value={formValues.subjective || ''}
                                 onChange={(e) => setFormValues({ ...formValues, subjective: e.target.value })}
-                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px]"
+                                className={`w-full text-sm rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px] ${formValues.subjective ? 'border-green-300' : 'border-slate-300'}`}
                             />
                         </div>
                         <div className="space-y-1">
@@ -241,7 +248,7 @@ P: `);
                             <textarea
                                 value={formValues.objective || ''}
                                 onChange={(e) => setFormValues({ ...formValues, objective: e.target.value })}
-                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px]"
+                                className={`w-full text-sm rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px] ${formValues.objective ? 'border-green-300' : 'border-slate-300'}`}
                             />
                         </div>
                         <div className="space-y-1">
@@ -249,7 +256,7 @@ P: `);
                             <textarea
                                 value={formValues.assessment || ''}
                                 onChange={(e) => setFormValues({ ...formValues, assessment: e.target.value })}
-                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px]"
+                                className={`w-full text-sm rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px] ${formValues.assessment ? 'border-green-300' : 'border-slate-300'}`}
                             />
                         </div>
                         <div className="space-y-1">
@@ -257,7 +264,7 @@ P: `);
                             <textarea
                                 value={formValues.plan || ''}
                                 onChange={(e) => setFormValues({ ...formValues, plan: e.target.value })}
-                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px]"
+                                className={`w-full text-sm rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px] ${formValues.plan ? 'border-green-300' : 'border-slate-300'}`}
                             />
                         </div>
                     </div>

@@ -99,8 +99,16 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                                 </li>
                             ))}
                         </ul>
-                        <div className="mt-3 text-xs text-yellow-600 font-medium text-right">
-                            {LABELS.VALIDATION.DUPLICATE_IGNORE}
+                        <div className="mt-3 flex justify-between items-center">
+                            <span className="text-xs text-yellow-600 font-medium">{LABELS.VALIDATION.DUPLICATE_IGNORE}</span>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setDuplicates([])}
+                                className="text-xs text-slate-600 hover:text-slate-800"
+                            >
+                                この人ではない（続行）
+                            </Button>
                         </div>
                     </div>
                 )}
@@ -108,21 +116,21 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.NAME}</label>
+                            <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.NAME} <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 value={formValues.name || ''}
                                 onChange={(e) => setFormValues({ ...formValues, name: e.target.value })}
-                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
+                                className={`w-full text-sm rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white ${formValues.name ? 'border-green-300' : 'border-red-300 border-2'}`}
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.KANA}</label>
+                            <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.KANA} <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 value={formValues.kana || ''}
                                 onChange={(e) => setFormValues({ ...formValues, kana: e.target.value })}
-                                className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
+                                className={`w-full text-sm rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white ${formValues.kana ? 'border-green-300' : 'border-red-300 border-2'}`}
                             />
                         </div>
                         <div className="space-y-1">
