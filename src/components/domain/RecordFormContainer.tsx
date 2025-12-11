@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { Staff } from '@/services/staffService';
 import { FormFieldConfig } from '@/components/form/ConfigForm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { TERMS } from '@/config/labels';
 
 interface RecordFormContainerProps {
     action: (formData: FormData) => Promise<any>;
@@ -58,7 +59,7 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
 
         // Validation
         if (!subjective && !objective && !assessment && !plan) {
-            const errorMsg = ["カルテの内容が空です。S/O/A/Pのいずれかを入力してください。"];
+            const errorMsg = [`${TERMS.RECORD}の内容が空です。S/O/A/Pのいずれかを入力してください。`];
             setErrors({ subjective: errorMsg });
             return { success: false, errors: { subjective: errorMsg } };
         }
@@ -204,7 +205,7 @@ P: `);
                         </div>
                         {staffList.length > 0 && (
                             <div className="space-y-1">
-                                <label className="text-xs text-slate-500 font-bold block">担当者</label>
+                                <label className="text-xs text-slate-500 font-bold block">{TERMS.STAFF}</label>
                                 <select
                                     value={formValues.staffId || ''}
                                     onChange={(e) => setFormValues({ ...formValues, staffId: e.target.value })}
@@ -284,7 +285,7 @@ P: `);
         <div id="new-record" className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 scroll-mt-24">
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
                 <h3 className="font-bold text-slate-800 flex items-center gap-2 shrink-0">
-                    <span>📝</span> 新しい記録
+                    <span>📝</span> 新しい{TERMS.RECORD}
                 </h3>
 
                 <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
@@ -310,9 +311,9 @@ P: `);
                         <button
                             onClick={handleCopyLastRecord}
                             className="w-full sm:w-auto text-xs text-indigo-600 border border-indigo-200 bg-indigo-50 px-3 py-1.5 rounded-md hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1"
-                            title="前回のS/O/A/Pをコピーします"
+                            title={`前回のS/O/A/Pをコピーします`}
                         >
-                            📋 <span className="md:hidden">前回コピー</span><span className="hidden md:inline">前回の記録をコピー</span>
+                            📋 <span className="md:hidden">前回コピー</span><span className="hidden md:inline">前回の{TERMS.RECORD}をコピー</span>
                         </button>
                     )}
                 </div>
@@ -373,9 +374,9 @@ P: `);
             <ConfirmDialog
                 open={copyConfirmOpen}
                 onOpenChange={setCopyConfirmOpen}
-                title="\u73fe\u5728\u306e\u5165\u529b\u5185\u5bb9\u3092\u4e0a\u66f8\u304d\u3057\u307e\u3059\u304b\uff1f"
-                description="\u524d\u56de\u306e\u8a18\u9332\u3092\u30b3\u30d4\u30fc\u3059\u308b\u3068\u3001\u73fe\u5728\u5165\u529b\u4e2d\u306eS/O/A/P\u306e\u5185\u5bb9\u304c\u4e0a\u66f8\u304d\u3055\u308c\u307e\u3059\u3002"
-                confirmLabel="\u30b3\u30d4\u30fc\u3059\u308b"
+                title="現在の入力内容を上書きしますか？"
+                description={`前回の${TERMS.RECORD}をコピーすると、現在入力中のS/O/A/Pの内容が上書きされます。`}
+                confirmLabel="コピーする"
                 variant="warning"
                 onConfirm={executeCopy}
             />

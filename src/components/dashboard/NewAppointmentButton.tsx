@@ -10,6 +10,7 @@ import { Staff } from '@/services/staffService';
 import { format, addDays } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
+import { TERMS } from '@/config/labels';
 
 interface NewAppointmentButtonProps {
     staffList: Staff[];
@@ -109,12 +110,12 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
             <DialogTrigger asChild>
                 <Button className="bg-[#6366f1] hover:bg-[#4f46e5] text-white shadow-md gap-3 px-6 h-11 rounded-lg text-base font-bold transition-all hover:shadow-lg">
                     <CalendarPlus className="w-5 h-5" />
-                    新規予約
+                    新規{TERMS.APPOINTMENT}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>新規予約を作成</DialogTitle>
+                    <DialogTitle>新規{TERMS.APPOINTMENT}を作成</DialogTitle>
                 </DialogHeader>
 
                 {step === 'search' ? (
@@ -122,7 +123,7 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
                         <div className="relative">
                             <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                             <input
-                                placeholder="患者名・フリガナ・No.で検索..."
+                                placeholder={`${TERMS.PATIENT}名・フリガナ・No.で検索...`}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-9 flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
@@ -133,7 +134,7 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
                         <div className="min-h-[200px] max-h-[300px] overflow-y-auto border rounded-md p-1 bg-slate-50">
                             {searchResults.length === 0 ? (
                                 <div className="p-4 text-center text-slate-400 text-sm">
-                                    {searchQuery.length < 1 ? '検索してください' : '該当する患者がいません'}
+                                    {searchQuery.length < 1 ? '検索してください' : `該当する${TERMS.PATIENT}がいません`}
                                 </div>
                             ) : (
                                 <div className="space-y-1">
@@ -255,7 +256,7 @@ export function NewAppointmentButton({ staffList, initialDate }: NewAppointmentB
                             <div className="flex justify-end gap-2 pt-2">
                                 <Button type="button" variant="ghost" onClick={() => setIsOpen(false)} disabled={isPending}>キャンセル</Button>
                                 <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={isPending}>
-                                    {isPending ? '予約中...' : '予約を確定'}
+                                    {isPending ? `${TERMS.APPOINTMENT}中...` : `${TERMS.APPOINTMENT}を確定`}
                                 </Button>
                             </div>
                         </form>

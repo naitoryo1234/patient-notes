@@ -9,6 +9,7 @@ import { AiUsageGuidePatient } from '@/components/guide/AiUsageGuidePatient';
 
 import { checkDuplicates } from '@/actions/patientActions';
 import Link from 'next/link';
+import { TERMS } from '@/config/labels';
 
 interface PatientFormContainerProps {
     action: (formData: FormData) => Promise<any>;
@@ -68,7 +69,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
         return (
             <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 space-y-6">
                 <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-slate-800">登録内容の確認・編集</h2>
+                    <h2 className="text-xl font-bold text-slate-800">新規{TERMS.PATIENT}登録</h2>
                     <span className="text-xs text-slate-500">※内容を直接修正できます</span>
                 </div>
 
@@ -76,9 +77,9 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                 {duplicates.length > 0 && (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 animate-in fade-in slide-in-from-top-1">
                         <div className="flex items-center gap-2 mb-2 text-yellow-800 font-bold">
-                            <span>⚠️</span> 似ている患者が見つかりました
+                            <span>⚠️</span> 似ている{TERMS.PATIENT}が見つかりました
                         </div>
-                        <p className="text-sm text-yellow-700 mb-3">以下の患者は既に登録されています。同一人物の可能性があります。</p>
+                        <p className="text-sm text-yellow-700 mb-3">以下の{TERMS.PATIENT}は既に登録されています。同一人物の可能性があります。</p>
                         <ul className="space-y-2">
                             {duplicates.map((d: any) => (
                                 <li key={d.id} className="bg-white border border-yellow-100 rounded-md p-3 text-sm flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
@@ -93,7 +94,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                                         href={`/patients/${d.id}`}
                                         className="h-8 px-3 inline-flex items-center justify-center rounded-md text-sm font-medium border border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50 hover:text-indigo-800 transition-colors"
                                     >
-                                        この患者のカルテへ →
+                                        この{TERMS.PATIENT}の{TERMS.RECORD}へ →
                                     </Link>
                                 </li>
                             ))}
@@ -178,7 +179,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
     return (
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-slate-800">新規患者登録</h2>
+                <h2 className="text-xl font-bold text-slate-800">新規{TERMS.PATIENT}登録</h2>
                 <div className="flex bg-slate-100 rounded-lg p-1">
                     <button
                         onClick={() => setMode('manual')}
@@ -200,7 +201,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
             {mode === 'ai' ? (
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="bg-indigo-50 border border-indigo-100 rounded-md p-4 text-sm text-indigo-800">
-                        <p className="font-bold mb-2">💡 患者データをテキストから取り込む</p>
+                        <p className="font-bold mb-2">💡 {TERMS.PATIENT}データをテキストから取り込む</p>
                         <p className="mb-2">既存のカルテやExcelなどから、以下の形式でテキストを貼り付けると自動入力できます。</p>
                         <pre className="bg-white/50 p-2 rounded text-xs font-mono border border-indigo-100/50">
                             {`氏名: 山田 太郎

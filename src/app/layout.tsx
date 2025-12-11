@@ -4,6 +4,7 @@ import './globals.css';
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { UserPlus, Calendar, Settings } from 'lucide-react';
+import { TERMS } from '@/config/labels';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -33,19 +34,19 @@ export default function RootLayout({
                   className="bg-white hover:bg-slate-50 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-md text-sm font-bold flex items-center gap-2 transition-colors shadow-sm"
                 >
                   <Calendar className="w-4 h-4" />
-                  予約一覧
+                  {TERMS.APPOINTMENT}一覧
                 </Link>
                 <Link
                   href="/patients/new"
                   className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-bold flex items-center gap-2 transition-colors shadow-sm"
                 >
                   <UserPlus className="w-4 h-4" />
-                  新患登録
+                  新規{TERMS.PATIENT}
                 </Link>
                 <Link
                   href="/settings/staff"
                   className="text-slate-500 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 transition-colors"
-                  title="設定 (スタッフ管理)"
+                  title={`設定 (${TERMS.STAFF}管理)`}
                 >
                   <Settings className="w-5 h-5" />
                 </Link>

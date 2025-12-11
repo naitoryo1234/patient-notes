@@ -56,20 +56,49 @@ export async function updateAppointmentAction(formData: FormData) {
     const startAt = new Date(`${dateStr}T${timeStr}`);
     const duration = formData.get('duration') ? parseInt(formData.get('duration') as string) : undefined;
 
-    const adminMemo = formData.get('adminMemo') as string | null;
-    const isMemoResolved = formData.get('isMemoResolved') === 'true'; // Checkbox value
+    const adminMemo = formData.has('adminMemo') ? formData.get('adminMemo') as string : undefined;
 
-    // Convert staffId: "" -> null (unassign), string -> string (assign), null/undefined -> undefined (no change, but form always sends something)
-    // Actually, form data "staffId" will be "" if "Unassigned" is selected.
-    // So:
-    const updateData: any = { startAt, memo, duration, adminMemo, isMemoResolved };
+    // Checkbox handling:
+    // If formData has 'isMemoResolved', use its value.
+    // If NOT (e.g. unchecked in standard form), we should check if this is an update that INTENDS to change it?
+    // Actually, HTML forms don't send unchecked boxes.
+    // But updateAppointmentAction is used by AppointmentEditModal which includes the checkbox.
+    // If unchecked, it's missing. We want to set it to false.
+    // BUT if we are calling this from a context where we simply didn't include the checkbox (partial update), we might accidentally unset it.
+    // For safer updates, we should probably assume "if visitDate/Time is present, and we are editing, we usually send all fields".
+    // However, to be safe, let's treat "missing" as "undefined/skip" UNLESS we know it's the Edit form?
+    // No, standard HTML behavior is missing = false. The Edit form relies on this.
+    // We will assume that if explicit "id" is passed, we are saving the form.
+    // "adminMemo" is explicit textarea. If empty, it sends "".
+
+    // Let's rely on explicit "true" string for checked. If missing, it implies false IF we assume full form submission.
+    // But to allow partial updates via Action, we must be careful.
+    // For now, let's keep previous logic for isMemoResolved but handle adminMemo carefully.
+
+    // Actually, let's check strict presence for safety.
+    // If existing code relies on "missing = false", we must keep it OR fix the sender to send "false".
+    // AppointmentEditModal uses default HTML, so unchecked = missing.
+    // So: const isMemoResolved = formData.get('isMemoResolved') === 'true'; 
+    // This resolves to false if missing. This is correct for the Edit Modal.
+    const isMemoResolved = formData.get('isMemoResolved') === 'true';
+
+    // Construct updateData with only present fields (or null if explicitly empty/cleared)
+    // Use Prisma.AppointmentUpdateInput type? Or just partial object.
+    const updateData: Record<string, any> = { startAt };
+    if (duration !== undefined) updateData.duration = duration;
+    if (adminMemo !== undefined) updateData.adminMemo = adminMemo;
+    updateData.isMemoResolved = isMemoResolved; // This forces false if missing. Accepted for Edit Modal.
+
+    if (formData.has('memo')) {
+        updateData.memo = formData.get('memo') as string;
+    }
 
     if (staffId === "") {
         updateData.staffId = null; // Unassign
     } else if (staffId) {
         updateData.staffId = staffId; // Assign
     }
-    // If we wanted "no change", we wouldn't include staffId in the updateData, but here we always get it from form.
+    // If staffId is undefined/null (missing from form), we simply don't set it in updateData, preserving current.
 
     try {
         await updateAppointment(id, updateData);

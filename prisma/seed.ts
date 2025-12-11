@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { addDays, subDays, addMinutes } from 'date-fns'
+import { subDays } from 'date-fns'
 
 const prisma = new PrismaClient()
 
@@ -188,170 +188,75 @@ async function main() {
     })
 
     // === APPOINTMENTS ===
-    // 基準時刻: 2025-12-11 10:13 (現在時刻)
-    const baseDate = new Date('2025-12-11T10:13:00+09:00')
+    // 基準時刻: 2025-12-11 21:30 (夜間テスト用)
 
-    // --- 12/11（今日）の予約 ---
-
-    // 1. 08:00 - すでに終了（過去2時間以上）
+    // 1. 21:40 - 直近の未来 (未解決メモあり)
     await prisma.appointment.create({
         data: {
             patientId: patient1.id,
-            startAt: new Date('2025-12-11T08:00:00+09:00'),
-            duration: 60,
-            status: 'scheduled',
-            memo: '朝一番。鍼希望。',
-            staffId: director.id
-        }
-    })
-
-    // 2. 09:30 - 終了直後（所要時間経過）
-    await prisma.appointment.create({
-        data: {
-            patientId: patient2.id,
-            startAt: new Date('2025-12-11T09:30:00+09:00'),
-            duration: 15,
-            status: 'scheduled',
-            memo: '短め。',
-            staffId: therapist.id
-        }
-    })
-
-    // 3. 10:00 - 施術中（開始13分後）
-    await prisma.appointment.create({
-        data: {
-            patientId: patient2.id,
-            startAt: new Date('2025-12-11T10:00:00+09:00'),
+            startAt: new Date('2025-12-11T21:40:00+09:00'),
             duration: 30,
             status: 'scheduled',
-            memo: '予約テスト 1回目',
-            staffId: director.id
-        }
-    })
-
-    // 4. 11:00 - これから（約50分後）- キャンセル済み
-    await prisma.appointment.create({
-        data: {
-            patientId: patient4.id,
-            startAt: new Date('2025-12-11T11:00:00+09:00'),
-            duration: 60,
-            status: 'cancelled',
-            memo: '電話あり。急用のためキャンセル。',
-            staffId: director.id
-        }
-    })
-
-    // 5. 11:30 - これから（1時間後以内）- 担当未定
-    await prisma.appointment.create({
-        data: {
-            patientId: patient5.id,
-            startAt: new Date('2025-12-11T11:30:00+09:00'),
-            duration: 45,
-            status: 'scheduled',
-            memo: '担当者未定。至急アサイン必要。',
-            staffId: null // 未アサイン
-        }
-    })
-
-    // 6. 12:00 - これから（約2時間後）
-    await prisma.appointment.create({
-        data: {
-            patientId: patient2.id,
-            startAt: new Date('2025-12-11T12:00:00+09:00'),
-            duration: 60,
-            status: 'scheduled',
-            staffId: therapist.id
-        }
-    })
-
-    // 7. 13:00 - 同時刻・院長
-    await prisma.appointment.create({
-        data: {
-            patientId: patient1.id,
-            startAt: new Date('2025-12-11T13:00:00+09:00'),
-            duration: 60,
-            status: 'scheduled',
-            memo: '定期メンテナンス（院長）',
-            staffId: director.id
-        }
-    })
-
-    // 8. 13:00 - 同時刻・施術者（並行診療のテスト）
-    await prisma.appointment.create({
-        data: {
-            patientId: patient5.id,
-            startAt: new Date('2025-12-11T13:00:00+09:00'),
-            duration: 45,
-            status: 'scheduled',
-            memo: '膝の治療（施術者）',
-            staffId: therapist.id
-        }
-    })
-
-    // 9. 14:00 - 午後の予約（申し送りあり・未確認）
-    await prisma.appointment.create({
-        data: {
-            patientId: patient3.id,
-            startAt: new Date('2025-12-11T14:00:00+09:00'),
-            duration: 90,
-            status: 'scheduled',
-            memo: '初診。問診票記入あり。時間多めに確保。',
-            adminMemo: '初診のため、問診票の記入時間を考慮してください。',
+            memo: '夜間診療テスト',
+            adminMemo: '【重要】夜間料金の適用について説明すること。',
             isMemoResolved: false,
             staffId: director.id
         }
     })
 
-    // 10. 15:30 - 午後の予約（長文メモテスト、申し送りあり・確認済み）
-    await prisma.appointment.create({
-        data: {
-            patientId: patient6.id,
-            startAt: new Date('2025-12-11T15:30:00+09:00'),
-            duration: 60,
-            status: 'scheduled',
-            memo: 'この患者は非常に詳細なメモを持っています。例えば、初診時の様子から、趣味、家族構成、ペットの名前（ポチ、タマ、ミケ）、好きな食べ物（カレーライス、特に辛口）、嫌いな食べ物（ピーマン、ニンジン）、過去の病歴（幼少期に水疱瘡、20代で骨折）、最近の旅行先（北海道、沖縄、グアム）、休日の過ごし方（読書、映画鑑賞、ハイキング）、仕事の内容（IT企業のプロジェクトマネージャー、最近は残業が多い）、ストレスの要因（上司との人間関係、満員電車）、睡眠時間（平均6時間、最近は不眠気味）、運動習慣（週に1回のジョギング、ジム通いは続かなかった）、サプリメントの摂取状況（ビタミンC、亜鉛）、アレルギーの有無（花粉症、ハウスダスト）、等々、ありとあらゆる情報がここに記載されています。これにより、UI上でメモ欄がどのように表示されるか、折り返しが正しく行われるか、スクロールが発生するか、レイアウト崩れが起きないかなどを検証することが可能です。',
-            adminMemo: '長文患者のため、カウンセリング時間を長めに確保済み。',
-            isMemoResolved: true,
-            staffId: director.id
-        }
-    })
-
-    // 11. 17:00 - 夕方の予約
+    // 2. 22:00 - 少し先の未来 (メモなし)
     await prisma.appointment.create({
         data: {
             patientId: patient2.id,
-            startAt: new Date('2025-12-11T17:00:00+09:00'),
-            duration: 30,
+            startAt: new Date('2025-12-11T22:00:00+09:00'),
+            duration: 60,
             status: 'scheduled',
+            memo: '遅い時間の予約',
             staffId: therapist.id
         }
     })
 
-    // 12. 18:30 - 最終枠
+    // 3. 23:00 - 深夜 (未解決メモ - 長文)
     await prisma.appointment.create({
         data: {
-            patientId: patient1.id,
-            startAt: new Date('2025-12-11T18:30:00+09:00'),
-            duration: 60,
+            patientId: patient3.id,
+            startAt: new Date('2025-12-11T23:00:00+09:00'),
+            duration: 30,
             status: 'scheduled',
-            memo: '定期メンテナンス',
+            memo: '深夜枠',
+            adminMemo: '深夜対応のため、入り口の施錠に注意してください。患者様には裏口から入っていただくよう案内済みです。',
+            isMemoResolved: false,
             staffId: director.id
         }
     })
 
-    // --- 昨日（12/10）の予約（完了済み） ---
+    // 4. 23:30 - 深夜 (解決済みメモ) -> ここがトグルテストの肝
     await prisma.appointment.create({
         data: {
-            patientId: patient1.id,
-            startAt: new Date('2025-12-10T15:00:00+09:00'),
+            patientId: patient5.id,
+            startAt: new Date('2025-12-11T23:30:00+09:00'),
+            duration: 30,
+            status: 'scheduled',
+            memo: '最終枠',
+            adminMemo: 'この時間帯はスタッフ1名体制です。',
+            isMemoResolved: true, // 最初から解決済みになっている
+            staffId: director.id
+        }
+    })
+
+    // 過去の予約（本日）
+    await prisma.appointment.create({
+        data: {
+            patientId: patient4.id,
+            startAt: new Date('2025-12-11T16:00:00+09:00'),
             duration: 60,
             status: 'completed',
-            memo: '前回治療分',
-            staffId: director.id
+            memo: '日中の予約（完了済み）',
+            staffId: therapist.id
         }
     })
 
-    // --- 明日（12/12）の予約 ---
+    // --- 12/12（明日）の予約 ---
     await prisma.appointment.create({
         data: {
             patientId: patient2.id,
@@ -362,58 +267,7 @@ async function main() {
         }
     })
 
-    await prisma.appointment.create({
-        data: {
-            patientId: patient3.id,
-            startAt: new Date('2025-12-12T14:00:00+09:00'),
-            duration: 30,
-            status: 'scheduled',
-            memo: '初診後のフォローアップ',
-            staffId: therapist.id
-        }
-    })
-
-    // --- 来週（12/18）の予約 ---
-    await prisma.appointment.create({
-        data: {
-            patientId: patient1.id,
-            startAt: new Date('2025-12-18T10:00:00+09:00'),
-            duration: 60,
-            status: 'scheduled',
-            memo: '1週間後の定期',
-            staffId: director.id
-        }
-    })
-
-    await prisma.appointment.create({
-        data: {
-            patientId: patient5.id,
-            startAt: new Date('2025-12-18T15:00:00+09:00'),
-            duration: 120,
-            status: 'scheduled',
-            memo: '長時間治療（2時間）',
-            staffId: null // 未アサイン
-        }
-    })
-
-    console.log('✅ Seeding completed!')
-    console.log('📊 Created:')
-    console.log('   - 2 Staff members')
-    console.log('   - 6 Patients (various cases)')
-    console.log('   - 5 Clinical Records (with visit history)')
-    console.log('   - 18 Appointments (12 today, 6 other days)')
-    console.log('')
-    console.log('⏰ Current simulation time: 2025-12-11 10:13')
-    console.log('📅 Today\'s appointments showcase:')
-    console.log('   - Past (already finished)')
-    console.log('   - In progress (施術中)')
-    console.log('   - Upcoming (within 1 hour)')
-    console.log('   - Cancelled')
-    console.log('   - Unassigned (要対応)')
-    console.log('   - Admin Memos (confirmed + unconfirmed)')
-    console.log('   - Various durations (15/30/45/60/90 mins)')
-    console.log('   - Long memo test')
-    console.log('   - 🔥 Same time slot with different staff (13:00)')
+    console.log('✅ Seeding completed with Night Scenarios!')
 }
 
 main()

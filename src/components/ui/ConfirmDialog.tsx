@@ -117,7 +117,7 @@ export function ConfirmDialog({
                             type="button"
                             className={`flex-1 px-4 py-2.5 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${config.buttonBg}`}
                         >
-                            {loading ? LABELS.COMMON.PROCESSING : confirmLabel}
+                            {loading ? '処理中...' : confirmLabel}
                         </button>
                     </div>
                 </div>

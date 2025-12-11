@@ -5,7 +5,7 @@ import { Appointment } from '@/services/appointmentService';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { UserCheck, Pencil, FileText, AlertTriangle, CheckCircle, ExternalLink, X } from 'lucide-react';
-import { updateAppointmentAction } from '@/actions/appointmentActions';
+import { updateAppointmentAction, toggleAdminMemoResolutionAction } from '@/actions/appointmentActions';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface AppointmentDetailModalProps {
@@ -34,15 +34,20 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
     const handleResolveAdminMemo = async () => {
         setIsResolving(true);
 
-        const formData = new FormData();
-        formData.append('id', appointment.id);
-        formData.append('visitDate', format(new Date(appointment.visitDate), 'yyyy-MM-dd'));
-        formData.append('visitTime', format(new Date(appointment.visitDate), 'HH:mm'));
-        formData.append('isMemoResolved', 'true');
+        // Toggle logic
+        const nextStatus = !appointment.isMemoResolved;
 
         try {
-            const res = await updateAppointmentAction(formData);
+            const res = await toggleAdminMemoResolutionAction(appointment.id, nextStatus);
             if (res.success) {
+                // Keep modal open to show updated state, or close?
+                // The prop 'appointment' should update via router.refresh in the action.
+                // Keeping modal open is fine as it will rerender with new status.
+                // Actually, let's close it if it's "Resolve" (done), but maybe keep if "Unresolve"?
+                // User might want to confirm it turned gray.
+                // Let's close for now as it's a "Done" action usually. 
+                // But wait, user expectation: "Confirm" -> "OK, done" -> Dialog closes.
+                // If "Unresolve" -> "OK" -> Dialog closes.
                 onClose();
             } else {
                 alert('更新に失敗しました: ' + res.message);
@@ -52,6 +57,7 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
             alert('エラーが発生しました');
         } finally {
             setIsResolving(false);
+            setConfirmOpen(false); // Close confirm dialog
         }
     };
 
@@ -94,24 +100,28 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
                         </div>
                     )}
 
-                    {/* Admin Memo (Alert) */}
-                    {appointment.adminMemo && !appointment.isMemoResolved && (
-                        <div className="bg-red-50 border border-red-100 rounded-md p-3">
-                            <div className="flex items-center gap-2 text-red-700 font-bold text-sm mb-1">
+                    {/* Admin Memo (Alert) - Show always if exists, change style based on status */}
+                    {appointment.adminMemo && (
+                        <div className={`border rounded-md p-3 ${appointment.isMemoResolved ? 'bg-slate-50 border-slate-200' : 'bg-red-50 border-red-100'
+                            }`}>
+                            <div className={`flex items-center gap-2 font-bold text-sm mb-1 ${appointment.isMemoResolved ? 'text-slate-500' : 'text-red-700'}`}>
                                 <AlertTriangle className="w-4 h-4" />
-                                <span>申し送り事項</span>
+                                <span>申し送り事項{appointment.isMemoResolved ? ' (確認済)' : ''}</span>
                             </div>
-                            <p className="text-sm text-red-800 mb-2">
+                            <p className={`text-sm mb-2 ${appointment.isMemoResolved ? 'text-slate-500 line-through decoration-slate-400' : 'text-red-800'}`}>
                                 {appointment.adminMemo}
                             </p>
 
                             <button
                                 onClick={() => setConfirmOpen(true)}
                                 disabled={isResolving}
-                                className="w-full text-xs bg-white border border-red-200 text-red-600 px-2 py-1.5 rounded shadow-sm hover:bg-red-50 font-bold flex items-center justify-center gap-1 transition-colors"
+                                className={`w-full text-xs border px-2 py-1.5 rounded shadow-sm font-bold flex items-center justify-center gap-1 transition-colors ${appointment.isMemoResolved
+                                    ? 'bg-slate-50 border-slate-300 text-slate-500 hover:bg-slate-100'
+                                    : 'bg-white border-red-200 text-red-600 hover:bg-red-50'
+                                    }`}
                             >
                                 <CheckCircle className="w-3 h-3" />
-                                {isResolving ? '処理中...' : '確認済みにする（アラート解除）'}
+                                {isResolving ? '処理中...' : (appointment.isMemoResolved ? '未確認に戻す' : '確認済みにする（アラート解除）')}
                             </button>
                         </div>
                     )}
@@ -171,10 +181,10 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
             <ConfirmDialog
                 open={confirmOpen}
                 onOpenChange={setConfirmOpen}
-                title="申し送り事項を確認済みにしますか？"
-                description="確認済みにすると、アラート表示が解除され、未解決リストから除外されます。"
-                confirmLabel="確認済みにする"
-                variant="primary"
+                title={appointment.isMemoResolved ? "申し送り事項を未確認に戻しますか？" : "申し送り事項を確認済みにしますか？"}
+                description={appointment.isMemoResolved ? "未確認に戻すと、再度アラート表示になります。" : "確認済みにすると、アラート表示が解除され、未解決リストから除外されます（履歴としては本日は残ります）。"}
+                confirmLabel={appointment.isMemoResolved ? "未確認に戻す" : "確認済みにする"}
+                variant={appointment.isMemoResolved ? "warning" : "primary"}
                 onConfirm={handleResolveAdminMemo}
             />
         </div>

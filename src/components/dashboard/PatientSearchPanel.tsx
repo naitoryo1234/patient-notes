@@ -13,6 +13,7 @@ import { AppointmentEditModal } from './AppointmentEditModal';
 import { Staff } from '@/services/staffService';
 import { checkInAppointmentAction } from '@/actions/appointmentActions';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { TERMS, LABELS } from '@/config/labels';
 
 // Minimal patient type for Recent History (stored in localStorage)
 export interface RecentPatient {
@@ -36,14 +37,19 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
     const [query, setQuery] = useState(searchQuery);
     const [activeTab, setActiveTab] = useState<'recent' | 'search' | 'attention'>('recent');
     const [recentPatients, setRecentPatients] = useState<RecentPatient[]>([]);
-    const [memoConfirm, setMemoConfirm] = useState<{ open: boolean; id: string }>({ open: false, id: '' });
+    const [memoConfirm, setMemoConfirm] = useState<{ open: boolean; id: string; targetStatus: boolean }>({ open: false, id: '', targetStatus: true });
 
     //  Modal State
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
 
     const handleMemoResolve = async () => {
+        // Find existing state
+        const target = memoAppointments.find(a => a.id === memoConfirm.id);
+        const nextStatus = !target?.isMemoResolved;
+
         try {
-            await toggleAdminMemoResolutionAction(memoConfirm.id, true);
+            await toggleAdminMemoResolutionAction(memoConfirm.id, nextStatus);
+            // Router refresh is handled in the action
         } catch (e) {
             console.error(e);
             alert('更新に失敗しました');
@@ -52,15 +58,20 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
 
     // Filter Logic
     // Use unresolvedMemos (all unresolved, including past) instead of only today's
-    const memoAppointments = unresolvedMemos; // All unresolved memos
+    // Filter Logic
+    // Use unresolvedMemos directly. It already includes "unresolved" + "resolved today".
+    const memoAppointments = [...unresolvedMemos].sort((a, b) =>
+        new Date(b.visitDate).getTime() - new Date(a.visitDate).getTime()
+    );
 
     // Counts
-    const unresolvedMemoCount = memoAppointments.length; // Already filtered to unresolved
+    // Counts: Only count genuinely unresolved items for the badge
+    const unresolvedMemoCount = memoAppointments.filter(a => !a.isMemoResolved).length;
 
     const unassignedCount = unassignedAppointments.length;
     const totalAttention = unresolvedMemoCount + unassignedCount;
-    // Show list if there are ANY unassigned OR ANY unresolved memos
-    const hasAnyAttentionItems = unassignedCount > 0 || unresolvedMemoCount > 0;
+    // Show list if there are ANY unassigned OR ANY unresolved memos OR ANY resolved memos history
+    const hasAnyAttentionItems = unassignedCount > 0 || memoAppointments.length > 0;
 
     // Load recent patients from localStorage
     useEffect(() => {
@@ -127,7 +138,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                                 type="search"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                placeholder="患者検索（氏名・ふりがな）"
+                                placeholder={`${TERMS.PATIENT}検索（氏名・ふりがな）`}
                                 className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-50 focus:bg-white transition-colors"
                             />
                             <Search className="w-5 h-5 text-slate-400 absolute left-3 top-2.5" />
@@ -220,7 +231,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                                 {initialPatients.length === 0 ? (
                                     <div className="p-8 text-center text-slate-400 text-sm">
                                         <Search className="w-12 h-12 mx-auto mb-2 opacity-20" />
-                                        {query ? '該当する患者が見つかりません' : 'キーワードを入力して検索'}
+                                        {query ? `該当する${TERMS.PATIENT}が見つかりません` : 'キーワードを入力して検索'}
                                     </div>
                                 ) : (
                                     <ul className="divide-y divide-slate-100">
@@ -320,8 +331,12 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
 
                                                         const handleResolveClick = async (e: React.MouseEvent) => {
                                                             e.stopPropagation();
-                                                            if (isResolved) return;
-                                                            setMemoConfirm({ open: true, id: apt.id });
+                                                            // Toggle logic
+                                                            setMemoConfirm({
+                                                                open: true,
+                                                                id: apt.id,
+                                                                targetStatus: !isResolved
+                                                            });
                                                         };
 
                                                         return (
@@ -363,13 +378,11 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                                                                     }`}>
                                                                     {apt.adminMemo}
                                                                 </p>
-                                                                {!isResolved && (
-                                                                    <div className="text-right">
-                                                                        <span className="text-xs text-blue-600 font-bold hover:underline">
-                                                                            クリックで確認済みにする
-                                                                        </span>
-                                                                    </div>
-                                                                )}
+                                                                <div className="text-right">
+                                                                    <span className="text-xs text-blue-600 font-bold hover:underline">
+                                                                        {isResolved ? 'クリックで未確認に戻す' : 'クリックで確認済みにする'}
+                                                                    </span>
+                                                                </div>
                                                             </li>
                                                         );
                                                     })}
@@ -387,10 +400,10 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
             <ConfirmDialog
                 open={memoConfirm.open}
                 onOpenChange={(open) => setMemoConfirm(prev => ({ ...prev, open }))}
-                title="この申し送り事項を確認済みにしますか？"
-                description="確認済みにすると、一覧上でグレーアウト表示になります。"
-                confirmLabel="確認済みにする"
-                variant="primary"
+                title={memoConfirm.targetStatus ? LABELS.APPOINTMENT.MEMO_RESOLVE_TITLE : LABELS.APPOINTMENT.MEMO_UNRESOLVE_TITLE}
+                description={memoConfirm.targetStatus ? LABELS.APPOINTMENT.MEMO_RESOLVE_DESC : LABELS.APPOINTMENT.MEMO_UNRESOLVE_DESC}
+                confirmLabel={LABELS.APPOINTMENT.CHANGE_STATUS}
+                variant={memoConfirm.targetStatus ? "primary" : "warning"}
                 onConfirm={handleMemoResolve}
             />
         </>

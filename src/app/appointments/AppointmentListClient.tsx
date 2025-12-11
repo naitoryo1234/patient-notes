@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Pencil, Trash2, Calendar, User, History, CheckCircle2, XCircle, CalendarClock, AlertCircle, AlertTriangle, ChevronLeft, ChevronRight, X, FileText } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { LABELS } from '@/config/labels';
+import { LABELS, TERMS } from '@/config/labels';
 
 interface AppointmentListClientProps {
     initialAppointments: Appointment[];
@@ -143,7 +143,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                             type="text"
                             value={filterPatient}
                             onChange={(e) => setFilterPatient(e.target.value)}
-                            placeholder="患者名・カナで検索..."
+                            placeholder={`${TERMS.PATIENT}名・カナで検索...`}
                             className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         />
                         {filterPatient && (
@@ -248,7 +248,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                         <tr>
                             <th className="px-4 py-3 whitespace-nowrap w-14 text-center">状態</th>
                             <th className="px-4 py-3 whitespace-nowrap">日時</th>
-                            <th className="px-4 py-3 whitespace-nowrap">患者名</th>
+                            <th className="px-4 py-3 whitespace-nowrap">{TERMS.PATIENT}名</th>
                             <th className="px-4 py-3 whitespace-nowrap">担当</th>
                             <th className="px-4 py-3 whitespace-nowrap w-1/3">メモ</th>
                             <th className="px-4 py-3 whitespace-nowrap text-right">操作</th>
@@ -363,7 +363,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                                     className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1 font-bold no-underline mr-auto md:mr-0"
                                                 >
                                                     <Pencil className="w-3 h-3" />
-                                                    カルテ作成
+                                                    {TERMS.RECORD}作成
                                                 </Link>
                                                 <button
                                                     onClick={() => setEditingAppointment(apt)}

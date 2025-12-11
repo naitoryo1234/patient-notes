@@ -62,21 +62,21 @@
 
 ## 🚧 今後の実装予定 (Upcoming / Planned)
 
-### Phase 9.5: Final Polish (v1.1 Completion) [Current]
-> **Goal**: 404エラー修正、UX改善、タグ表示など、残存課題の一掃。
+### Phase 9.6: Final Polish & Safety (Components & Logic) [Completed]
+> **Goal**: 404エラー修正、UX改善、タグ表示など、残存課題の一掃と安全性強化。
 
-- [ ] **緊急修正 (Critical Fixes)**:
-    - [ ] 患者編集画面の404エラー修正 (実装漏れ対応)
-- [ ] **UX向上 (UX Polish)**:
-    - [ ] 予約入力の速度改善 (+15minボタン等)
-    - [ ] 検索結果へのタグ表示
-    - [ ] 表記揺れ・文言の統一
+- [x] **安全性強化 (Safety)**:
+    - [x] `ConfirmDialog` の全面導入 (`window.confirm` の廃止)
+    - [x] 予約・カルテ操作時の確認フロー統一
+- [x] **UX向上 (UX Polish)**:
+    - [x] 申し送りメモ (Admin Memo) の解決トグルと履歴表示ロジック修正
+    - [x] ダッシュボードの表示ロジック修正 (解決済みメモの保持)
 
-### Phase 10: v1.2 Launch Pad (Optimization & Dist)
+### Phase 10: v1.2 Launch Pad (Optimization & Dist) [In Progress]
 > **Goal**: 配布・本番運用に向けた最終調整と「Base Kit」としての整理。
 
 - [ ] **導入・設定機能**:
-    - [ ] 文言の変数化（ラベル外出し）の下準備 (configの作成)
+    - [x] 文言の変数化（ラベル外出し） (`src/config/labels.ts` 作成 & 適用開始)
     - [ ] バックアップ機能 (CSV/SQL Export)
 - [ ] **パッケージング**:
     - [ ] 起動スクリプトの整理

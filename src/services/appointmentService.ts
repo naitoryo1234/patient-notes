@@ -383,8 +383,14 @@ export const getUnresolvedAdminMemos = async (): Promise<Appointment[]> => {
     const appointments = await prisma.appointment.findMany({
         where: {
             adminMemo: { not: null },
-            isMemoResolved: false,
-            status: { not: 'cancelled' }
+            status: { not: 'cancelled' },
+            OR: [
+                { isMemoResolved: false },
+                {
+                    isMemoResolved: true,
+                    updatedAt: { gte: startOfDay(new Date()) } // Keep today's resolved items visible
+                }
+            ]
         },
         include: {
             patient: {

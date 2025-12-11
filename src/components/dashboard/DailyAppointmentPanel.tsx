@@ -23,7 +23,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
     const [currentTime, setCurrentTime] = useState(new Date());
     const [appointments, setAppointments] = useState(initialData);
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
-    const [detailAppointment, setDetailAppointment] = useState<Appointment | null>(null);
+    const [detailAppointmentId, setDetailAppointmentId] = useState<string | null>(null);
     const [checkInConfirm, setCheckInConfirm] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
     const [cancelConfirm, setCancelConfirm] = useState<{ open: boolean; id: string }>({ open: false, id: '' });
 
@@ -38,13 +38,13 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
-            if (!editingAppointment && !detailAppointment) { // Pause refresh if modal is open
+            if (!editingAppointment && !detailAppointmentId) { // Pause refresh if modal is open
                 router.refresh();
             }
         }, 60000); // 1 min
 
         return () => clearInterval(timer);
-    }, [router, editingAppointment, detailAppointment]);
+    }, [router, editingAppointment, detailAppointmentId]);
 
     // Manual Refresh
     const handleRefresh = () => {
@@ -61,8 +61,9 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
             a.id === id ? { ...a, status: 'arrived', arrivedAt: new Date() } : a
         ));
 
-        if (detailAppointment && detailAppointment.id === id) {
-            setDetailAppointment(prev => prev ? { ...prev, status: 'arrived', arrivedAt: new Date() } : null);
+        if (detailAppointmentId && detailAppointmentId === id) {
+            // No need to update local state for detail, traversing appointments prop is enough, 
+            // but we are updating 'appointments' state optimistically, so the derived appointment will update automatically.
         }
 
         await checkInAppointmentAction(id);
@@ -83,8 +84,8 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
 
     const pendingAssignments = appointments.filter(a => !a.staffId && a.status !== 'cancelled').length;
 
-    // Count all unresolved memos (including past appointments)
-    const pendingMemos = unresolvedMemos.length;
+    // Count all unresolved memos (only truly unresolved)
+    const pendingMemos = unresolvedMemos.filter(m => !m.isMemoResolved).length;
 
 
     // Split appointments
@@ -94,7 +95,12 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
         const duration = a.duration || 60;
         const isDone = diff < -duration;
         const isCancelled = a.status === 'cancelled';
-        return !isDone && !isCancelled;
+
+        // Keep visible if:
+        // 1. Not done AND Not cancelled (Standard active)
+        // 2. Has Admin Memo (Even if done, we want to keep it visible for handover)
+        // Note: Cancelled items with memos... maybe show? For now, stick to non-cancelled.
+        return (!isDone && !isCancelled) || (!!a.adminMemo && !isCancelled);
     });
 
     const pastAppointments = appointments.filter(a => {
@@ -142,7 +148,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
             <div
                 key={apt.id}
                 className={`relative rounded-lg border transition-all hover:shadow-md cursor-pointer ${statusColor} group`}
-                onClick={() => setDetailAppointment(apt)}
+                onClick={() => setDetailAppointmentId(apt.id)}
             >
                 <div className="block p-3">
                     {/* Row 1: Time + Status Badge + Visit Count */}
@@ -220,6 +226,17 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                                 </span>
                             )}
                         </div>
+                        {apt.adminMemo && (
+                            <div className={`mt-2 border rounded p-1.5 flex items-start gap-1.5 leading-tight ${apt.isMemoResolved
+                                ? 'bg-slate-50 border-slate-200 text-slate-400'
+                                : 'bg-red-50 border-red-100 text-red-700 animate-pulse'
+                                }`}>
+                                <AlertTriangle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${apt.isMemoResolved ? 'text-slate-400' : ''}`} />
+                                <span className={`text-xs font-bold whitespace-pre-wrap ${apt.isMemoResolved ? 'line-through decoration-slate-300' : ''}`}>
+                                    {apt.adminMemo}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -261,7 +278,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                         <Trash2 className="w-3.5 h-3.5" />
                     </button>
                 </div>
-            </div>
+            </div >
         );
     };
 
@@ -338,22 +355,27 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                 />
             )}
 
-            {/* Detail Mini Panel */}
-            {detailAppointment && (
-                <AppointmentDetailModal
-                    appointment={detailAppointment}
-                    isOpen={!!detailAppointment}
-                    onClose={() => setDetailAppointment(null)}
-                    onEdit={() => {
-                        setDetailAppointment(null);
-                        setEditingAppointment(detailAppointment);
-                    }}
-                    onCheckIn={() => {
-                        setCheckInConfirm({ open: true, id: detailAppointment.id, name: detailAppointment.patientName });
-                        setDetailAppointment(null);
-                    }}
-                />
-            )}
+            {/* Detail Mini Panel - Derived from ID to ensure freshness */}
+            {detailAppointmentId && (() => {
+                const target = appointments.find(a => a.id === detailAppointmentId);
+                if (!target) return null; // Should not happen usually, maybe if cancelled and filtered out?
+
+                return (
+                    <AppointmentDetailModal
+                        appointment={target}
+                        isOpen={!!target}
+                        onClose={() => setDetailAppointmentId(null)}
+                        onEdit={() => {
+                            setDetailAppointmentId(null);
+                            setEditingAppointment(target);
+                        }}
+                        onCheckIn={() => {
+                            setCheckInConfirm({ open: true, id: target.id, name: target.patientName });
+                            setDetailAppointmentId(null);
+                        }}
+                    />
+                );
+            })()}
 
             <ConfirmDialog
                 open={checkInConfirm.open}

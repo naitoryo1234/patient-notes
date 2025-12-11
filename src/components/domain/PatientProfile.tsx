@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { updatePatientMemo, updatePatientTags, deletePatient } from '@/actions/patientActions';
 import { useRouter } from 'next/navigation';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { TERMS } from '@/config/labels';
 
 interface PatientProfileProps {
     patient: Patient;
@@ -128,7 +129,7 @@ export function PatientProfile({ patient }: PatientProfileProps) {
                     size="icon"
                     onClick={() => setDeleteConfirmOpen(true)}
                     className="h-8 w-8 text-slate-500 hover:text-red-600 bg-slate-50 hover:bg-red-50 border border-slate-200 hover:border-red-200 shadow-sm transition-all ml-1"
-                    title="患者を削除"
+                    title={`${TERMS.PATIENT}を削除`}
                 >
                     <Trash2 className="w-4 h-4" />
                 </Button>
@@ -225,7 +226,7 @@ export function PatientProfile({ patient }: PatientProfileProps) {
                             value={memo}
                             onChange={(e) => setMemo(e.target.value)}
                             className="w-full text-sm border-slate-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 min-h-[100px]"
-                            placeholder="患者に関するメモを入力..."
+                            placeholder={`${TERMS.PATIENT}に関するメモを入力...`}
                             autoFocus
                         />
                         <div className="flex justify-end gap-2">
@@ -239,8 +240,8 @@ export function PatientProfile({ patient }: PatientProfileProps) {
             <ConfirmDialog
                 open={deleteConfirmOpen}
                 onOpenChange={setDeleteConfirmOpen}
-                title="この患者を削除しますか？"
-                description="この操作は取り消せません。患者情報と関連する全ての記録が削除され、未来の予約は自動的にキャンセルされます。"
+                title={`この${TERMS.PATIENT}を削除しますか？`}
+                description={`この操作は取り消せません。${TERMS.PATIENT}情報と関連する全ての記録が削除され、未来の${TERMS.APPOINTMENT}は自動的にキャンセルされます。`}
                 confirmLabel="削除する"
                 variant="danger"
                 onConfirm={handleDelete}
