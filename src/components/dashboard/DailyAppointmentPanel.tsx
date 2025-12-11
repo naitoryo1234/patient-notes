@@ -15,9 +15,10 @@ import { Bell, Clock, RefreshCw, Pencil, Trash2, AlertCircle, AlertTriangle, Use
 interface DailyAppointmentPanelProps {
     appointments: Appointment[]; // Initial server data
     staffList?: Staff[];
+    unresolvedMemos?: Appointment[]; // All unresolved memos (including past)
 }
 
-export function DailyAppointmentPanel({ appointments: initialData, staffList = [] }: DailyAppointmentPanelProps) {
+export function DailyAppointmentPanel({ appointments: initialData, staffList = [], unresolvedMemos = [] }: DailyAppointmentPanelProps) {
     const [currentTime, setCurrentTime] = useState(new Date());
     const [appointments, setAppointments] = useState(initialData);
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
@@ -80,9 +81,9 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
 
     const pendingAssignments = appointments.filter(a => !a.staffId && a.status !== 'cancelled').length;
 
-    const pendingMemos = appointments.filter(a => {
-        return a.adminMemo && !a.isMemoResolved && a.status !== 'cancelled';
-    }).length;
+    // Count all unresolved memos (including past appointments)
+    const pendingMemos = unresolvedMemos.length;
+
 
     // Split appointments
     const activeAppointments = appointments.filter(a => {

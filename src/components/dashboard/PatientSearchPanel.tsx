@@ -30,11 +30,12 @@ interface PatientSearchPanelProps {
     initialPatients: any[]; // Using any for now to match flexible Prisma return type, ideally defined properly
     appointments: Appointment[]; // For memos (today's)
     unassignedAppointments?: Appointment[]; // Future unassigned
+    unresolvedMemos?: Appointment[]; // All unresolved memos (including past)
     activeStaff?: Staff[];
     searchQuery: string;
 }
 
-export function PatientSearchPanel({ initialPatients, appointments, unassignedAppointments = [], activeStaff = [], searchQuery }: PatientSearchPanelProps) {
+export function PatientSearchPanel({ initialPatients, appointments, unassignedAppointments = [], unresolvedMemos = [], activeStaff = [], searchQuery }: PatientSearchPanelProps) {
     const router = useRouter();
     const [query, setQuery] = useState(searchQuery);
     const [activeTab, setActiveTab] = useState<'recent' | 'search' | 'attention'>('recent');
@@ -44,20 +45,16 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
 
     // Filter Logic
-    // Memos are from today's appointments (history kept for day)
-    const memoAppointments = appointments.filter(a => {
-        return a.adminMemo && a.status !== 'cancelled';
-    });
+    // Use unresolvedMemos (all unresolved, including past) instead of only today's
+    const memoAppointments = unresolvedMemos; // All unresolved memos
 
     // Counts
-    const unresolvedMemoCount = memoAppointments.filter(a => {
-        return !a.isMemoResolved;
-    }).length;
+    const unresolvedMemoCount = memoAppointments.length; // Already filtered to unresolved
 
     const unassignedCount = unassignedAppointments.length;
     const totalAttention = unresolvedMemoCount + unassignedCount;
-    // Show list if there are ANY unassigned OR ANY memos (even resolved ones)
-    const hasAnyAttentionItems = unassignedCount > 0 || memoAppointments.length > 0;
+    // Show list if there are ANY unassigned OR ANY unresolved memos
+    const hasAnyAttentionItems = unassignedCount > 0 || unresolvedMemoCount > 0;
 
     // Load recent patients from localStorage
     useEffect(() => {
@@ -336,8 +333,22 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                                                                 : 'bg-white border-red-100 hover:shadow-md hover:border-red-300'
                                                                 }`}>
                                                             <div className="flex items-center justify-between mb-2">
-                                                                <div className={`text-sm font-bold ${isResolved ? 'text-slate-500' : 'text-slate-700'}`}>
-                                                                    {format(new Date(apt.visitDate), 'HH:mm')} {apt.patientName}
+                                                                <div className={`text-sm font-bold flex items-center gap-2 ${isResolved ? 'text-slate-500' : 'text-slate-700'}`}>
+                                                                    {(() => {
+                                                                        const aptDate = new Date(apt.visitDate);
+                                                                        const now = new Date();
+                                                                        const isPast = aptDate < now;
+                                                                        return (
+                                                                            <>
+                                                                                {isPast && (
+                                                                                    <span className="text-xs bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded">
+                                                                                        【過去】
+                                                                                    </span>
+                                                                                )}
+                                                                                {format(aptDate, 'MM/dd HH:mm')} {apt.patientName}
+                                                                            </>
+                                                                        );
+                                                                    })()}
                                                                 </div>
                                                                 {isResolved && (
                                                                     <div className="flex items-center gap-1 text-xs text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
