@@ -11,6 +11,7 @@ import { ja } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Bell, Clock, RefreshCw, Pencil, Trash2, AlertCircle, AlertTriangle, UserCheck } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface DailyAppointmentPanelProps {
     appointments: Appointment[]; // Initial server data
@@ -22,7 +23,9 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
     const [currentTime, setCurrentTime] = useState(new Date());
     const [appointments, setAppointments] = useState(initialData);
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
-    const [detailAppointment, setDetailAppointment] = useState<Appointment | null>(null); // New state for mini panel
+    const [detailAppointment, setDetailAppointment] = useState<Appointment | null>(null);
+    const [checkInConfirm, setCheckInConfirm] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
+    const [cancelConfirm, setCancelConfirm] = useState<{ open: boolean; id: string }>({ open: false, id: '' });
 
     const router = useRouter();
 
@@ -50,32 +53,31 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
     };
 
     // Optimistic Actions
-    const handleCheckIn = async (aptId: string, patientName: string) => {
-        if (!confirm(`${patientName}様の来院を記録しますか？`)) return;
+    const handleCheckIn = async () => {
+        const { id, name } = checkInConfirm;
 
         // Optimistic Update
         setAppointments(prev => prev.map(a =>
-            a.id === aptId ? { ...a, status: 'arrived', arrivedAt: new Date() } : a
+            a.id === id ? { ...a, status: 'arrived', arrivedAt: new Date() } : a
         ));
 
-        // Also update local detail/edit state if needed (though usually we close it)
-        if (detailAppointment && detailAppointment.id === aptId) {
+        if (detailAppointment && detailAppointment.id === id) {
             setDetailAppointment(prev => prev ? { ...prev, status: 'arrived', arrivedAt: new Date() } : null);
         }
 
-        await checkInAppointmentAction(aptId);
-        router.refresh(); // Sync with server
+        await checkInAppointmentAction(id);
+        router.refresh();
     };
 
-    const handleCancel = async (aptId: string) => {
-        if (!confirm('本当にこの予約をキャンセルしますか？')) return;
+    const handleCancel = async () => {
+        const { id } = cancelConfirm;
 
         // Optimistic Update
         setAppointments(prev => prev.map(a =>
-            a.id === aptId ? { ...a, status: 'cancelled' } : a
+            a.id === id ? { ...a, status: 'cancelled' } : a
         ));
 
-        await cancelAppointmentAction(aptId);
+        await cancelAppointmentAction(id);
         router.refresh();
     };
 
@@ -228,7 +230,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                             onClick={(e) => {
                                 e.stopPropagation();
                                 e.nativeEvent.stopImmediatePropagation();
-                                handleCheckIn(apt.id, apt.patientName);
+                                setCheckInConfirm({ open: true, id: apt.id, name: apt.patientName });
                             }}
                             className="p-1.5 bg-white text-slate-500 hover:text-emerald-600 rounded-md shadow-sm border border-slate-200 hover:border-emerald-300 transition-all font-bold flex items-center gap-1 cursor-pointer"
                             title="来院チェックイン"
@@ -252,7 +254,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                         onClick={(e) => {
                             e.stopPropagation();
                             e.nativeEvent.stopImmediatePropagation();
-                            handleCancel(apt.id);
+                            setCancelConfirm({ open: true, id: apt.id });
                         }}
                         className="p-1.5 bg-white text-slate-500 hover:text-red-600 rounded-md shadow-sm border border-slate-200 hover:border-red-300 transition-all cursor-pointer"
                     >
@@ -347,11 +349,30 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                         setEditingAppointment(detailAppointment);
                     }}
                     onCheckIn={() => {
-                        handleCheckIn(detailAppointment.id, detailAppointment.patientName);
+                        setCheckInConfirm({ open: true, id: detailAppointment.id, name: detailAppointment.patientName });
                         setDetailAppointment(null);
                     }}
                 />
             )}
+
+            <ConfirmDialog
+                open={checkInConfirm.open}
+                onOpenChange={(open) => setCheckInConfirm(prev => ({ ...prev, open }))}
+                title={`${checkInConfirm.name}様の来院を記録しますか？`}
+                confirmLabel="記録する"
+                variant="primary"
+                onConfirm={handleCheckIn}
+            />
+
+            <ConfirmDialog
+                open={cancelConfirm.open}
+                onOpenChange={(open) => setCancelConfirm(prev => ({ ...prev, open }))}
+                title="この予約をキャンセルしますか？"
+                description="キャンセルした予約は予約一覧に「キャンセル」と表示されます。"
+                confirmLabel="キャンセルする"
+                variant="warning"
+                onConfirm={handleCancel}
+            />
         </div>
     );
 }
