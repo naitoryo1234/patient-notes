@@ -272,7 +272,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
             {pendingMemos > 0 && (
                 <div className="bg-red-50 border-b border-red-100 p-2 flex items-center gap-2 text-xs text-red-700 font-bold px-4 animate-in slide-in-from-top-1">
                     <AlertTriangle className="w-4 h-4 text-red-600" />
-                    <span>未確認の申し送り事項が {pendingMemos} 件あります</span>
+                    <span>本日の未確認申し送り: {pendingMemos}件</span>
                 </div>
             )}
 

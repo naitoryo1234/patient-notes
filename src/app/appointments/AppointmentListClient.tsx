@@ -111,7 +111,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                 {pendingMemos > 0 && (
                     <div className="bg-red-50 border-b border-red-100 p-2 flex items-center gap-2 text-xs text-red-700 font-bold px-4 animate-in slide-in-from-top-1">
                         <AlertTriangle className="w-4 h-4 text-red-600" />
-                        <span>未確認の申し送り事項が {pendingMemos} 件あります</span>
+                        <span>すべての未確認申し送り: {pendingMemos}件</span>
                     </div>
                 )}
             </div>
@@ -329,8 +329,8 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                             {apt.adminMemo && (
                                                 <div
                                                     className={`mt-2 p-2 rounded text-xs border cursor-pointer transition-colors flex items-start gap-1.5 ${!apt.isMemoResolved && !isCancelled
-                                                            ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
-                                                            : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 opacity-80'
+                                                        ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
+                                                        : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 opacity-80'
                                                         }`}
                                                     onClick={async (e) => {
                                                         e.stopPropagation();
