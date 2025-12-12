@@ -245,11 +245,11 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                     </div>
 
                     {/* Row 2: Patient Name + Duration Badge */}
-                    <div className="flex justify-between items-center mb-1">
-                        <div className={`font-bold text-base transition-colors line-clamp-2 ${isCancelled ? 'text-slate-400 line-through' : 'text-slate-800 group-hover:text-blue-600'}`}>
-                            {apt.patientName} <span className="text-xs font-normal text-slate-500 ml-1 decoration-auto">{apt.patientKana}</span>
+                    <div className="flex justify-between items-center mb-1 gap-2">
+                        <div className={`font-bold text-base transition-colors truncate flex-1 min-w-0 ${isCancelled ? 'text-slate-400 line-through' : 'text-slate-800 group-hover:text-blue-600'}`}>
+                            {apt.patientName} <span className="text-[10px] font-normal text-slate-400 ml-1">{apt.patientKana}</span>
                         </div>
-                        <span className="text-[10px] bg-slate-50 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
+                        <span className="text-[10px] bg-slate-50 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200 flex-none">
                             {apt.duration}分
                         </span>
                     </div>

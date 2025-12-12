@@ -136,21 +136,32 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
         }
     }, [initialPatients]);
 
-    // Switch tab based on search query
+    // Switch tab based on search query from URL (only on initial load or URL change)
+    // Do NOT include activeTab in deps - that causes a loop
     useEffect(() => {
         if (searchQuery) {
             setActiveTab('search');
             setQuery(searchQuery);
-        } else if (activeTab === 'search' && !searchQuery) {
-            // If search is cleared, go back to recent or attention
-            setActiveTab('recent');
         }
-    }, [searchQuery, activeTab]);
+        // Only react to searchQuery changes from URL, not tab switches
+         
+    }, [searchQuery]);
 
     // Handle manual search input
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        router.push(`/?q=${query}`);
+        if (query.trim()) {
+            router.push(`/?q=${query}`);
+        }
+    };
+
+    // Handle tab click - clear URL query when switching away from search
+    const handleTabClick = (tab: 'recent' | 'search' | 'attention') => {
+        if (tab !== 'search' && searchQuery) {
+            // Clear URL query parameter when leaving search
+            router.push('/');
+        }
+        setActiveTab(tab);
     };
 
     // Save to recent on click
@@ -199,21 +210,21 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                     {/* Tab Navigation */}
                     <div className="flex text-sm font-medium bg-slate-50">
                         <button
-                            onClick={() => setActiveTab('recent')}
+                            onClick={() => handleTabClick('recent')}
                             className={`flex-1 py-3 flex items-center justify-center gap-2 border-b-2 transition-colors ${activeTab === 'recent' ? 'border-indigo-500 text-indigo-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
                         >
                             <History className="w-4 h-4" />
                             {LABELS.COMMON.RECENT}
                         </button>
                         <button
-                            onClick={() => setActiveTab('search')}
+                            onClick={() => handleTabClick('search')}
                             className={`flex-1 py-3 flex items-center justify-center gap-2 border-b-2 transition-colors ${activeTab === 'search' ? 'border-indigo-500 text-indigo-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
                         >
                             <Users className="w-4 h-4" />
                             {LABELS.COMMON.SEARCH_RESULT}
                         </button>
                         <button
-                            onClick={() => setActiveTab('attention')}
+                            onClick={() => handleTabClick('attention')}
                             className={`flex-1 py-3 flex items-center justify-center gap-2 border-b-2 transition-colors ${activeTab === 'attention' ? 'border-amber-500 text-amber-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
                         >
                             <AlertCircle className={`w-4 h-4 ${totalAttention > 0 ? 'text-amber-500' : ''}`} />
