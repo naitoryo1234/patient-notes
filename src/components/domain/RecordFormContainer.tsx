@@ -12,6 +12,7 @@ import { FormFieldConfig } from '@/components/form/ConfigForm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS } from '@/config/labels';
 import { useToast } from '@/components/ui/Toast';
+import { AiUsageGuide } from '@/components/guide/AiUsageGuide';
 
 interface ActionResult {
     success?: boolean;
@@ -354,28 +355,21 @@ P: `);
 
             {mode === 'ai' ? (
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                    {/* AI Guide Section */}
+                    {/* Compact AI Guide with link to detailed modal */}
                     <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-lg p-4">
                         <div className="flex items-start gap-3">
                             <div className="text-2xl">✨</div>
                             <div className="flex-1">
-                                <h4 className="font-bold text-indigo-900 mb-2">AIを使って簡単入力</h4>
-                                <ol className="text-xs text-indigo-800 space-y-1 mb-3">
-                                    <li>① 下のプロンプトをコピーして、AI（Gemini / ChatGPT等）に貼り付け</li>
-                                    <li>② プロンプトの下にメモを追記して送信</li>
-                                    <li>③ AIの返答をこのテキストエリアに貼り付け</li>
-                                </ol>
+                                <div className="flex items-center justify-between mb-2">
+                                    <h4 className="font-bold text-indigo-900">AIを使って簡単入力</h4>
+                                    <AiUsageGuide />
+                                </div>
                                 <div className="bg-white/80 border border-indigo-200 rounded-md p-3 text-xs font-mono text-slate-700 relative">
-                                    <pre className="whitespace-pre-wrap">{`以下のメモをSOAP形式に整理してください。
-- S: 主訴（患者の訴え）
-- O: 所見（客観的な観察）
-- A: 施術内容
-- P: 計画（次回への申し送り）
-
-出力は「S: 〜」「O: 〜」の形式で、余計な説明は不要です。
-
+                                    <pre className="whitespace-pre-wrap pr-16">{`以下のメモをSOAP形式に整理してください。
+S: 主訴, O: 所見, A: 施術, P: 計画
+出力は「S: 〜」の形式で、余計な説明は不要。
 ---
-（ここにメモを追記）`}</pre>
+（メモを追記）`}</pre>
                                     <button
                                         type="button"
                                         onClick={() => {
