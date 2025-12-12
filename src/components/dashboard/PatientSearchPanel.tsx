@@ -144,7 +144,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
             setQuery(searchQuery);
         }
         // Only react to searchQuery changes from URL, not tab switches
-         
+
     }, [searchQuery]);
 
     // Handle manual search input
@@ -157,7 +157,10 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
 
     // Handle tab click - clear URL query when switching away from search
     const handleTabClick = (tab: 'recent' | 'search' | 'attention') => {
-        if (tab !== 'search' && searchQuery) {
+        if (tab === 'search' && query.trim() && !searchQuery) {
+            // Clicking search tab with text in input: trigger search
+            router.push(`/?q=${query}`);
+        } else if (tab !== 'search' && searchQuery) {
             // Clear URL query parameter when leaving search
             router.push('/');
         }

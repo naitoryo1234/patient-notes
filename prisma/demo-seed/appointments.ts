@@ -29,69 +29,145 @@ function addDays(dateStr: string, days: number): string {
 export function generateDemoAppointments(patientIds: string[], staffIds: string[]) {
     const today = DEMO_DATE_STR;
     const tomorrow = addDays(today, 1);
+    const dayAfter = addDays(today, 2);
     const nextWeek = addDays(today, 7);
 
     return [
-        // 今日の予約（デモ確認用）
+        // ===== 今日の予約（朝〜夕方まで充実） =====
         {
             patientId: patientIds[0], // デモ太郎
             staffId: staffIds[0],     // 山田院長
             startAt: createDateTime(today, 9, 0),
             duration: 60,
             memo: '定期メンテナンス',
-            status: 'pending',
+            status: 'completed',
         },
         {
             patientId: patientIds[1], // サンプル花子
             staffId: staffIds[1],     // 鈴木スタッフ
-            startAt: createDateTime(today, 10, 30),
+            startAt: createDateTime(today, 10, 0),
             duration: 45,
             memo: '肩こり集中ケア',
             adminMemo: '保険証再確認お願いします',
             isMemoResolved: false,
-            status: 'pending',
+            status: 'completed',
         },
         {
             patientId: patientIds[2], // テスト次郎
-            staffId: null,            // 担当未割当（アラート確認用）
-            startAt: createDateTime(today, 14, 0),
+            staffId: staffIds[2],     // 佐藤スタッフ
+            startAt: createDateTime(today, 11, 0),
             duration: 60,
             memo: 'スポーツ後ケア',
-            status: 'pending',
+            status: 'arrived',
         },
         {
             patientId: patientIds[3], // 架空三子
-            staffId: staffIds[2],     // 佐藤スタッフ
-            startAt: createDateTime(today, 15, 30),
+            staffId: staffIds[0],
+            startAt: createDateTime(today, 13, 0),
             duration: 45,
             memo: 'マタニティケア',
-            status: 'pending',
+            status: 'scheduled',
         },
-        // 明日の予約
         {
             patientId: patientIds[4], // 見本四郎
-            staffId: staffIds[0],
-            startAt: createDateTime(tomorrow, 11, 0),
+            staffId: null,            // 担当未割当（アラート確認用）
+            startAt: createDateTime(today, 14, 0),
             duration: 60,
             memo: '全身調整',
-            status: 'pending',
+            adminMemo: '血圧高めのため注意',
+            isMemoResolved: false,
+            status: 'scheduled',
         },
         {
             patientId: patientIds[0], // デモ太郎（複数予約）
             staffId: staffIds[1],
+            startAt: createDateTime(today, 15, 30),
+            duration: 45,
+            memo: 'フォローアップ',
+            status: 'scheduled',
+        },
+        {
+            patientId: patientIds[1], // サンプル花子
+            staffId: staffIds[2],
+            startAt: createDateTime(today, 16, 30),
+            duration: 60,
+            memo: '眼精疲労ケア',
+            status: 'scheduled',
+        },
+        {
+            patientId: patientIds[2], // テスト次郎
+            staffId: null,            // 担当未割当
+            startAt: createDateTime(today, 17, 30),
+            duration: 45,
+            memo: '夕方の施術',
+            status: 'scheduled',
+        },
+        // ===== 明日の予約 =====
+        {
+            patientId: patientIds[4], // 見本四郎
+            staffId: staffIds[0],
+            startAt: createDateTime(tomorrow, 10, 0),
+            duration: 60,
+            memo: '全身調整',
+            status: 'scheduled',
+        },
+        {
+            patientId: patientIds[3],
+            staffId: staffIds[1],
+            startAt: createDateTime(tomorrow, 11, 30),
+            duration: 45,
+            memo: 'マタニティケア',
+            status: 'scheduled',
+        },
+        {
+            patientId: patientIds[0],
+            staffId: staffIds[2],
+            startAt: createDateTime(tomorrow, 14, 0),
+            duration: 60,
+            memo: '腰痛ケア',
+            status: 'scheduled',
+        },
+        {
+            patientId: patientIds[1],
+            staffId: staffIds[0],
             startAt: createDateTime(tomorrow, 16, 0),
             duration: 45,
             memo: 'フォローアップ',
-            status: 'pending',
+            status: 'scheduled',
         },
-        // 来週の予約
+        // ===== 明後日の予約 =====
         {
-            patientId: patientIds[1],
+            patientId: patientIds[2],
+            staffId: staffIds[1],
+            startAt: createDateTime(dayAfter, 9, 30),
+            duration: 60,
+            memo: 'スポーツケア',
+            status: 'scheduled',
+        },
+        {
+            patientId: patientIds[4],
+            staffId: staffIds[2],
+            startAt: createDateTime(dayAfter, 13, 0),
+            duration: 45,
+            memo: '定期チェック',
+            status: 'scheduled',
+        },
+        // ===== 来週の予約 =====
+        {
+            patientId: patientIds[0],
             staffId: staffIds[0],
             startAt: createDateTime(nextWeek, 10, 0),
             duration: 60,
             memo: '定期チェック',
-            status: 'pending',
+            status: 'scheduled',
+        },
+        {
+            patientId: patientIds[1],
+            staffId: staffIds[1],
+            startAt: createDateTime(nextWeek, 14, 0),
+            duration: 45,
+            memo: '肩こりケア',
+            status: 'scheduled',
         },
     ];
 }
