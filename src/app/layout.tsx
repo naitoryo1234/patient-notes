@@ -7,6 +7,7 @@ import { UserPlus, Calendar, Settings, LayoutDashboard } from 'lucide-react';
 import { TERMS } from '@/config/labels';
 import { getActiveStaff } from '@/services/staffService';
 import { NewAppointmentButton } from '@/components/dashboard/NewAppointmentButton';
+import { isDemoMode, getDemoDateString } from '@/lib/dateUtils';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,6 +22,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const staffList = await getActiveStaff();
+  const demoMode = isDemoMode();
+  const demoDate = getDemoDateString();
 
   return (
     <html lang="ja" className="h-full">
@@ -31,6 +34,11 @@ export default async function RootLayout({
               <Link href="/" className="font-bold text-lg text-slate-800 flex items-center gap-2">
                 <span>🩺</span>
                 Clinic Notebook
+                {demoMode && (
+                  <span className="bg-amber-400 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse ml-2">
+                    DEMO
+                  </span>
+                )}
               </Link>
               <nav className="flex gap-4 items-center">
                 <Link
@@ -74,6 +82,12 @@ export default async function RootLayout({
           <main className="flex-1 min-h-0 container mx-auto px-4 py-4 md:py-6 overflow-hidden flex flex-col">
             {children}
           </main>
+          {/* Demo Mode Footer Notice */}
+          {demoMode && (
+            <footer className="flex-none bg-amber-50 border-t border-amber-200 text-amber-700 text-xs text-center py-2 px-4">
+              ※ これはデモ環境です。表示されているデータは架空のものです。（システム日付: {demoDate}）
+            </footer>
+          )}
         </div>
       </body >
     </html >

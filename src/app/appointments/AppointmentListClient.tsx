@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { Pencil, Trash2, Calendar, User, History, CheckCircle2, XCircle, CalendarClock, AlertCircle, AlertTriangle, ChevronLeft, ChevronRight, X, FileText, Search } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { LABELS, TERMS } from '@/config/labels';
+import { getNow } from '@/lib/dateUtils';
 
 interface AppointmentListClientProps {
     initialAppointments: Appointment[];
@@ -72,12 +73,12 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
             setFilterDate(addDays(filterDate, offset));
         } else {
             // If no date set, start from today
-            setFilterDate(addDays(new Date(), offset > 0 ? 0 : offset));
+            setFilterDate(addDays(getNow(), offset > 0 ? 0 : offset));
         }
     };
 
     const setSpecificDate = (offsetFromToday: number) => {
-        setFilterDate(addDays(new Date(), offsetFromToday));
+        setFilterDate(addDays(getNow(), offsetFromToday));
     };
 
     const filteredAppointments = initialAppointments.filter(apt => {
@@ -178,7 +179,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                     {/* New Appointment Button */}
                     <NewAppointmentButton
                         staffList={staffList}
-                        initialDate={filterDate || new Date()}
+                        initialDate={filterDate || getNow()}
                     />
                     {/* ... (rest of toolbar logic remains similar, truncating for brevity since we are focusing on the top part and main content replacement) ... */}
                     <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block"></div>
@@ -410,7 +411,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                         ) : (
                             paginatedAppointments.map((apt) => {
                                 const visitDate = new Date(apt.visitDate);
-                                const diff = differenceInMinutes(visitDate, new Date());
+                                const diff = differenceInMinutes(visitDate, getNow());
                                 const isExpired = diff < -60;
                                 const isCancelled = apt.status === 'cancelled';
                                 const isUnassigned = !isCancelled && !isExpired && !apt.staffId;
@@ -575,7 +576,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                 ) : (
                     paginatedAppointments.map((apt) => {
                         const visitDate = new Date(apt.visitDate);
-                        const diff = differenceInMinutes(visitDate, new Date());
+                        const diff = differenceInMinutes(visitDate, getNow());
                         const isExpired = diff < -60;
                         const isCancelled = apt.status === 'cancelled';
                         const isUnassigned = !isCancelled && !isExpired && !apt.staffId;

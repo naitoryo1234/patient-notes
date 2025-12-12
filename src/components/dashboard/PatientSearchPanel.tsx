@@ -16,6 +16,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS, LABELS } from '@/config/labels';
 import { differenceInMinutes } from 'date-fns';
 import { Patient, ClinicalRecord } from '@prisma/client';
+import { getNow } from '@/lib/dateUtils';
 
 // Minimal patient type for Recent History (stored in localStorage)
 export interface RecentPatient {
@@ -41,7 +42,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
     const [recentPatients, setRecentPatients] = useState<RecentPatient[]>([]);
     const [memoConfirm, setMemoConfirm] = useState<{ open: boolean; id: string; targetStatus: boolean }>({ open: false, id: '', targetStatus: true });
     const [completeConfirm, setCompleteConfirm] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
-    const [currentTime, setCurrentTime] = useState(new Date());
+    const [currentTime, setCurrentTime] = useState(getNow());
 
     const [attentionFilter, setAttentionFilter] = useState<'all' | 'delayed' | 'unassigned' | 'memo'>('all');
     //  Modal State
@@ -49,7 +50,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
 
     // Update time every minute
     useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+        const timer = setInterval(() => setCurrentTime(getNow()), 60000);
         return () => clearInterval(timer);
     }, []);
 

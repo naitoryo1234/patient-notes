@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createPatient, findSimilarPatients } from '@/services/patientService';
+import { getNow } from '@/lib/dateUtils';
 
 /**
  * Create a new patient
@@ -151,7 +152,7 @@ export async function deletePatient(patientId: string) {
             await tx.appointment.updateMany({
                 where: {
                     patientId: patientId,
-                    startAt: { gte: new Date() },
+                    startAt: { gte: getNow() },
                     status: 'scheduled'
                 },
                 data: { status: 'cancelled' }

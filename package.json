@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "prepare": "husky"
+    "prepare": "husky",
+    "seed:demo": "tsx prisma/demo-seed/index.ts"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

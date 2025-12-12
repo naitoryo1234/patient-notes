@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { Bell, Clock, RefreshCw, Pencil, Trash2, AlertCircle, AlertTriangle, UserCheck, CheckCircle } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS, LABELS } from '@/config/labels';
+import { getNow, isDemoMode, getDemoDateString } from '@/lib/dateUtils';
 
 interface DailyAppointmentPanelProps {
     appointments: Appointment[]; // Initial server data
@@ -21,7 +22,7 @@ interface DailyAppointmentPanelProps {
 }
 
 export function DailyAppointmentPanel({ appointments: initialData, staffList = [], unresolvedMemos = [] }: DailyAppointmentPanelProps) {
-    const [currentTime, setCurrentTime] = useState(new Date());
+    const [currentTime, setCurrentTime] = useState(getNow());
     const [appointments, setAppointments] = useState(initialData);
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
     const [detailAppointmentId, setDetailAppointmentId] = useState<string | null>(null);
@@ -39,7 +40,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
     // Update time and fetch latest data every minute
     useEffect(() => {
         const timer = setInterval(() => {
-            setCurrentTime(new Date());
+            setCurrentTime(getNow());
             if (!editingAppointment && !detailAppointmentId) { // Pause refresh if modal is open
                 router.refresh();
             }
@@ -50,7 +51,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
 
     // Manual Refresh
     const handleRefresh = () => {
-        setCurrentTime(new Date());
+        setCurrentTime(getNow());
         router.refresh();
     };
 
@@ -336,7 +337,12 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
             <div className="bg-slate-800 text-white p-4 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-emerald-400" />
-                    <h2 className="font-bold text-lg">{LABELS.DASHBOARD.TITLE}</h2>
+                    <h2 className="font-bold text-lg">
+                        {LABELS.DASHBOARD.TITLE}
+                        {isDemoMode() && (
+                            <span className="text-xs text-amber-400 ml-2 font-normal">（デモ日: {getDemoDateString()}）</span>
+                        )}
+                    </h2>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-400">
                     <span>{format(currentTime, 'HH:mm')} {LABELS.COMMON.UPDATE}</span>

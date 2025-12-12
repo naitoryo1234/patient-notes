@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { startOfDay, endOfDay } from 'date-fns';
+import { getNow } from '@/lib/dateUtils';
 
 export interface Appointment {
     id: string; // record id
@@ -39,7 +40,7 @@ type AppointmentWithRel = Prisma.AppointmentGetPayload<{
     }
 }>;
 
-export const getTodaysAppointments = async (date: Date = new Date()): Promise<Appointment[]> => {
+export const getTodaysAppointments = async (date: Date = getNow()): Promise<Appointment[]> => {
     const start = startOfDay(date);
     const end = endOfDay(date);
 
@@ -88,7 +89,7 @@ export const getTodaysAppointments = async (date: Date = new Date()): Promise<Ap
 };
 
 export const findAllAppointments = async (options?: { includePast?: boolean; includeCancelled?: boolean }) => {
-    const now = new Date();
+    const now = getNow();
     const where: { startAt?: { gte: Date }; status?: { not: string } } = {};
 
     if (!options?.includePast) {
@@ -146,7 +147,7 @@ export const findAllAppointments = async (options?: { includePast?: boolean; inc
 };
 
 export const getUnassignedFutureAppointments = async (): Promise<Appointment[]> => {
-    const now = new Date();
+    const now = getNow();
 
     // We want all unassigned valid appointments from now.
     const appointments = await prisma.appointment.findMany({
@@ -189,7 +190,7 @@ export const getUnassignedFutureAppointments = async (): Promise<Appointment[]> 
 
 export const getTodaysAppointmentForPatient = async (patientId: string) => {
     // ... (unchanged logic)
-    const today = new Date();
+    const today = getNow();
     const start = startOfDay(today);
     const end = endOfDay(today);
 
@@ -205,7 +206,7 @@ export const getTodaysAppointmentForPatient = async (patientId: string) => {
 
     if (appointments.length === 0) return null;
 
-    const now = new Date();
+    const now = getNow();
     const closest = appointments.reduce((prev, curr) => {
         const prevDiff = Math.abs(prev.startAt.getTime() - now.getTime());
         const currDiff = Math.abs(curr.startAt.getTime() - now.getTime());
@@ -270,7 +271,7 @@ export const checkPatientAvailability = async (patientId: string, startAt: Date,
 
 export const getNextAppointment = async (patientId: string) => {
     // ... (unchanged)
-    const now = new Date();
+    const now = getNow();
     const appointment = await prisma.appointment.findFirst({
         where: {
             patientId,
@@ -397,7 +398,7 @@ export const getUnresolvedAdminMemos = async (): Promise<Appointment[]> => {
                 { isMemoResolved: false },
                 {
                     isMemoResolved: true,
-                    updatedAt: { gte: startOfDay(new Date()) } // Keep today's resolved items visible
+                    updatedAt: { gte: startOfDay(getNow()) } // Keep today's resolved items visible
                 }
             ]
         },
