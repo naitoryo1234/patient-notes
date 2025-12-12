@@ -12,20 +12,19 @@ import Link from 'next/link';
 import { TERMS, LABELS } from '@/config/labels';
 
 interface PatientFormContainerProps {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     action: (formData: FormData) => Promise<any>;
-    initialValues?: Record<string, any>;
+    initialValues?: Record<string, unknown>;
 }
 
 export function PatientFormContainer({ action, initialValues = {} }: PatientFormContainerProps) {
     const [mode, setMode] = useState<'manual' | 'ai'>('manual');
     const [step, setStep] = useState<'input' | 'confirm'>('input'); // New: Step management
     const [aiText, setAiText] = useState('');
-    const [formValues, setFormValues] = useState(initialValues);
+    const [formValues, setFormValues] = useState<Record<string, unknown>>(initialValues);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [duplicates, setDuplicates] = useState<any[]>([]);
-    const [isChecking, setIsChecking] = useState(false);
-
     const handleParse = async () => {
-        setIsChecking(true);
         const parsed = parseAiText(aiText);
         // console.log('AI Parsed Result (Patient):', parsed);
 
@@ -41,7 +40,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
 
         // Check duplicates
         if (mergedValues.name || mergedValues.kana) {
-            const results = await checkDuplicates(mergedValues.name || '', mergedValues.kana || '');
+            const results = await checkDuplicates((mergedValues.name as string) || '', (mergedValues.kana as string) || '');
             setDuplicates(results);
         } else {
             setDuplicates([]);
@@ -49,7 +48,6 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
 
         setFormValues(mergedValues);
         setStep('confirm'); // Go to confirm step instead of pure manual mode immediately
-        setIsChecking(false);
     };
 
     const handleConfirm = () => {
@@ -81,6 +79,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                         </div>
                         <p className="text-sm text-yellow-700 mb-3">{LABELS.VALIDATION.DUPLICATE_DESC}</p>
                         <ul className="space-y-2">
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {duplicates.map((d: any) => (
                                 <li key={d.id} className="bg-white border border-yellow-100 rounded-md p-3 text-sm flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                                     <div className="flex flex-col">
@@ -107,7 +106,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                                 onClick={() => setDuplicates([])}
                                 className="text-xs text-slate-600 hover:text-slate-800"
                             >
-                                この人ではない（続行）
+                                {LABELS.VALIDATION.NOT_THIS_PERSON}
                             </Button>
                         </div>
                     </div>
@@ -119,7 +118,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                             <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.NAME} <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
-                                value={formValues.name || ''}
+                                value={(formValues.name as string) || ''}
                                 onChange={(e) => setFormValues({ ...formValues, name: e.target.value })}
                                 className={`w-full text-sm rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white ${formValues.name ? 'border-green-300' : 'border-red-300 border-2'}`}
                             />
@@ -128,7 +127,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                             <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.KANA} <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
-                                value={formValues.kana || ''}
+                                value={(formValues.kana as string) || ''}
                                 onChange={(e) => setFormValues({ ...formValues, kana: e.target.value })}
                                 className={`w-full text-sm rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white ${formValues.kana ? 'border-green-300' : 'border-red-300 border-2'}`}
                             />
@@ -138,7 +137,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                             <input
                                 type="text"
                                 placeholder="YYYY-MM-DD"
-                                value={formValues.birthDate || ''}
+                                value={(formValues.birthDate as string) || ''}
                                 onChange={(e) => setFormValues({ ...formValues, birthDate: e.target.value })}
                                 className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
                             />
@@ -147,7 +146,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                             <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.PHONE}</label>
                             <input
                                 type="text"
-                                value={formValues.phone || ''}
+                                value={(formValues.phone as string) || ''}
                                 onChange={(e) => setFormValues({ ...formValues, phone: e.target.value })}
                                 className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
                             />
@@ -155,7 +154,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                         <div className="space-y-1">
                             <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.GENDER}</label>
                             <select
-                                value={formValues.gender || ''}
+                                value={(formValues.gender as string) || ''}
                                 onChange={(e) => setFormValues({ ...formValues, gender: e.target.value })}
                                 className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white"
                             >
@@ -169,7 +168,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
                     <div className="pt-2 border-t border-slate-200 space-y-1">
                         <label className="text-xs text-slate-500 font-bold">{LABELS.PATIENT_FORM.MEMO}</label>
                         <textarea
-                            value={formValues.memo || ''}
+                            value={(formValues.memo as string) || ''}
                             onChange={(e) => setFormValues({ ...formValues, memo: e.target.value })}
                             className="w-full text-sm border-slate-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[80px]"
                         />

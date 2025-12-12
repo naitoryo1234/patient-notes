@@ -63,6 +63,7 @@ export const LABELS = {
         NONE: 'なし',
         FULL_TEXT: '全文',
         OPERATION: '操作',
+        CREATE: '作成',
         STATUS: '状態',
         NAV_PREV: '前日',
         NAV_NEXT: '翌日',
@@ -171,6 +172,10 @@ export const LABELS = {
         JUST_NOW: `${TERMS.VISIT}時刻`,
         COMING_SOON: (mins: number) => `あと${mins}分`,
         PAST: '【過去】',
+        UNASSIGNED_SHORT: '担当未定',
+        UNRESOLVED_SHORT: '未確認',
+        COMPLETE_DESC: '完了すると、リストから非表示になります。',
+        COMPLETE_EXECUTE: '完了する',
     },
     PATIENT_FORM: {
         NAME: '氏名',
@@ -213,5 +218,23 @@ export const LABELS = {
         DUPLICATE_TITLE: `似ている${TERMS.PATIENT}が見つかりました`,
         DUPLICATE_DESC: `以下の${TERMS.PATIENT}は既に登録されています。同一人物の可能性があります。`,
         DUPLICATE_IGNORE: '※ 別人の場合は、そのまま新規登録を行ってください',
+        NOT_THIS_PERSON: 'この人ではない（続行）',
+    },
+    // Phase 10 追加分
+    FILTER: {
+        CONDITION: '検索条件',
+        RESULT: '結果',
+        UNIT: '件',
+        CLEAR: '条件をクリア',
+        RESET_ALL: '条件をリセットしてすべて表示',
+        NO_MATCH: `条件に一致する${TERMS.APPOINTMENT}は見つかりませんでした。`,
+    },
+    SETTINGS: {
+        TITLE: 'データ管理',
+        DESC: 'システムのデータを管理します。定期的にバックアップを取得することをお勧めします。',
+        BACKUP_SECTION: 'データベースバックアップ',
+        BACKUP_DESC: '現在のデータベースファイル (local.db) をダウンロードします。',
+        BACKUP_BTN: 'バックアップを保存',
+        SYSTEM_SETTINGS: 'システム設定',
     }
 } as const;

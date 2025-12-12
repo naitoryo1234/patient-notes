@@ -445,8 +445,8 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                 open={completeConfirm.open}
                 onOpenChange={(open) => setCompleteConfirm(prev => ({ ...prev, open }))}
                 title={`${completeConfirm.name}様の${TERMS.APPOINTMENT}を完了しますか？`}
-                description="完了すると、リストから非表示になります。"
-                confirmLabel="完了する"
+                description={LABELS.STATUS.COMPLETE_DESC}
+                confirmLabel={LABELS.STATUS.COMPLETE_EXECUTE}
                 variant="primary"
                 onConfirm={handleComplete}
             />

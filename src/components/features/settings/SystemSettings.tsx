@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download } from 'lucide-react';
+import { LABELS } from '@/config/labels';
 
 export const SystemSettings = () => {
     const handleDownloadBackup = () => {
@@ -14,17 +15,17 @@ export const SystemSettings = () => {
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>データ管理</CardTitle>
+                    <CardTitle>{LABELS.SETTINGS.TITLE}</CardTitle>
                     <CardDescription>
-                        システムのデータを管理します。定期的にバックアップを取得することをお勧めします。
+                        {LABELS.SETTINGS.DESC}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50">
                         <div>
-                            <h3 className="font-medium text-slate-900">データベースバックアップ</h3>
+                            <h3 className="font-medium text-slate-900">{LABELS.SETTINGS.BACKUP_SECTION}</h3>
                             <p className="text-sm text-slate-500 mt-1">
-                                現在のデータベースファイル (dev.db) をダウンロードします。
+                                {LABELS.SETTINGS.BACKUP_DESC}
                             </p>
                         </div>
                         <Button
@@ -33,7 +34,7 @@ export const SystemSettings = () => {
                             className="flex items-center gap-2"
                         >
                             <Download className="w-4 h-4" />
-                            バックアップを保存
+                            {LABELS.SETTINGS.BACKUP_BTN}
                         </Button>
                     </div>
                 </CardContent>

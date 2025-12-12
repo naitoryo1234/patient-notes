@@ -19,7 +19,7 @@ export default async function SettingsPage() {
                 </Link>
                 <div className="flex items-center gap-2">
                     <Settings className="w-6 h-6 text-slate-700" />
-                    <h1 className="text-2xl font-bold text-slate-900">設定</h1>
+                    <h1 className="text-2xl font-bold text-slate-900">{LABELS.SETTINGS.SYSTEM_SETTINGS}</h1>
                 </div>
             </div>
 

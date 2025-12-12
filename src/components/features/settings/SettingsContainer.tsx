@@ -44,7 +44,7 @@ export const SettingsContainer = ({ initialStaff }: SettingsContainerProps) => {
                         )}
                     >
                         <Database className="w-4 h-4" />
-                        システム・データ
+                        {LABELS.SETTINGS.TITLE}
                     </button>
                 </nav>
             </aside>
