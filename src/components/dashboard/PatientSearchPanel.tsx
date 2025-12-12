@@ -15,6 +15,7 @@ import { checkInAppointmentAction } from '@/actions/appointmentActions';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS, LABELS } from '@/config/labels';
 import { differenceInMinutes } from 'date-fns';
+import { Patient, ClinicalRecord } from '@prisma/client';
 
 // Minimal patient type for Recent History (stored in localStorage)
 export interface RecentPatient {
@@ -25,7 +26,7 @@ export interface RecentPatient {
 }
 
 interface PatientSearchPanelProps {
-    initialPatients: any[];
+    initialPatients: (Patient & { records: ClinicalRecord[] })[];
     appointments: Appointment[];
     unassignedAppointments?: Appointment[];
     unresolvedMemos?: Appointment[];
@@ -107,17 +108,32 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
     // Show list if there are ANY unassigned OR ANY unresolved memos OR ANY resolved memos history OR ANY delayed appointments
     const hasAnyAttentionItems = unassignedCount > 0 || memoAppointments.length > 0 || delayedCount > 0;
 
-    // Load recent patients from localStorage
+    // Load recent patients from localStorage and validate with current DB
     useEffect(() => {
         const stored = localStorage.getItem('recent_patients');
         if (stored) {
             try {
-                setRecentPatients(JSON.parse(stored));
+                const parsed: RecentPatient[] = JSON.parse(stored);
+
+                // Auto-cleanup: remove patients that no longer exist in the DB (initialPatients)
+                // This prevents 404s after DB resets/seeds
+                const validRecents = parsed.filter(recent =>
+                    initialPatients.some(current => current.id === recent.id)
+                );
+
+                // If we filtered out garbage, update storage immediately
+                if (validRecents.length !== parsed.length) {
+                    localStorage.setItem('recent_patients', JSON.stringify(validRecents));
+                }
+
+                setRecentPatients(validRecents);
             } catch (e) {
                 console.error("Failed to parse recent patients", e);
+                // If corrupt, clear it
+                localStorage.removeItem('recent_patients');
             }
         }
-    }, []);
+    }, [initialPatients]);
 
     // Switch tab based on search query
     useEffect(() => {
@@ -128,7 +144,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
             // If search is cleared, go back to recent or attention
             setActiveTab('recent');
         }
-    }, [searchQuery]);
+    }, [searchQuery, activeTab]);
 
     // Handle manual search input
     const handleSearch = (e: React.FormEvent) => {
