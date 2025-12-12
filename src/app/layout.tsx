@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   description: 'A simple CRM for private clinics.',
 };
 
+// Force dynamic rendering to prevent DB calls during build
+export const dynamic = 'force-dynamic';
+
 export default async function RootLayout({
   children,
 }: {
