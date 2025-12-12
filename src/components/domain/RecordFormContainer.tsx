@@ -12,6 +12,7 @@ import { FormFieldConfig } from '@/components/form/ConfigForm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS } from '@/config/labels';
 import { useToast } from '@/components/ui/Toast';
+import { AiUsageGuide } from '@/components/guide/AiUsageGuide';
 
 interface ActionResult {
     success?: boolean;
@@ -354,21 +355,22 @@ P: `);
 
             {mode === 'ai' ? (
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="bg-indigo-50 border border-indigo-100 rounded-md p-3 text-xs text-indigo-800 flex justify-between items-start">
-                        <div>
-                            <p className="font-bold mb-1">💡 AI出力テキストを貼り付けてください</p>
-                            <p>Geminiなどで作成した「S: 〜 O: 〜」形式のテキストを解析し、下のフォームに自動入力します。</p>
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-md p-4 text-sm text-indigo-800">
+                        <p className="font-bold mb-2">💡 データ自動解析</p>
+                        <p className="mb-2">Gemini等で作成した「S: 〜 O: 〜」形式のテキストを解析し、下のフォームに自動入力します。</p>
+                        <pre className="bg-white/50 p-2 rounded text-xs font-mono border border-indigo-100/50">
+                            {`S: 腰が痛い、昨日から悪化
+O: 腰部に圧痛あり、前屈制限
+A: 鍼治療（腰部）、マッサージ
+P: 1週間後に経過観察`}
+                        </pre>
+                        <div className="mt-2 flex justify-end">
+                            <AiUsageGuide />
                         </div>
-                        <button
-                            onClick={handleInsertTemplate}
-                            className="bg-white border border-indigo-200 text-indigo-600 px-2 py-1 rounded hover:bg-indigo-100 transition-colors whitespace-nowrap ml-2 shadow-sm"
-                        >
-                            テンプレートを挿入
-                        </button>
                     </div>
                     <textarea
                         className="w-full h-48 p-3 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono"
-                        placeholder={`(例)\n来院日: 2024-12-10\nS: 腰が痛い\nO: 圧痛あり\nA: 鍼治療\nP: 経過観察`}
+                        placeholder="ここにテキストを貼り付けてください..."
                         value={aiText}
                         onChange={(e) => setAiText(e.target.value)}
                     />

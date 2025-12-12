@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createPatient, findSimilarPatients } from '@/services/patientService';
 import { getNow } from '@/lib/dateUtils';
+import { getKanaVariants } from '@/lib/kanaUtils';
 
 /**
  * Create a new patient
@@ -175,6 +176,7 @@ export async function deletePatient(patientId: string) {
 
 /**
  * Search patients for selection (Lightweight)
+ * Supports hiragana/katakana insensitive search
  */
 export async function searchPatientsForSelect(query: string) {
     if (!query || query.length < 1) return [];
@@ -182,11 +184,18 @@ export async function searchPatientsForSelect(query: string) {
     const isNumeric = /^\d+$/.test(query);
     const idCondition = isNumeric ? { pId: parseInt(query) } : undefined;
 
+    // Get hiragana and katakana variants of the query
+    const kanaVariants = getKanaVariants(query);
+
+    // Build OR conditions for all kana variants
+    const nameConditions = kanaVariants.map(v => ({ name: { contains: v } }));
+    const kanaConditions = kanaVariants.map(v => ({ kana: { contains: v } }));
+
     const patients = await prisma.patient.findMany({
         where: {
             OR: [
-                { name: { contains: query } },
-                { kana: { contains: query } },
+                ...nameConditions,
+                ...kanaConditions,
                 ...(idCondition ? [idCondition] : [])
             ],
             deletedAt: null

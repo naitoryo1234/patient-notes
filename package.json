@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "prepare": "husky",
+    "postinstall": "prisma generate",
     "seed:demo": "tsx prisma/demo-seed/index.ts"
   },
   "lint-staged": {
