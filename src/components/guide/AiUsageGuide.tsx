@@ -54,19 +54,10 @@ export function AiUsageGuide() {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 cursor-pointer hover:bg-indigo-100 transition-colors group">
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="bg-white p-1.5 rounded-md shadow-sm text-indigo-600">
-                            <Sparkles className="w-5 h-5" />
-                        </span>
-                        <h4 className="font-bold text-indigo-900">AI活用ガイド</h4>
-                    </div>
-                    <p className="text-xs text-indigo-700 leading-relaxed">
-                        「どう使えばいいの？」<br />
-                        AIを使ってカルテ入力を爆速化するための<br />
-                        <span className="font-bold border-b border-indigo-400">プロンプト活用術</span>はこちら
-                    </p>
-                </div>
+                <button className="flex items-center gap-2 text-indigo-600 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-full text-xs transition-colors">
+                    <Sparkles className="w-4 h-4" />
+                    <span className="font-bold">プロンプトをコピー</span>
+                </button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>

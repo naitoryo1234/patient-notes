@@ -355,72 +355,30 @@ P: `);
 
             {mode === 'ai' ? (
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                    {/* Compact AI Guide with link to detailed modal */}
-                    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-lg p-4">
-                        <div className="flex items-start gap-3">
-                            <div className="text-2xl">✨</div>
-                            <div className="flex-1">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h4 className="font-bold text-indigo-900">AIを使って簡単入力</h4>
-                                    <AiUsageGuide />
-                                </div>
-                                <div className="bg-white/80 border border-indigo-200 rounded-md p-3 text-xs font-mono text-slate-700 relative">
-                                    <pre className="whitespace-pre-wrap pr-16">{`以下のメモをSOAP形式に整理してください。
-S: 主訴, O: 所見, A: 施術, P: 計画
-出力は「S: 〜」の形式で、余計な説明は不要。
----
-（メモを追記）`}</pre>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const prompt = `以下のメモをSOAP形式に整理してください。
-- S: 主訴（患者の訴え）
-- O: 所見（客観的な観察）
-- A: 施術内容
-- P: 計画（次回への申し送り）
-
-出力は「S: 〜」「O: 〜」の形式で、余計な説明は不要です。
-
----
-`;
-                                            navigator.clipboard.writeText(prompt);
-                                            showToast('プロンプトをコピーしました', 'success');
-                                        }}
-                                        className="absolute top-2 right-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded shadow-sm transition-colors flex items-center gap-1"
-                                    >
-                                        <span>📋</span> コピー
-                                    </button>
-                                </div>
-                            </div>
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-md p-4 text-sm text-indigo-800">
+                        <p className="font-bold mb-2">💡 データ自動解析</p>
+                        <p className="mb-2">Gemini等で作成した「S: 〜 O: 〜」形式のテキストを解析し、下のフォームに自動入力します。</p>
+                        <pre className="bg-white/50 p-2 rounded text-xs font-mono border border-indigo-100/50">
+                            {`S: 腰が痛い、昨日から悪化
+O: 腰部に圧痛あり、前屈制限
+A: 鍼治療（腰部）、マッサージ
+P: 1週間後に経過観察`}
+                        </pre>
+                        <div className="mt-2 flex justify-end">
+                            <AiUsageGuide />
                         </div>
                     </div>
-
-                    {/* Textarea for AI output */}
-                    <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">AIの返答を貼り付け</label>
-                        <textarea
-                            className="w-full h-40 p-3 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono"
-                            placeholder={`AIの返答をここに貼り付けてください\n\n例:\nS: 腰が痛い、仕事中に悪化\nO: 腰部に圧痛あり、可動域制限\nA: 鍼治療（腰部）、マッサージ\nP: 1週間後に経過観察`}
-                            value={aiText}
-                            onChange={(e) => setAiText(e.target.value)}
-                        />
-                    </div>
-
-                    {/* Action buttons */}
-                    <div className="flex justify-between items-center">
-                        <button
-                            type="button"
-                            onClick={handleInsertTemplate}
-                            className="text-xs text-slate-500 hover:text-slate-700 underline"
-                        >
-                            手動でテンプレートを挿入
-                        </button>
-                        <div className="flex gap-2">
-                            <Button variant="ghost" onClick={() => setMode('manual')}>キャンセル</Button>
-                            <Button onClick={handleParse} disabled={!aiText.trim()} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                                解析して確認
-                            </Button>
-                        </div>
+                    <textarea
+                        className="w-full h-48 p-3 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono"
+                        placeholder="ここにテキストを貼り付けてください..."
+                        value={aiText}
+                        onChange={(e) => setAiText(e.target.value)}
+                    />
+                    <div className="flex justify-end gap-2">
+                        <Button variant="ghost" onClick={() => setMode('manual')}>キャンセル</Button>
+                        <Button onClick={handleParse} disabled={!aiText.trim()} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                            解析して確認
+                        </Button>
                     </div>
                 </div>
             ) : (
