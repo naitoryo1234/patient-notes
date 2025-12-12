@@ -175,6 +175,7 @@ export async function deletePatient(patientId: string) {
 
 /**
  * Search patients for selection (Lightweight)
+ * Supports hiragana/katakana insensitive search
  */
 export async function searchPatientsForSelect(query: string) {
     if (!query || query.length < 1) return [];
@@ -182,11 +183,19 @@ export async function searchPatientsForSelect(query: string) {
     const isNumeric = /^\d+$/.test(query);
     const idCondition = isNumeric ? { pId: parseInt(query) } : undefined;
 
+    // Get hiragana and katakana variants of the query
+    const { getKanaVariants } = await import('@/lib/kanaUtils');
+    const kanaVariants = getKanaVariants(query);
+
+    // Build OR conditions for all kana variants
+    const nameConditions = kanaVariants.map(v => ({ name: { contains: v } }));
+    const kanaConditions = kanaVariants.map(v => ({ kana: { contains: v } }));
+
     const patients = await prisma.patient.findMany({
         where: {
             OR: [
-                { name: { contains: query } },
-                { kana: { contains: query } },
+                ...nameConditions,
+                ...kanaConditions,
                 ...(idCondition ? [idCondition] : [])
             ],
             deletedAt: null
