@@ -15,6 +15,9 @@ export const demoPatients = [
         birthDate: new Date('1980-05-15'),
         memo: '腰痛で定期的に通院中。デスクワークが多い。',
         tags: JSON.stringify(['腰痛', '常連']),
+        attributes: '{}',
+        externalRef: '{}',
+        importMeta: '{}',
     },
     {
         pId: 2,
@@ -25,6 +28,9 @@ export const demoPatients = [
         birthDate: new Date('1975-08-22'),
         memo: '肩こりと眼精疲労。PC作業が原因か。',
         tags: JSON.stringify(['肩こり', '眼精疲労']),
+        attributes: '{}',
+        externalRef: '{}',
+        importMeta: '{}',
     },
     {
         pId: 3,
@@ -35,6 +41,9 @@ export const demoPatients = [
         birthDate: new Date('1990-12-01'),
         memo: 'スポーツ後の膝痛。週1回の施術を希望。',
         tags: JSON.stringify(['膝痛', 'スポーツ']),
+        attributes: '{}',
+        externalRef: '{}',
+        importMeta: '{}',
     },
     {
         pId: 4,
@@ -45,6 +54,9 @@ export const demoPatients = [
         birthDate: new Date('1988-03-10'),
         memo: '妊娠中のマタニティケア。',
         tags: JSON.stringify(['マタニティ', '要配慮']),
+        attributes: '{}',
+        externalRef: '{}',
+        importMeta: '{}',
     },
     {
         pId: 5,
@@ -55,5 +67,9 @@ export const demoPatients = [
         birthDate: new Date('1965-07-20'),
         memo: '高齢者向け全身ケア。血圧注意。',
         tags: JSON.stringify(['高齢者', '血圧注意']),
+        attributes: '{}',
+        externalRef: '{}',
+        importMeta: '{}',
     },
 ];
+

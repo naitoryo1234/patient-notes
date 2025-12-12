@@ -5,14 +5,17 @@
 export const demoStaff = [
     {
         name: '山田 院長',
-        isActive: true,
+        role: 'Director',
+        active: true,
     },
     {
         name: '鈴木 スタッフ',
-        isActive: true,
+        role: 'Therapist',
+        active: true,
     },
     {
         name: '佐藤 スタッフ',
-        isActive: true,
+        role: 'Therapist',
+        active: true,
     },
 ];
