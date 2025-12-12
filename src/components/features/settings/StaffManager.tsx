@@ -6,6 +6,7 @@ import { createStaff, toggleStaffStatus, updateStaff } from '@/actions/staffActi
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { LABELS } from '@/config/labels';
+import { useToast } from '@/components/ui/Toast';
 
 interface StaffManagerProps {
     initialStaff: Staff[];
@@ -18,6 +19,7 @@ export function StaffManager({ initialStaff }: StaffManagerProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [toggleConfirm, setToggleConfirm] = useState<{ open: boolean; id: string; active: boolean; name: string }>({ open: false, id: '', active: false, name: '' });
+    const { showToast } = useToast();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -42,7 +44,7 @@ export function StaffManager({ initialStaff }: StaffManagerProps) {
             if (!editingId) setRole('Director');
             // Optional: Toast success
         } else {
-            alert(`${LABELS.COMMON.OPERATION}に失敗しました: ` + (result.message || JSON.stringify(result.errors)));
+            showToast(`${LABELS.COMMON.OPERATION}に失敗しました: ` + (result.message || JSON.stringify(result.errors)), 'error');
         }
     };
 

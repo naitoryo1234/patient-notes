@@ -10,8 +10,10 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Copy, ExternalLink, Sparkles } from "lucide-react"
+import { useToast } from '@/components/ui/Toast'
 
 export function AiUsageGuide() {
+    const { showToast } = useToast();
     const promptTemplate = `以下の情報をSOAP形式でカルテの下書きにしてください。
 
 患者の言葉:
@@ -27,7 +29,7 @@ export function AiUsageGuide() {
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(promptTemplate);
-        alert("プロンプト例をコピーしました！\nChat GPTやGeminiに貼り付けて使ってください。");
+        showToast("プロンプト例をコピーしました！Chat GPTやGeminiに貼り付けて使ってください。", 'success');
     };
 
     return (

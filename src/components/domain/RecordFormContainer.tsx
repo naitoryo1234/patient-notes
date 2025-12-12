@@ -11,6 +11,7 @@ import { Staff } from '@/services/staffService';
 import { FormFieldConfig } from '@/components/form/ConfigForm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS } from '@/config/labels';
+import { useToast } from '@/components/ui/Toast';
 
 interface ActionResult {
     success?: boolean;
@@ -57,6 +58,7 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
     const [copyConfirmOpen, setCopyConfirmOpen] = useState(false);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { showToast } = useToast();
 
     // 1. Process Input from ConfigForm or AI Parser
     const processInput = async (formData: FormData) => {
@@ -123,7 +125,7 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
                     setErrors(result.errors);
                     setStep('input'); // Back to input on error
                 } else {
-                    alert(result.message || 'エラーが発生しました');
+                    showToast(result.message || 'エラーが発生しました', 'error');
                 }
             } else {
                 // Success
@@ -143,7 +145,7 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
             }
         } catch (error) {
             console.error(error);
-            alert('送信中にエラーが発生しました');
+            showToast('送信中にエラーが発生しました', 'error');
         } finally {
             setIsSubmitting(false);
         }

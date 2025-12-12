@@ -8,6 +8,7 @@ import { UserCheck, Pencil, FileText, AlertTriangle, CheckCircle, ExternalLink, 
 import { updateAppointmentAction, toggleAdminMemoResolutionAction, cancelAppointmentAction } from '@/actions/appointmentActions';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS, LABELS } from '@/config/labels';
+import { useToast } from '@/components/ui/Toast';
 
 interface AppointmentDetailModalProps {
     appointment: Appointment;
@@ -23,6 +24,7 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
     const [isResolving, setIsResolving] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+    const { showToast } = useToast();
 
     if (!isOpen) return null;
 
@@ -40,11 +42,11 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
             if (res.success) {
                 onClose();
             } else {
-                alert('キャンセルに失敗しました');
+                showToast('キャンセルに失敗しました', 'error');
             }
         } catch (e) {
             console.error(e);
-            alert('エラーが発生しました');
+            showToast('エラーが発生しました', 'error');
         }
     };
 
@@ -61,11 +63,11 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
             if (res.success) {
                 onClose();
             } else {
-                alert(`${LABELS.COMMON.UPDATE}に失敗しました: ` + res.message);
+                showToast(`${LABELS.COMMON.UPDATE}に失敗しました: ` + res.message, 'error');
             }
         } catch (e) {
             console.error(e);
-            alert(LABELS.STATUS.ERROR);
+            showToast(LABELS.STATUS.ERROR, 'error');
         } finally {
             setIsResolving(false);
             setConfirmOpen(false); // Close confirm dialog

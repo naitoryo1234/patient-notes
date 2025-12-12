@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { Trash2, User } from 'lucide-react';
 import { deleteRecord } from '@/actions/recordActions';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { useToast } from '@/components/ui/Toast';
 
 interface RecordListProps {
     records: (ClinicalRecord & { staff?: Staff | null })[];
@@ -17,6 +18,7 @@ export function RecordList({ records }: RecordListProps) {
         recordId: '',
         patientId: '',
     });
+    const { showToast } = useToast();
 
     if (records.length === 0) {
         return (
@@ -29,7 +31,7 @@ export function RecordList({ records }: RecordListProps) {
     const handleDelete = async () => {
         const result = await deleteRecord(deleteConfirm.recordId, deleteConfirm.patientId);
         if (!result.success) {
-            alert('削除に失敗しました');
+            showToast('削除に失敗しました', 'error');
         }
     };
 

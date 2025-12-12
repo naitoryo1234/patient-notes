@@ -8,9 +8,11 @@ import { format, addDays } from 'date-fns';
 import Link from 'next/link';
 
 import { Staff } from '@/services/staffService';
+import { useToast } from '@/components/ui/Toast';
 
 export function AppointmentButton({ patientId, staffList }: { patientId: string, staffList: Staff[] }) {
     const [isOpen, setIsOpen] = useState(false);
+    const { showToast } = useToast();
 
     // State for controlled inputs to allow quick setting
     const [date, setDate] = useState(format(addDays(new Date(), 1), 'yyyy-MM-dd'));
@@ -23,7 +25,7 @@ export function AppointmentButton({ patientId, staffList }: { patientId: string,
             setIsOpen(false);
             // Optional: Reload logic could go here if needed, but server action revalidates path
         } else {
-            alert(result.message || '予約の作成に失敗しました');
+            showToast(result.message || '予約の作成に失敗しました', 'error');
         }
     };
 

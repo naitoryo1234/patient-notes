@@ -17,6 +17,7 @@ import { TERMS, LABELS } from '@/config/labels';
 import { differenceInMinutes } from 'date-fns';
 import { Patient, ClinicalRecord } from '@prisma/client';
 import { getNow } from '@/lib/dateUtils';
+import { useToast } from '@/components/ui/Toast';
 
 // Minimal patient type for Recent History (stored in localStorage)
 export interface RecentPatient {
@@ -42,6 +43,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
     const [recentPatients, setRecentPatients] = useState<RecentPatient[]>([]);
     const [memoConfirm, setMemoConfirm] = useState<{ open: boolean; id: string; targetStatus: boolean }>({ open: false, id: '', targetStatus: true });
     const [completeConfirm, setCompleteConfirm] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
+    const { showToast } = useToast();
     const [currentTime, setCurrentTime] = useState(getNow());
 
     const [attentionFilter, setAttentionFilter] = useState<'all' | 'delayed' | 'unassigned' | 'memo'>('all');
@@ -61,7 +63,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
             // Router refresh handled in action
         } catch (e) {
             console.error(e);
-            alert('完了処理に失敗しました');
+            showToast('完了処理に失敗しました', 'error');
         }
     };
 
@@ -75,7 +77,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
             // Router refresh is handled in the action
         } catch (e) {
             console.error(e);
-            alert('更新に失敗しました');
+            showToast('更新に失敗しました', 'error');
         }
     };
 

@@ -11,6 +11,7 @@ import { format, addDays } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { TERMS, LABELS } from '@/config/labels';
+import { useToast } from '@/components/ui/Toast';
 
 interface NewAppointmentButtonProps {
     staffList: Staff[];
@@ -28,6 +29,7 @@ type PatientResult = {
 
 export function NewAppointmentButton({ staffList, initialDate, className }: NewAppointmentButtonProps) {
     const router = useRouter();
+    const { showToast } = useToast();
     const [isOpen, setIsOpen] = useState(false);
     const [step, setStep] = useState<'search' | 'form'>('search');
     const [searchQuery, setSearchQuery] = useState('');
@@ -87,7 +89,7 @@ export function NewAppointmentButton({ staffList, initialDate, className }: NewA
                 setIsOpen(false);
                 router.refresh();
             } else {
-                alert(result.message || '予約の作成に失敗しました');
+                showToast(result.message || '予約の作成に失敗しました', 'error');
             }
         } finally {
             setIsPending(false);

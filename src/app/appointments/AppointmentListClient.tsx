@@ -15,6 +15,7 @@ import { Pencil, Trash2, Calendar, User, History, CheckCircle2, XCircle, Calenda
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { LABELS, TERMS } from '@/config/labels';
 import { getNow } from '@/lib/dateUtils';
+import { useToast } from '@/components/ui/Toast';
 
 interface AppointmentListClientProps {
     initialAppointments: Appointment[];
@@ -24,6 +25,7 @@ interface AppointmentListClientProps {
 
 export function AppointmentListClient({ initialAppointments, staffList, includePast }: AppointmentListClientProps) {
     const router = useRouter();
+    const { showToast } = useToast();
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
     const [viewingMemo, setViewingMemo] = useState<{ patient: string; memo: string } | null>(null);
     const [filterStaffId, setFilterStaffId] = useState<string>('all');
@@ -44,7 +46,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
         if (res.success) {
             router.refresh();
         } else {
-            alert(res.message);
+            showToast(res.message || 'キャンセルに失敗しました', 'error');
         }
     };
 

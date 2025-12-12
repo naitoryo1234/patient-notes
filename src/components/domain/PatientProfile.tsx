@@ -10,6 +10,7 @@ import { updatePatientMemo, updatePatientTags, deletePatient } from '@/actions/p
 import { useRouter } from 'next/navigation';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS } from '@/config/labels';
+import { useToast } from '@/components/ui/Toast';
 
 interface PatientProfileProps {
     patient: Patient;
@@ -20,6 +21,7 @@ export function PatientProfile({ patient }: PatientProfileProps) {
     const [isEditingMemo, setIsEditingMemo] = useState(false);
     const [isEditingTags, setIsEditingTags] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const { showToast } = useToast();
 
 
     // Initial State from Props
@@ -27,7 +29,7 @@ export function PatientProfile({ patient }: PatientProfileProps) {
     const [tags, setTags] = useState<string[]>(JSON.parse(patient.tags || '[]'));
     const [tagInput, setTagInput] = useState('');
 
-    const attributes = JSON.parse(patient.attributes || '{}') as Record<string, any>;
+    const attributes = JSON.parse(patient.attributes || '{}') as Record<string, unknown>;
 
     // Memo Handlers
     const handleSaveMemo = async () => {
@@ -72,7 +74,7 @@ export function PatientProfile({ patient }: PatientProfileProps) {
         if (result.success) {
             router.push('/');
         } else {
-            alert('削除に失敗しました。');
+            showToast('削除に失敗しました。', 'error');
         }
     };
 

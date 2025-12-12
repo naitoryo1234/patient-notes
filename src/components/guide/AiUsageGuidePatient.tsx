@@ -11,8 +11,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { Copy, Sparkles } from "lucide-react"
 import { LABELS } from '@/config/labels';
+import { useToast } from '@/components/ui/Toast';
 
 export function AiUsageGuidePatient() {
+    const { showToast } = useToast();
     const promptTemplate = `以下の患者情報を抽出して形式を整えてください。
 
 【入力テキスト】
@@ -29,7 +31,7 @@ Memo:
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(promptTemplate);
-        alert("プロンプト例をコピーしました！");
+        showToast("プロンプト例をコピーしました！", 'success');
     };
 
     return (
