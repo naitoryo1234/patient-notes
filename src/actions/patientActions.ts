@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createPatient, findSimilarPatients } from '@/services/patientService';
 import { getNow } from '@/lib/dateUtils';
+import { getKanaVariants } from '@/lib/kanaUtils';
 
 /**
  * Create a new patient
@@ -184,7 +185,6 @@ export async function searchPatientsForSelect(query: string) {
     const idCondition = isNumeric ? { pId: parseInt(query) } : undefined;
 
     // Get hiragana and katakana variants of the query
-    const { getKanaVariants } = await import('@/lib/kanaUtils');
     const kanaVariants = getKanaVariants(query);
 
     // Build OR conditions for all kana variants
