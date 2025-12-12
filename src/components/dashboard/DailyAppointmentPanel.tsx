@@ -332,7 +332,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[500px] lg:h-full max-h-full">
             <div className="bg-slate-800 text-white p-4 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-emerald-400" />

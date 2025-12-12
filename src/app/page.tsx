@@ -25,7 +25,7 @@ export default async function Home(props: { searchParams: Promise<{ q?: string }
       {/* Mobile: Stacked, Desktop: Grid */}
       <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-y-auto lg:overflow-hidden">
         {/* Left Column: Today's Schedule (Fixed Panel) */}
-        <div className="lg:col-span-1 h-auto lg:h-full lg:overflow-y-auto pr-1">
+        <div className="lg:col-span-1 h-auto max-h-[50vh] lg:max-h-full lg:overflow-y-auto pr-1 min-h-0">
           <DailyAppointmentPanel
             appointments={todaysAppointments}
             staffList={activeStaff}
