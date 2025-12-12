@@ -133,105 +133,80 @@ async function main() {
     // 3. APPOINTMENTS (Dynamic Time)
     // ==========================================
 
-    console.log('📅 Generating Appointments relative to:', today.toLocaleString())
+    // ==========================================
+    // 3. APPOINTMENTS (Dynamic Time - Bulk Generation)
+    // ==========================================
 
-    // --- TODAY'S SCHEDULE ---
+    console.log('📅 Generating Bulk Appointments relative to:', today.toLocaleString())
 
-    // 1. Morning - Completed (Busy Bee)
-    await prisma.appointment.create({
-        data: {
-            patientId: patientBusy.id,
-            startAt: setTime(today, 9, 0),
-            duration: 60,
-            status: 'completed',
-            memo: '朝一番の施術',
-            staffId: director.id
+    const appointments = [];
+
+    // 1. Generate 30 Appointments for TODAY to test Pagination (20 items/page)
+    for (let i = 0; i < 30; i++) {
+        const hour = 9 + Math.floor(i / 2); // 9:00, 9:30, 10:00...
+        const minute = (i % 2) * 30;
+        const time = setTime(today, hour, minute);
+
+        // Mix of patients
+        const patients = [patientRegular, patientEdge, patientProblem, patientBusy, patientGap];
+        const patient = patients[i % patients.length];
+
+        // Status Variation
+        let status = 'scheduled';
+        if (i < 5) status = 'completed'; // Morning done
+        if (i === 12) status = 'cancelled'; // Lunch cancellation
+        if (i > 15 && i < 18) status = 'arrived'; // Currently waiting
+
+        // Staff Variation
+        let staffId: string | null = (i % 2 === 0) ? director.id : therapist.id;
+        if (i === 10 || i === 25) staffId = null; // Unassigned cases (Warning Badge)
+
+        // Memo Variation
+        let adminMemo = undefined;
+        let isMemoResolved = false;
+
+        // Scenario: Unresolved Memo (Red Badge)
+        if (i === 7 || i === 22) {
+            adminMemo = '【要確認】持病の薬が変わったとのこと。必ず確認してください。';
+            isMemoResolved = false;
         }
-    })
-
-    // 2. Noon - Cancelled (Regular)
-    await prisma.appointment.create({
-        data: {
-            patientId: patientRegular.id,
-            startAt: setTime(today, 12, 0),
-            duration: 30,
-            status: 'cancelled',
-            memo: '昼休みに来たかったがキャンセル',
-            staffId: therapist.id
+        // Scenario: Resolved Memo (History)
+        if (i === 3) {
+            adminMemo = '前回のクレーム対応完了。本日は特別対応不要。';
+            isMemoResolved = true;
         }
-    })
-
-    // 3. Afternoon - Active/Unassigned (Gap) - "Coming Soon" or "Just Now" depending on run time
-    // Let's make it fixed relative to 'now' to ensure it's visible as "Upcoming" or "Recent"
-    // If run at night, these might be "past" but "scheduled" (status checks usually handle this)
-    // We'll place one near "NOW" to test the time indicator
-    const nearFuture = addMinutes(today, 30);
-    await prisma.appointment.create({
-        data: {
-            patientId: patientGap.id,
-            startAt: nearFuture,
-            duration: 45,
-            status: 'scheduled',
-            memo: '久しぶりの来院枠。担当未定。',
-            staffId: null // Unassigned
+        // Scenario: Problem Case (Cancelled but Unresolved)
+        if (i === 12) {
+            status = 'cancelled';
+            adminMemo = 'キャンセル連絡あり。来週へ変更希望とのこと。';
+            isMemoResolved = false; // Should show red badge? Or be grayed out?
         }
-    })
 
-    // 4. Evening - The BUG VERIFICATION Case (Problem Patient)
-    // Cancelled Appointment with UNRESOLVED Admin Memo
-    // This tests if the system incorrectly shows it or if toggling memo reverts status
-    await prisma.appointment.create({
-        data: {
-            patientId: patientProblem.id,
-            startAt: setTime(today, 18, 0),
-            duration: 30,
-            status: 'cancelled',
-            memo: '直前キャンセル',
-            adminMemo: '【重要検証】キャンセル済みだが、この申し送りは未確認(Unresolved)のまま。これをResolvedにしても復活してはいけない。',
-            isMemoResolved: false,
-            staffId: director.id
-        }
-    })
+        appointments.push({
+            patientId: patient.id,
+            startAt: time,
+            duration: (i % 3 + 1) * 30, // 30, 60, 90 mins
+            status: status,
+            memo: i % 5 === 0 ? '定期的なメンテナンス' : (i % 7 === 0 ? '少し痛みがあるとのこと' : undefined),
+            adminMemo: adminMemo,
+            isMemoResolved: isMemoResolved,
+            staffId: staffId
+        });
+    }
 
-    // 5. Night - Long Name Test
-    await prisma.appointment.create({
-        data: {
-            patientId: patientEdge.id,
-            startAt: setTime(today, 20, 0),
-            duration: 90,
-            status: 'scheduled',
-            memo: '名前によるレイアウト崩れを確認。',
-            adminMemo: 'VIP対応必須。お茶は熱めで。',
-            isMemoResolved: false,
-            staffId: director.id
-        }
-    })
+    // Add specific "Tomorrow" case
+    appointments.push({
+        patientId: patientRegular.id,
+        startAt: addDays(setTime(today, 10, 0), 1),
+        duration: 60,
+        status: 'scheduled',
+        memo: '明日の予約テスト',
+        staffId: director.id
+    });
 
-    // 6. Night - Detailed Memo (Resolved)
-    await prisma.appointment.create({
-        data: {
-            patientId: patientBusy.id,
-            startAt: setTime(today, 21, 0),
-            duration: 30,
-            status: 'scheduled',
-            memo: '本日2回目の来院。',
-            adminMemo: '前回の施術（朝）の経過を聞くこと。申し送りは確認済み。',
-            isMemoResolved: true,
-            staffId: therapist.id
-        }
-    })
-
-    // --- FUTURE ---
-    await prisma.appointment.create({
-        data: {
-            patientId: patientRegular.id,
-            startAt: addDays(setTime(today, 10, 0), 1), // Tomorrow 10am
-            duration: 60,
-            status: 'scheduled',
-            memo: '明日の予約',
-            staffId: director.id
-        }
-    })
+    for (const apt of appointments) {
+        await prisma.appointment.create({ data: apt });
+    }
 
     // ==========================================
     // 4. CLINICAL RECORDS

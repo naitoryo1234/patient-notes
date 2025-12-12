@@ -1,11 +1,7 @@
 import { prisma } from '@/lib/db';
 
-export interface Staff {
-    id: string;
-    name: string;
-    role: string;
-    active: boolean;
-}
+import { type Staff } from '@prisma/client';
+export type { Staff };
 
 export const getActiveStaff = async (): Promise<Staff[]> => {
     const staff = await prisma.staff.findMany({

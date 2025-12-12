@@ -20,26 +20,30 @@ export default async function Home(props: { searchParams: Promise<{ q?: string }
   const activeStaff = await getActiveStaff();
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-100px)]">
-      {/* Left Column: Today's Schedule (Fixed Panel) */}
-      <div className="lg:col-span-1 h-full">
-        <DailyAppointmentPanel
-          appointments={todaysAppointments}
-          staffList={activeStaff}
-          unresolvedMemos={unresolvedMemos}
-        />
-      </div>
+    <div className="h-full flex flex-col gap-6">
+      {/* Search & Patient List (Smart Directory) - Takes priority in space */}
+      {/* Mobile: Stacked, Desktop: Grid */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-y-auto lg:overflow-hidden">
+        {/* Left Column: Today's Schedule (Fixed Panel) */}
+        <div className="lg:col-span-1 h-auto lg:h-full lg:overflow-y-auto pr-1">
+          <DailyAppointmentPanel
+            appointments={todaysAppointments}
+            staffList={activeStaff}
+            unresolvedMemos={unresolvedMemos}
+          />
+        </div>
 
-      {/* Right Column: Search & Patient List (Smart Directory) */}
-      <div className="lg:col-span-3 h-full overflow-hidden">
-        <PatientSearchPanel
-          initialPatients={patients}
-          appointments={todaysAppointments} // Still needed for memos
-          unassignedAppointments={unassignedAppointments} // New prop for unassigned list
-          unresolvedMemos={unresolvedMemos} // All unresolved memos
-          activeStaff={activeStaff} // New prop for generic staff list
-          searchQuery={query}
-        />
+        {/* Right Column: Search & Patient List (Smart Directory) */}
+        <div className="lg:col-span-3 h-auto lg:h-full lg:overflow-y-auto min-h-0">
+          <PatientSearchPanel
+            initialPatients={patients}
+            appointments={todaysAppointments} // Still needed for memos
+            unassignedAppointments={unassignedAppointments} // New prop for unassigned list
+            unresolvedMemos={unresolvedMemos} // All unresolved memos
+            activeStaff={activeStaff} // New prop for generic staff list
+            searchQuery={query}
+          />
+        </div>
       </div>
     </div>
   );

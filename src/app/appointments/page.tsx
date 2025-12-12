@@ -19,20 +19,12 @@ export default async function AppointmentsPage({ searchParams }: { searchParams:
     const staffList = await getActiveStaff();
 
     return (
-        <div className="space-y-4">
-            <div className="flex items-center gap-4">
-                <Link href="/" className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500">
-                    <ChevronLeft className="w-6 h-6" />
-                </Link>
-                <div className="flex-1">
-                    <h1 className="text-2xl font-bold text-slate-800">{LABELS.APPOINTMENT.MANAGER_TITLE}</h1>
-                    <p className="text-slate-500 text-sm">{LABELS.APPOINTMENT.MANAGER_DESC}</p>
-                </div>
-            </div>
+        <div className="h-full flex flex-col gap-4">
+            {/* Header removed for space optimization */}
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-180px)]">
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-y-auto lg:overflow-hidden">
                 {/* Left Column: Today's Schedule (Fixed Panel) */}
-                <div className="lg:col-span-1 h-full">
+                <div className="lg:col-span-1 h-auto lg:h-full lg:overflow-y-auto pr-1">
                     <DailyAppointmentPanel
                         appointments={todaysAppointments}
                         staffList={staffList}
@@ -41,7 +33,7 @@ export default async function AppointmentsPage({ searchParams }: { searchParams:
                 </div>
 
                 {/* Right Column: All Appointments */}
-                <div className="lg:col-span-3 h-full overflow-hidden">
+                <div className="lg:col-span-3 h-auto lg:h-full lg:overflow-y-auto min-h-0">
                     <AppointmentListClient
                         initialAppointments={appointments}
                         staffList={staffList}

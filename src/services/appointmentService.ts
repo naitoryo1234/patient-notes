@@ -377,6 +377,16 @@ export const checkInAppointment = async (id: string) => {
     });
 };
 
+export const cancelCheckIn = async (id: string) => {
+    return await prisma.appointment.update({
+        where: { id },
+        data: {
+            status: 'pending', // Revert to meaningful default
+            arrivedAt: null
+        }
+    });
+};
+
 // Get all unresolved admin memos (not limited to today)
 export const getUnresolvedAdminMemos = async (): Promise<Appointment[]> => {
     const appointments = await prisma.appointment.findMany({

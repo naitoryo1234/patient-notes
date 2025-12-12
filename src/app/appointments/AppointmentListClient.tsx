@@ -111,59 +111,76 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
         return a.adminMemo && !a.isMemoResolved && a.status !== 'cancelled';
     }).length;
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 20;
+
+    // Reset page when filters change
+    const [prevFilterKey, setPrevFilterKey] = useState("");
+    const currentFilterKey = `${filterStaffId}-${filterDate?.getTime()}-${filterPatient}-${filterUnresolved}`;
+    if (prevFilterKey !== currentFilterKey) {
+        setPrevFilterKey(currentFilterKey);
+        setCurrentPage(1);
+    }
+
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredAppointments.length / itemsPerPage);
+    const paginatedAppointments = filteredAppointments.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
     return (
         <div className="bg-white rounded-lg shadow border border-slate-200 overflow-hidden h-full flex flex-col">
-            {/* Alerts */}
-            <div className="flex flex-col">
-                {pendingAssignments > 0 && (
-                    <div
-                        onClick={() => {
-                            setFilterStaffId('unassigned');
-                            setFilterUnresolved(false);
-                        }}
-                        className="bg-amber-50 border-b border-amber-100 p-2 flex items-center gap-2 text-xs text-amber-700 font-bold px-4 animate-in slide-in-from-top-1 cursor-pointer hover:bg-amber-100 transition-colors"
-                        title="クリックして担当者未定のみ表示"
-                    >
-                        <AlertCircle className="w-4 h-4 text-amber-600" />
-                        <span>{LABELS.DASHBOARD.UNASSIGNED_ALERT(pendingAssignments)}</span>
-                    </div>
-                )}
-                {pendingMemos > 0 && (
-                    <div
-                        onClick={() => {
-                            setFilterUnresolved(true);
-                            setFilterStaffId('all');
-                        }}
-                        className="bg-red-50 border-b border-red-100 p-2 flex items-center gap-2 text-xs text-red-700 font-bold px-4 animate-in slide-in-from-top-1 cursor-pointer hover:bg-red-100 transition-colors"
-                        title="クリックして未確認申し送りのみ表示"
-                    >
-                        <AlertTriangle className="w-4 h-4 text-red-600" />
-                        <span>{LABELS.DASHBOARD.MEMO_ALERT_ALL(pendingMemos)}</span>
-                        {filterUnresolved && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setFilterUnresolved(false);
-                                }}
-                                className="ml-auto bg-white/50 hover:bg-white text-red-700 rounded-full p-0.5"
-                            >
-                                <X className="w-3 h-3" />
-                            </button>
-                        )}
-                    </div>
-                )}
-            </div>
-
             {/* Toolbar - Redesigned */}
             <div className="border-b border-slate-100 bg-slate-50">
                 {/* Row 1: Filters */}
                 <div className="p-3 flex flex-wrap gap-2 items-center">
+                    {/* Alerts (Compact Badges) */}
+                    {pendingAssignments > 0 && (
+                        <button
+                            onClick={() => {
+                                if (filterStaffId === 'unassigned') {
+                                    setFilterStaffId('all');
+                                } else {
+                                    setFilterStaffId('unassigned');
+                                    setFilterUnresolved(false);
+                                }
+                            }}
+                            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${filterStaffId === 'unassigned'
+                                ? 'bg-amber-100 text-amber-800 border-amber-300 ring-2 ring-amber-200'
+                                : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50 shadow-sm'
+                                }`}
+                            title={filterStaffId === 'unassigned' ? "絞り込みを解除" : LABELS.DASHBOARD.UNASSIGNED_ALERT(pendingAssignments)}
+                        >
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">担当未定</span>
+                            <span className="bg-amber-200 px-1.5 rounded-full text-[10px]">{pendingAssignments}</span>
+                        </button>
+                    )}
+                    {pendingMemos > 0 && (
+                        <button
+                            onClick={() => {
+                                setFilterUnresolved(!filterUnresolved);
+                                if (!filterUnresolved) setFilterStaffId('all');
+                            }}
+                            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${filterUnresolved
+                                ? 'bg-red-100 text-red-800 border-red-300 ring-2 ring-red-200'
+                                : 'bg-white text-red-700 border-red-200 hover:bg-red-50 shadow-sm'
+                                }`}
+                            title={filterUnresolved ? "絞り込みを解除" : LABELS.DASHBOARD.MEMO_ALERT_ALL(pendingMemos)}
+                        >
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">未確認</span>
+                            <span className="bg-red-200 px-1.5 rounded-full text-[10px]">{pendingMemos}</span>
+                        </button>
+                    )}
+
                     {/* New Appointment Button */}
                     <NewAppointmentButton
                         staffList={staffList}
                         initialDate={filterDate || new Date()}
                     />
-
+                    {/* ... (rest of toolbar logic remains similar, truncating for brevity since we are focusing on the top part and main content replacement) ... */}
                     <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block"></div>
 
                     {/* Patient Search */}
@@ -261,7 +278,32 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                     <button onClick={() => navigateDate(7)} className="text-xs px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded transition-colors">{LABELS.COMMON.NAV_WEEK}</button>
                     <button onClick={() => setFilterDate(null)} className={`text-xs px-2.5 py-1.5 border rounded transition-colors ${!filterDate ? 'bg-slate-800 text-white border-slate-800' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>{LABELS.COMMON.NAV_ALL_PERIOD}</button>
 
+                    <div className="h-6 w-px bg-slate-200 mx-1"></div>
 
+                    {/* Pagination Controls (Toolbar) */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="p-1 rounded hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-slate-500"
+                                title="前のページ"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            <span className="text-xs font-bold text-slate-600 min-w-[40px] text-center">
+                                {currentPage} / {totalPages}
+                            </span>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className="p-1 rounded hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-slate-500"
+                                title="次のページ"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -332,16 +374,16 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                 <table className="w-full text-left text-sm text-slate-700">
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold sticky top-0 z-10">
                         <tr>
-                            <th className="px-4 py-3 whitespace-nowrap w-14 text-center">{LABELS.COMMON.STATUS}</th>
-                            <th className="px-4 py-3 whitespace-nowrap">{LABELS.FORM.DATE_TIME}</th>
-                            <th className="px-4 py-3 whitespace-nowrap">{TERMS.PATIENT}名</th>
-                            <th className="px-4 py-3 whitespace-nowrap">{TERMS.STAFF}</th>
-                            <th className="px-4 py-3 whitespace-nowrap w-[240px]">{LABELS.PATIENT_FORM.MEMO.split(' ')[0]}</th>
-                            <th className="px-4 py-3 whitespace-nowrap text-right w-[100px]">{LABELS.COMMON.OPERATION}</th>
+                            <th className="px-2 py-3 whitespace-nowrap w-14 text-center">{LABELS.COMMON.STATUS}</th>
+                            <th className="px-2 py-3 whitespace-nowrap">{LABELS.FORM.DATE_TIME}</th>
+                            <th className="px-2 py-3 whitespace-nowrap">{TERMS.PATIENT}名</th>
+                            <th className="px-2 py-3 whitespace-nowrap">{TERMS.STAFF}</th>
+                            <th className="px-2 py-3 whitespace-nowrap w-[200px]">{LABELS.PATIENT_FORM.MEMO.split(' ')[0]}</th>
+                            <th className="px-2 py-3 whitespace-nowrap text-right w-[100px]">{LABELS.COMMON.OPERATION}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                        {filteredAppointments.length === 0 ? (
+                        {paginatedAppointments.length === 0 ? (
                             <tr>
                                 <td colSpan={6} className="p-12 text-center text-slate-400">
                                     <div className="flex flex-col items-center gap-2">
@@ -366,7 +408,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                 </td>
                             </tr>
                         ) : (
-                            filteredAppointments.map((apt) => {
+                            paginatedAppointments.map((apt) => {
                                 const visitDate = new Date(apt.visitDate);
                                 const diff = differenceInMinutes(visitDate, new Date());
                                 const isExpired = diff < -60;
@@ -380,12 +422,12 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
 
                                 return (
                                     <tr key={apt.id} className={`${rowClass} group transition-colors`}>
-                                        <td className="px-4 py-3 text-center">
+                                        <td className="px-2 py-3 text-center">
                                             <div className="flex justify-center" title={apt.status}>
                                                 {getStatusIcon(apt.status)}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 whitespace-nowrap">
+                                        <td className="px-2 py-3 whitespace-nowrap">
                                             <div className={`font-mono font-bold text-base ${isCancelled ? 'text-slate-400 line-through' : (isExpired ? 'text-slate-500' : 'text-slate-800')}`}>
                                                 {format(visitDate, 'yyyy/MM/dd (eee)', { locale: ja })}
                                             </div>
@@ -393,7 +435,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                                 {format(visitDate, 'HH:mm')}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 max-w-[280px]">
+                                        <td className="px-2 py-3 max-w-[180px]">
                                             <Link
                                                 href={`/patients/${apt.patientId}`}
                                                 className="hover:underline flex flex-col"
@@ -412,11 +454,14 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                                 </span>
                                             </Link>
                                         </td>
-                                        <td className="px-4 py-3 whitespace-nowrap">
+                                        <td className="px-2 py-3 max-w-[100px]">
                                             {apt.staffName ? (
-                                                <span className="inline-flex items-center gap-1 bg-slate-100 px-2 py-1 rounded text-xs text-slate-600">
-                                                    <User className="w-3 h-3" />
-                                                    {apt.staffName}
+                                                <span
+                                                    className="inline-flex items-center gap-1 bg-slate-100 px-2 py-1 rounded text-xs text-slate-600 w-full"
+                                                    title={apt.staffName}
+                                                >
+                                                    <User className="w-3 h-3 flex-none" />
+                                                    <span className="truncate">{apt.staffName}</span>
                                                 </span>
                                             ) : (
                                                 !isCancelled && !isExpired ? (
@@ -429,7 +474,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                                 )
                                             )}
                                         </td>
-                                        <td className={`px-4 py-3 ${textClass} max-w-[240px]`}>
+                                        <td className={`px-2 py-3 ${textClass} max-w-[240px]`}>
                                             <div className="relative group/memo">
                                                 <div className="line-clamp-3 text-sm leading-snug">
                                                     {apt.memo || <span className="text-slate-300 italic">{LABELS.COMMON.NONE}</span>}
@@ -483,20 +528,20 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                                 </div>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                                        <td className="px-2 py-3 text-right whitespace-nowrap">
                                             <div className="flex justify-end gap-2 text-right items-center">
                                                 {!isCancelled && (
                                                     <Link
                                                         href={`/patients/${apt.patientId}#new-record`}
-                                                        className="bg-indigo-600 text-white px-3 py-1.5 rounded-md text-xs font-bold shadow hover:bg-indigo-700 transition-colors flex items-center gap-1 whitespace-nowrap"
+                                                        className="bg-indigo-600 text-white px-2 py-1.5 rounded-md text-xs font-bold shadow hover:bg-indigo-700 transition-colors flex items-center gap-1 whitespace-nowrap"
                                                     >
                                                         <Pencil className="w-3 h-3" />
-                                                        {TERMS.RECORD}作成
+                                                        {TERMS.RECORD}
                                                     </Link>
                                                 )}
                                                 <button
                                                     onClick={() => setEditingAppointment(apt)}
-                                                    className="bg-white text-slate-600 border border-slate-200 px-3 py-1.5 rounded-md text-xs font-bold shadow-sm hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-1"
+                                                    className="bg-white text-slate-600 border border-slate-200 px-2 py-1.5 rounded-md text-xs font-bold shadow-sm hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-1"
                                                     title={LABELS.COMMON.MENU_EDIT}
                                                 >
                                                     <CalendarClock className="w-3.5 h-3.5" />
@@ -505,7 +550,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                                 {!isCancelled && (
                                                     <button
                                                         onClick={() => setCancelConfirm({ open: true, id: apt.id })}
-                                                        className="p-1.5 bg-white border border-slate-200 rounded hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors text-slate-500"
+                                                        className="p-1 px-1.5 bg-white border border-slate-200 rounded hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors text-slate-500"
                                                         title={LABELS.DIALOG.DEFAULT_CANCEL}
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -523,12 +568,12 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
 
             {/* Mobile Card View */}
             <div className="md:hidden flex-1 overflow-auto p-4 space-y-4 bg-slate-50">
-                {filteredAppointments.length === 0 ? (
+                {paginatedAppointments.length === 0 ? (
                     <div className="text-center text-slate-400 py-8">
                         {LABELS.APPOINTMENT.MSG_NO_DISPLAY_DATA}
                     </div>
                 ) : (
-                    filteredAppointments.map((apt) => {
+                    paginatedAppointments.map((apt) => {
                         const visitDate = new Date(apt.visitDate);
                         const diff = differenceInMinutes(visitDate, new Date());
                         const isExpired = diff < -60;

@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { Appointment } from '@/services/appointmentService';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
-import { UserCheck, Pencil, FileText, AlertTriangle, CheckCircle, ExternalLink, X } from 'lucide-react';
-import { updateAppointmentAction, toggleAdminMemoResolutionAction } from '@/actions/appointmentActions';
+import { UserCheck, Pencil, FileText, AlertTriangle, CheckCircle, ExternalLink, X, RotateCcw } from 'lucide-react';
+import { updateAppointmentAction, toggleAdminMemoResolutionAction, cancelAppointmentAction } from '@/actions/appointmentActions';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS, LABELS } from '@/config/labels';
 
@@ -15,12 +15,14 @@ interface AppointmentDetailModalProps {
     onClose: () => void;
     onEdit: () => void;
     onCheckIn: () => void;
+    onUndoCheckIn: () => void;
 }
 
-export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, onCheckIn }: AppointmentDetailModalProps) {
+export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, onCheckIn, onUndoCheckIn }: AppointmentDetailModalProps) {
     const router = useRouter();
     const [isResolving, setIsResolving] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
+    const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
     if (!isOpen) return null;
 
@@ -32,6 +34,22 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
         router.push(`/patients/${appointment.patientId}`);
     };
 
+    const handleCancel = async () => {
+        try {
+            const res = await cancelAppointmentAction(appointment.id);
+            if (res.success) {
+                onClose();
+            } else {
+                alert('キャンセルに失敗しました');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('エラーが発生しました');
+        }
+    };
+
+
+
     const handleResolveAdminMemo = async () => {
         setIsResolving(true);
 
@@ -41,14 +59,6 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
         try {
             const res = await toggleAdminMemoResolutionAction(appointment.id, nextStatus);
             if (res.success) {
-                // Keep modal open to show updated state, or close?
-                // The prop 'appointment' should update via router.refresh in the action.
-                // Keeping modal open is fine as it will rerender with new status.
-                // Actually, let's close it if it's "Resolve" (done), but maybe keep if "Unresolve"?
-                // User might want to confirm it turned gray.
-                // Let's close for now as it's a "Done" action usually. 
-                // But wait, user expectation: "Confirm" -> "OK, done" -> Dialog closes.
-                // If "Unresolve" -> "OK" -> Dialog closes.
                 onClose();
             } else {
                 alert(`${LABELS.COMMON.UPDATE}に失敗しました: ` + res.message);
@@ -160,14 +170,23 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
                     </button>
 
                     <div className="grid grid-cols-2 gap-2 mt-1">
-                        <button
-                            onClick={onCheckIn}
-                            disabled={appointment.status === 'arrived'}
-                            className="bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:grayscale"
-                        >
-                            <UserCheck className="w-4 h-4" />
-                            {appointment.status === 'arrived' ? LABELS.STATUS.ARRIVED : LABELS.APPOINTMENT.CHECKIN_ACTION}
-                        </button>
+                        {appointment.status === 'arrived' ? (
+                            <button
+                                onClick={onUndoCheckIn}
+                                className="bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                            >
+                                <RotateCcw className="w-4 h-4" />
+                                受付を取り消す
+                            </button>
+                        ) : (
+                            <button
+                                onClick={onCheckIn}
+                                className="bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                            >
+                                <UserCheck className="w-4 h-4" />
+                                {LABELS.APPOINTMENT.CHECKIN_ACTION}
+                            </button>
+                        )}
                         <button
                             onClick={onEdit}
                             className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
@@ -176,6 +195,14 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
                             {LABELS.COMMON.MENU_EDIT}
                         </button>
                     </div>
+
+                    {/* Cancel Button - Subtle but accessible */}
+                    <button
+                        onClick={() => setCancelConfirmOpen(true)}
+                        className="w-full mt-2 text-xs text-slate-400 hover:text-red-600 py-2 hover:bg-red-50 rounded transition-colors text-center"
+                    >
+                        {LABELS.APPOINTMENT.CANCEL_EXECUTE}
+                    </button>
                 </div>
             </div>
 
@@ -187,6 +214,16 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
                 confirmLabel={appointment.isMemoResolved ? LABELS.FORM.UNRESOLVE_ACTION : LABELS.APPOINTMENT.ADMIN_MEMO_RESOLVED}
                 variant={appointment.isMemoResolved ? "warning" : "primary"}
                 onConfirm={handleResolveAdminMemo}
+            />
+
+            <ConfirmDialog
+                open={cancelConfirmOpen}
+                onOpenChange={setCancelConfirmOpen}
+                title={`${appointment.patientName}様の${TERMS.APPOINTMENT}を取り消しますか？`}
+                description="取り消された予約はキャンセル扱いとなり、リストからグレーアウトされます。"
+                confirmLabel="予約を取り消す"
+                variant="danger"
+                onConfirm={handleCancel}
             />
         </div>
     );

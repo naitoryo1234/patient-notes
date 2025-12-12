@@ -102,8 +102,8 @@ export function PatientProfile({ patient }: PatientProfileProps) {
                     <span className="bg-slate-100 text-slate-500 text-xs px-2 py-0.5 rounded font-mono shrink-0">
                         No.{patient.pId}
                     </span>
-                    <h2 className="text-xl font-bold text-slate-900 break-words">{patient.name}</h2>
-                    <span className="text-slate-500 text-sm whitespace-normal md:whitespace-nowrap">({patient.kana})</span>
+                    <h2 className="text-xl font-bold text-slate-900 line-clamp-3" title={patient.name}>{patient.name}</h2>
+                    <span className="text-slate-500 text-sm truncate max-w-[300px]" title={patient.kana}>({patient.kana})</span>
                 </div>
                 <div className="text-sm text-slate-600 space-x-3">
                     <span>{patient.gender || '-'}</span>

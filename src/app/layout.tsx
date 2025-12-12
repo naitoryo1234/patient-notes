@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
-import { UserPlus, Calendar, Settings } from 'lucide-react';
+import { UserPlus, Calendar, Settings, LayoutDashboard } from 'lucide-react';
 import { TERMS } from '@/config/labels';
 import { getActiveStaff } from '@/services/staffService';
 import { NewAppointmentButton } from '@/components/dashboard/NewAppointmentButton';
@@ -23,16 +23,24 @@ export default async function RootLayout({
   const staffList = await getActiveStaff();
 
   return (
-    <html lang="ja">
-      <body className={inter.className}>
-        <div className="min-h-screen bg-slate-50 text-slate-900">
-          <header className="sticky top-0 z-10 w-full border-b bg-white/80 backdrop-blur-sm">
+    <html lang="ja" className="h-full">
+      <body className={`${inter.className} h-full overflow-hidden`}>
+        <div className="h-full flex flex-col bg-slate-50 text-slate-900">
+          <header className="flex-none z-10 w-full border-b bg-white/80 backdrop-blur-sm">
             <div className="container mx-auto flex h-14 items-center justify-between px-4">
               <Link href="/" className="font-bold text-lg text-slate-800 flex items-center gap-2">
                 <span>🩺</span>
                 Clinic Notebook
               </Link>
               <nav className="flex gap-4 items-center">
+                <Link
+                  href="/"
+                  className="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-3 py-2 rounded-md text-sm font-bold flex items-center gap-2 transition-colors shadow-sm"
+                  title="ダッシュボード"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="hidden md:inline">ホーム</span>
+                </Link>
                 <Link
                   href="/appointments"
                   className="bg-white hover:bg-slate-50 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-md text-sm font-bold flex items-center gap-2 transition-colors shadow-sm"
@@ -53,16 +61,17 @@ export default async function RootLayout({
                   新規{TERMS.PATIENT}
                 </Link>
                 <Link
-                  href="/settings/staff"
+                  href="/settings"
                   className="text-slate-500 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 transition-colors"
-                  title={`設定 (${TERMS.STAFF}管理)`}
+                  title="設定"
                 >
                   <Settings className="w-5 h-5" />
                 </Link>
               </nav>
             </div>
           </header>
-          <main className="container mx-auto px-4 py-6">
+          {/* Main area: Fills remaining height, clips overflow. Children must handle scroll. */}
+          <main className="flex-1 min-h-0 container mx-auto px-4 py-4 md:py-6 overflow-hidden flex flex-col">
             {children}
           </main>
         </div>

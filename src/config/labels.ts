@@ -57,7 +57,7 @@ export const LABELS = {
         PROCESSING: '処理中...',
         SAVE: '保存',
         UPDATING: '更新中...',
-        ALL: '全員',
+        ALL: 'すべて',
         TOTAL_COUNT: (count: number) => `全 ${count} 件`,
         CLEAR: '解除',
         NONE: 'なし',
@@ -165,6 +165,8 @@ export const LABELS = {
         ARRIVED: `${TERMS.VISIT}済み`,
         CANCELLED: 'キャンセル',
         DONE: '完了', // 施術完了
+        COMPLETED_ACTION: '完了してリストから消す', // 手動消込
+        IN_PROGRESS: '対応中', // 来院済みだが完了していない
         UNASSIGNED: `${TERMS.STAFF}未定`,
         JUST_NOW: `${TERMS.VISIT}時刻`,
         COMING_SOON: (mins: number) => `あと${mins}分`,

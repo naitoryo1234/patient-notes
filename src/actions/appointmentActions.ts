@@ -122,6 +122,18 @@ export async function checkInAppointmentAction(appointmentId: string) {
     }
 }
 
+export async function cancelCheckInAction(appointmentId: string) {
+    if (!appointmentId) return { success: false, message: 'IDが不足しています' };
+    try {
+        await import('@/services/appointmentService').then(s => s.cancelCheckIn(appointmentId));
+        revalidatePath('/');
+        return { success: true };
+    } catch (e: any) {
+        console.error(e);
+        return { success: false, message: e.message || 'チェックイン取り消しに失敗しました' };
+    }
+}
+
 export async function toggleAdminMemoResolutionAction(appointmentId: string, isResolved: boolean) {
     if (!appointmentId) return { success: false, message: 'IDが不足しています' };
     try {
@@ -132,5 +144,17 @@ export async function toggleAdminMemoResolutionAction(appointmentId: string, isR
     } catch (e: any) {
         console.error(e);
         return { success: false, message: e.message || '更新に失敗しました' };
+    }
+}
+
+export async function completeAppointmentAction(appointmentId: string) {
+    if (!appointmentId) return { success: false, message: 'IDが不足しています' };
+    try {
+        await import('@/services/appointmentService').then(s => s.updateAppointment(appointmentId, { status: 'completed' }));
+        revalidatePath('/');
+        return { success: true };
+    } catch (e: any) {
+        console.error(e);
+        return { success: false, message: e.message || '完了処理に失敗しました' };
     }
 }
