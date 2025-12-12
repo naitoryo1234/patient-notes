@@ -57,59 +57,61 @@ export default async function PatientDetailPage(props: PageProps) {
     const addRecordAction = addRecord.bind(null, id);
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Track patient view for "Recently Viewed" feature */}
-            <RecentPatientTracker
-                patientId={patient.id}
-                patientName={patient.name}
-                patientKana={patient.kana}
-            />
-
-            {/* Left Column: Profile & Navigation */}
-            <div className="lg:col-span-1">
-                <PatientDetailSidebar patient={patient} nextAppt={nextAppt} staffList={staffList} />
-                <div className="mt-4">
-                    <Link href={`/patients/${id}/history`} className="block w-full text-center py-3 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2 font-bold group">
-                        <History className="w-4 h-4 text-slate-400 group-hover:text-indigo-600" />
-                        過去の履歴を見る ({records.length})
-                    </Link>
-                </div>
-
-                {/* AI Guide */}
-                <div className="mt-6">
-                    <AiUsageGuide />
-                </div>
-            </div>
-
-            {/* Right Column: New Entry Form Only */}
-            <div className="lg:col-span-2">
-                <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                    <span>✏️</span> 新しい記録
-                </h2>
-                <RecordFormContainer
-                    action={addRecordAction}
-                    staffList={staffList}
-                    initialValues={{
-                        visitDate: initialVisitDate,
-                        staffId: todaysAppt?.staffId || undefined
-                    }}
-                    lastRecord={records[0] || undefined}
+        <div className="flex-1 overflow-y-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Track patient view for "Recently Viewed" feature */}
+                <RecentPatientTracker
+                    patientId={patient.id}
+                    patientName={patient.name}
+                    patientKana={patient.kana}
                 />
 
-                {/* Show only the latest record for context if exists */}
-                {records.length > 0 && (
-                    <div className="mt-8 border-t border-slate-100 pt-6 opacity-80 hover:opacity-100 transition-opacity">
-                        <h3 className="text-sm font-bold text-slate-400 mb-4">前回の記録 (参照用)</h3>
-                        <RecordList records={[records[0]]} />
-                        {records.length > 1 && (
-                            <div className="text-center mt-2">
-                                <Link href={`/patients/${id}/history`} className="text-xs text-indigo-600 hover:underline">
-                                    ...他 {records.length - 1} 件の履歴を表示
-                                </Link>
-                            </div>
-                        )}
+                {/* Left Column: Profile & Navigation */}
+                <div className="lg:col-span-1">
+                    <PatientDetailSidebar patient={patient} nextAppt={nextAppt} staffList={staffList} />
+                    <div className="mt-4">
+                        <Link href={`/patients/${id}/history`} className="block w-full text-center py-3 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2 font-bold group">
+                            <History className="w-4 h-4 text-slate-400 group-hover:text-indigo-600" />
+                            過去の履歴を見る ({records.length})
+                        </Link>
                     </div>
-                )}
+
+                    {/* AI Guide */}
+                    <div className="mt-6">
+                        <AiUsageGuide />
+                    </div>
+                </div>
+
+                {/* Right Column: New Entry Form Only */}
+                <div className="lg:col-span-2">
+                    <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <span>✏️</span> 新しい記録
+                    </h2>
+                    <RecordFormContainer
+                        action={addRecordAction}
+                        staffList={staffList}
+                        initialValues={{
+                            visitDate: initialVisitDate,
+                            staffId: todaysAppt?.staffId || undefined
+                        }}
+                        lastRecord={records[0] || undefined}
+                    />
+
+                    {/* Show only the latest record for context if exists */}
+                    {records.length > 0 && (
+                        <div className="mt-8 border-t border-slate-100 pt-6 opacity-80 hover:opacity-100 transition-opacity">
+                            <h3 className="text-sm font-bold text-slate-400 mb-4">前回の記録 (参照用)</h3>
+                            <RecordList records={[records[0]]} />
+                            {records.length > 1 && (
+                                <div className="text-center mt-2">
+                                    <Link href={`/patients/${id}/history`} className="text-xs text-indigo-600 hover:underline">
+                                        ...他 {records.length - 1} 件の履歴を表示
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
         </div >
     );
