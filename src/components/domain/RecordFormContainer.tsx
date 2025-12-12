@@ -12,11 +12,24 @@ import { FormFieldConfig } from '@/components/form/ConfigForm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS } from '@/config/labels';
 
+interface ActionResult {
+    success?: boolean;
+    message?: string;
+    errors?: Record<string, string[]>;
+}
+
+interface LastRecordData {
+    subjective?: string;
+    objective?: string;
+    assessment?: string;
+    plan?: string;
+}
+
 interface RecordFormContainerProps {
-    action: (formData: FormData) => Promise<any>;
-    initialValues?: Record<string, any>;
+    action: (formData: FormData) => Promise<ActionResult>;
+    initialValues?: Record<string, string | number | undefined>;
     staffList: Staff[];
-    lastRecord?: any; // ClinicalRecord type but simple any to avoid import issues for now or use the Type
+    lastRecord?: LastRecordData;
 }
 
 export function RecordFormContainer({ action, initialValues = {}, staffList, lastRecord }: RecordFormContainerProps) {
@@ -57,11 +70,21 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
         const assessment = (formData.get('assessment') as string)?.trim() || '';
         const plan = (formData.get('plan') as string)?.trim() || '';
 
-        // Validation
+        const validationErrors: Record<string, string[]> = {};
+
+        // Staff validation (required)
+        if (staffList.length > 0 && !staffId) {
+            validationErrors.staffId = ['担当者を選択してください'];
+        }
+
+        // SOAP content validation
         if (!subjective && !objective && !assessment && !plan) {
-            const errorMsg = [`${TERMS.RECORD}の内容が空です。S/O/A/Pのいずれかを入力してください。`];
-            setErrors({ subjective: errorMsg });
-            return { success: false, errors: { subjective: errorMsg } };
+            validationErrors.subjective = [`${TERMS.RECORD}の内容が空です。S/O/A/Pのいずれかを入力してください。`];
+        }
+
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return { success: false, errors: validationErrors };
         }
 
         // Update state for preview
@@ -162,6 +185,7 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
     };
 
     const executeCopy = () => {
+        if (!lastRecord) return;
         setFormValues(prev => ({
             ...prev,
             subjective: lastRecord.subjective || '',
@@ -219,7 +243,7 @@ P: `);
                         <div className="space-y-1 md:col-span-2">
                             <label className="text-xs text-slate-500 font-bold block">タグ</label>
                             <TagInput
-                                value={formValues.tags || ''}
+                                value={String(formValues.tags || '')}
                                 onChange={(val) => setFormValues({ ...formValues, tags: val })}
                                 placeholder="例: 腰痛, 初診"
                                 suggestions={RecordFormConfig.find(f => f.name === 'tags')?.options as string[]}
