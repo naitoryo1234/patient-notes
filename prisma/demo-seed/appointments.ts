@@ -33,7 +33,7 @@ export function generateDemoAppointments(patientIds: string[], staffIds: string[
     const nextWeek = addDays(today, 7);
 
     return [
-        // ===== 今日の予約（朝〜夕方まで充実） =====
+        // ===== 今日の予約（朝〜夜まで充実） =====
         {
             patientId: patientIds[0], // デモ太郎
             staffId: staffIds[0],     // 山田院長
@@ -102,6 +102,49 @@ export function generateDemoAppointments(patientIds: string[], staffIds: string[
             memo: '夕方の施術',
             status: 'scheduled',
         },
+        // ===== 今日の夕方〜夜の予約 =====
+        {
+            patientId: patientIds[5], // 例示五郎（夜間希望）
+            staffId: staffIds[0],
+            startAt: createDateTime(today, 18, 0),
+            duration: 60,
+            memo: '首の痛み - 仕事終わり',
+            status: 'scheduled',
+        },
+        {
+            patientId: patientIds[6], // 試作六美（学生）
+            staffId: staffIds[1],
+            startAt: createDateTime(today, 18, 30),
+            duration: 45,
+            memo: 'リハビリ継続',
+            status: 'scheduled',
+        },
+        {
+            patientId: patientIds[7], // 仮名七雄
+            staffId: staffIds[2],
+            startAt: createDateTime(today, 19, 0),
+            duration: 45,
+            memo: 'ゴルフ肘ケア',
+            adminMemo: '次回で一区切りの予定',
+            isMemoResolved: false,
+            status: 'scheduled',
+        },
+        {
+            patientId: patientIds[8], // 標本八重（産後）
+            staffId: staffIds[0],
+            startAt: createDateTime(today, 19, 30),
+            duration: 60,
+            memo: '骨盤矯正',
+            status: 'scheduled',
+        },
+        {
+            patientId: patientIds[9], // 模型九太（高齢者）
+            staffId: staffIds[1],
+            startAt: createDateTime(today, 20, 0),
+            duration: 45,
+            memo: '健康維持コース',
+            status: 'scheduled',
+        },
         // ===== 明日の予約 =====
         {
             patientId: patientIds[4], // 見本四郎
@@ -135,6 +178,24 @@ export function generateDemoAppointments(patientIds: string[], staffIds: string[
             memo: 'フォローアップ',
             status: 'scheduled',
         },
+        {
+            patientId: patientIds[5], // 例示五郎
+            staffId: staffIds[1],
+            startAt: createDateTime(tomorrow, 18, 30),
+            duration: 60,
+            memo: '首ケア継続',
+            status: 'scheduled',
+        },
+        {
+            patientId: patientIds[6], // 試作六美
+            staffId: null,            // 担当未割当
+            startAt: createDateTime(tomorrow, 19, 0),
+            duration: 45,
+            memo: 'リハビリ',
+            adminMemo: '担当者を割り当ててください',
+            isMemoResolved: false,
+            status: 'scheduled',
+        },
         // ===== 明後日の予約 =====
         {
             patientId: patientIds[2],
@@ -152,6 +213,22 @@ export function generateDemoAppointments(patientIds: string[], staffIds: string[
             memo: '定期チェック',
             status: 'scheduled',
         },
+        {
+            patientId: patientIds[7], // 仮名七雄
+            staffId: staffIds[0],
+            startAt: createDateTime(dayAfter, 15, 0),
+            duration: 60,
+            memo: 'ゴルフ肘 最終チェック',
+            status: 'scheduled',
+        },
+        {
+            patientId: patientIds[8], // 標本八重
+            staffId: staffIds[1],
+            startAt: createDateTime(dayAfter, 17, 0),
+            duration: 45,
+            memo: '骨盤矯正フォロー',
+            status: 'scheduled',
+        },
         // ===== 来週の予約 =====
         {
             patientId: patientIds[0],
@@ -167,6 +244,14 @@ export function generateDemoAppointments(patientIds: string[], staffIds: string[
             startAt: createDateTime(nextWeek, 14, 0),
             duration: 45,
             memo: '肩こりケア',
+            status: 'scheduled',
+        },
+        {
+            patientId: patientIds[9], // 模型九太
+            staffId: staffIds[2],
+            startAt: createDateTime(nextWeek, 11, 0),
+            duration: 60,
+            memo: '月2回の定期ケア',
             status: 'scheduled',
         },
     ];
