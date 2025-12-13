@@ -10,14 +10,15 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Copy, Sparkles, ExternalLink, CheckCircle2 } from "lucide-react"
-import { LABELS } from '@/config/labels';
+import { LABELS, TERMS } from '@/config/labels';
 import { useToast } from '@/components/ui/Toast';
 
 export function AiUsageGuidePatient() {
     const { showToast } = useToast();
 
     // 統合版プロンプト（出力安定化）
-    const patientPrompt = `以下のテキストから患者情報を抽出してください。
+    // TERMSを使用して業態に応じた文言に対応
+    const patientPrompt = `以下のテキストから${TERMS.PATIENT}情報を抽出してください。
 
 【出力ルール】
 - 結果のみをコードブロック（\`\`\`）で囲んで出力
@@ -51,10 +52,10 @@ Memo: その他の情報
                 <DialogHeader>
                     <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-indigo-500" />
-                        患者情報 AI取込ガイド
+                        {TERMS.PATIENT}情報 AI取込ガイド
                     </DialogTitle>
                     <DialogDescription className="text-slate-600">
-                        LINEやメールから患者情報を自動抽出！
+                        LINEやメールから{TERMS.PATIENT}情報を自動抽出！
                     </DialogDescription>
                 </DialogHeader>
 

@@ -11,23 +11,25 @@ import {
 import { Button } from "@/components/ui/button"
 import { Copy, ExternalLink, Sparkles, CheckCircle2 } from "lucide-react"
 import { useToast } from '@/components/ui/Toast'
+import { TERMS, LABELS } from '@/config/labels';
 
 export function AiUsageGuide() {
     const { showToast } = useToast();
 
     // 統合版プロンプト（出力安定化）
-    const soapPrompt = `以下の情報をSOAP形式でカルテの下書きにしてください。
+    // TERMSを使用して業態に応じた文言に対応
+    const recordPrompt = `以下の情報を${TERMS.RECORD}の下書きにしてください。
 
 【出力ルール】
-- SOAP部分のみをコードブロック（\`\`\`）で囲んで出力
+- 結果のみをコードブロック（\`\`\`）で囲んで出力
 - Markdown記号（#, *, **）は使わずプレーンテキストで
-- 形式: 「S: 〜」「O: 〜」「A: 〜」「P: 〜」
+- 各項目は「項目名: 内容」の形式で
 
 ---
 （ここにメモを入力）`;
 
     const copyPrompt = () => {
-        navigator.clipboard.writeText(soapPrompt);
+        navigator.clipboard.writeText(recordPrompt);
         showToast("プロンプトをコピーしました！", 'success');
     };
 
@@ -43,10 +45,10 @@ export function AiUsageGuide() {
                 <DialogHeader>
                     <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-indigo-500" />
-                        AIカルテ入力ガイド
+                        AI {TERMS.RECORD}入力ガイド
                     </DialogTitle>
                     <DialogDescription className="text-slate-600">
-                        GeminiやChatGPTでカルテ作成をサポート
+                        GeminiやChatGPTで{TERMS.RECORD}作成をサポート
                     </DialogDescription>
                 </DialogHeader>
 
@@ -79,7 +81,7 @@ export function AiUsageGuide() {
                             📝 プロンプト
                         </h3>
                         <div className="bg-slate-50 p-4 rounded-md border border-slate-200 relative">
-                            <pre className="text-sm font-mono text-slate-700 whitespace-pre-wrap pr-16">{soapPrompt}</pre>
+                            <pre className="text-sm font-mono text-slate-700 whitespace-pre-wrap pr-16">{recordPrompt}</pre>
                             <Button
                                 size="sm"
                                 className="absolute top-2 right-2 bg-indigo-600 hover:bg-indigo-700 text-white"
