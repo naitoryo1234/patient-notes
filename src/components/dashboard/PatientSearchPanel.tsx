@@ -455,6 +455,14 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                                                                         <div className="flex items-center gap-1 text-xs text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
                                                                             <CheckCircle className="w-3 h-3" />
                                                                             {LABELS.APPOINTMENT.ADMIN_MEMO_RESOLVED}
+                                                                            {apt.adminMemoResolverName && (
+                                                                                <span className="text-green-500 font-normal ml-1">
+                                                                                    ({apt.adminMemoResolverName}
+                                                                                    {apt.adminMemoResolvedAt && (
+                                                                                        <span className="ml-1">{format(new Date(apt.adminMemoResolvedAt), 'M/d HH:mm')}</span>
+                                                                                    )})
+                                                                                </span>
+                                                                            )}
                                                                         </div>
                                                                     )}
                                                                 </div>

@@ -10,6 +10,7 @@ export async function scheduleAppointment(formData: FormData) {
     const timeStr = formData.get('visitTime') as string;
     const memo = formData.get('memo') as string;
     const staffId = formData.get('staffId') as string;
+    const operatorId = formData.get('operatorId') as string | null;
 
     if (!patientId || !dateStr || !timeStr) {
         return { success: false, message: '必須項目が不足しています' };
@@ -20,7 +21,7 @@ export async function scheduleAppointment(formData: FormData) {
     const duration = formData.get('duration') ? parseInt(formData.get('duration') as string) : 60;
 
     try {
-        await createAppointment(patientId, startAt, memo, staffId || undefined, duration, adminMemo);
+        await createAppointment(patientId, startAt, memo, staffId || undefined, duration, adminMemo, operatorId || undefined);
         revalidatePath('/');
         revalidatePath(`/patients/${patientId}`);
         return { success: true };
@@ -50,6 +51,7 @@ export async function updateAppointmentAction(formData: FormData) {
     const timeStr = formData.get('visitTime') as string;
     const memo = formData.get('memo') as string;
     const staffId = formData.get('staffId') as string;
+    const operatorId = formData.get('operatorId') as string | null;
 
     if (!id || !dateStr || !timeStr) {
         return { success: false, message: '必須項目が不足しています' };
@@ -91,6 +93,11 @@ export async function updateAppointmentAction(formData: FormData) {
     if (duration !== undefined) updateData.duration = duration;
     if (adminMemo !== undefined) updateData.adminMemo = adminMemo;
     updateData.isMemoResolved = isMemoResolved; // This forces false if missing. Accepted for Edit Modal.
+
+    // Track who updated
+    if (operatorId) {
+        updateData.updatedBy = operatorId;
+    }
 
     if (formData.has('memo')) {
         updateData.memo = formData.get('memo') as string;

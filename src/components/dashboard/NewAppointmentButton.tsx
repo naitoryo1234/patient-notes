@@ -12,6 +12,7 @@ import { ja } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { TERMS, LABELS } from '@/config/labels';
 import { useToast } from '@/components/ui/Toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NewAppointmentButtonProps {
     staffList: Staff[];
@@ -30,6 +31,7 @@ type PatientResult = {
 export function NewAppointmentButton({ staffList, initialDate, className }: NewAppointmentButtonProps) {
     const router = useRouter();
     const { showToast } = useToast();
+    const { operator } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [step, setStep] = useState<'search' | 'form'>('search');
     const [searchQuery, setSearchQuery] = useState('');
@@ -180,6 +182,7 @@ export function NewAppointmentButton({ staffList, initialDate, className }: NewA
 
                         <form action={handleSubmit} className="space-y-4">
                             <input type="hidden" name="patientId" value={selectedPatient?.id} />
+                            {operator?.id && <input type="hidden" name="operatorId" value={operator.id} />}
 
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-slate-700 block">{LABELS.FORM.DATE_TIME}</label>

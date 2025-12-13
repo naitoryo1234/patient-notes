@@ -1,15 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { ClinicalRecord, Staff } from '@prisma/client';
 import { format } from 'date-fns';
-import { Trash2, User } from 'lucide-react';
+import { Trash2, User, UserCheck } from 'lucide-react';
 import { deleteRecord } from '@/actions/recordActions';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/components/ui/Toast';
+import type { RecordWithCreator } from '@/services/recordService';
 
 interface RecordListProps {
-    records: (ClinicalRecord & { staff?: Staff | null })[];
+    records: RecordWithCreator[];
 }
 
 export function RecordList({ records }: RecordListProps) {
@@ -54,6 +54,18 @@ export function RecordList({ records }: RecordListProps) {
                                     <span className="text-xs flex items-center gap-1 text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-full shadow-sm">
                                         <User className="w-3 h-3" />
                                         {record.staff.name}
+                                    </span>
+                                )}
+                                {/* Always show creator info for audit trail (Design Principle: Transparency) */}
+                                {record.creatorName && (
+                                    <span className="text-xs flex items-center gap-1 text-slate-400 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-full" title="記録者">
+                                        <UserCheck className="w-3 h-3" />
+                                        記録: {record.creatorName}
+                                        {record.createdAt && (
+                                            <span className="text-slate-300">
+                                                ({format(new Date(record.createdAt), 'M/d HH:mm')})
+                                            </span>
+                                        )}
                                     </span>
                                 )}
                                 {tags.map((tag, i) => (

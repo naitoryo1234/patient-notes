@@ -1,8 +1,14 @@
 import { prisma } from '@/lib/db';
 import { RecordInput } from '@/config/schema';
 
-export const getRecordsByPatientId = async (patientId: string) => {
-    return await prisma.clinicalRecord.findMany({
+// Extended type with creatorName
+export type RecordWithCreator = Awaited<ReturnType<typeof prisma.clinicalRecord.findMany>>[number] & {
+    staff: { id: string; name: string; role: string; active: boolean; createdAt: Date; updatedAt: Date } | null;
+    creatorName?: string;
+};
+
+export const getRecordsByPatientId = async (patientId: string): Promise<RecordWithCreator[]> => {
+    const records = await prisma.clinicalRecord.findMany({
         where: { patientId },
         orderBy: { visitDate: 'desc' },
         include: {
@@ -10,6 +16,29 @@ export const getRecordsByPatientId = async (patientId: string) => {
             staff: true
         }
     });
+
+    // Collect creator IDs and fetch their names
+    const creatorIds = [...new Set(
+        records
+            .filter(r => r.createdBy)
+            .map(r => r.createdBy as string)
+    )];
+
+    const creators = creatorIds.length > 0
+        ? await prisma.staff.findMany({
+            where: { id: { in: creatorIds } },
+            select: { id: true, name: true }
+        })
+        : [];
+
+    const creatorMap = new Map(creators.map(c => [c.id, c.name]));
+
+    return records.map(record => ({
+        ...record,
+        creatorName: record.createdBy
+            ? creatorMap.get(record.createdBy)
+            : undefined,
+    }));
 };
 
 export const createRecord = async (data: RecordInput, patientId: string, createdBy?: string) => {

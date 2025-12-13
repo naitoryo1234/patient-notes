@@ -15,6 +15,9 @@ export interface Appointment {
     memo?: string; // patient memo
     adminMemo?: string; // admin/handover memo
     isMemoResolved?: boolean;
+    adminMemoResolvedBy?: string; // staffId of resolver
+    adminMemoResolvedAt?: Date; // when resolved
+    adminMemoResolverName?: string; // name of resolver (for UI display)
     staffName?: string;
     staffId?: string;
     status: string; // Changed to required string as per schema default
@@ -59,6 +62,22 @@ export const getTodaysAppointments = async (date: Date = getNow()): Promise<Appo
         orderBy: { startAt: 'asc' },
     });
 
+    // Collect resolver IDs and fetch their names
+    const resolverIds = [...new Set(
+        appointments
+            .filter(a => a.adminMemoResolvedBy)
+            .map(a => a.adminMemoResolvedBy as string)
+    )];
+
+    const resolvers = resolverIds.length > 0
+        ? await prisma.staff.findMany({
+            where: { id: { in: resolverIds } },
+            select: { id: true, name: true }
+        })
+        : [];
+
+    const resolverMap = new Map(resolvers.map(r => [r.id, r.name]));
+
     const patientVisitCounter = new Map<string, number>();
 
     return appointments.map((a: AppointmentWithRel) => {
@@ -80,6 +99,11 @@ export const getTodaysAppointments = async (date: Date = getNow()): Promise<Appo
             memo: a.memo || a.patient.memo || '',
             adminMemo: a.adminMemo || undefined,
             isMemoResolved: a.isMemoResolved ?? false,
+            adminMemoResolvedBy: a.adminMemoResolvedBy || undefined,
+            adminMemoResolvedAt: a.adminMemoResolvedAt || undefined,
+            adminMemoResolverName: a.adminMemoResolvedBy
+                ? resolverMap.get(a.adminMemoResolvedBy)
+                : undefined,
             staffName: a.staff?.name,
             staffId: a.staffId || undefined,
             status: a.status,
@@ -113,6 +137,22 @@ export const findAllAppointments = async (options?: { includePast?: boolean; inc
         orderBy: { startAt: 'asc' },
     });
 
+    // Collect resolver IDs and fetch their names
+    const resolverIds = [...new Set(
+        appointments
+            .filter(a => a.adminMemoResolvedBy)
+            .map(a => a.adminMemoResolvedBy as string)
+    )];
+
+    const resolvers = resolverIds.length > 0
+        ? await prisma.staff.findMany({
+            where: { id: { in: resolverIds } },
+            select: { id: true, name: true }
+        })
+        : [];
+
+    const resolverMap = new Map(resolvers.map(r => [r.id, r.name]));
+
     const patientVisitCounter = new Map<string, number>();
 
     return appointments.map((a: AppointmentWithRel) => {
@@ -138,6 +178,11 @@ export const findAllAppointments = async (options?: { includePast?: boolean; inc
             memo: a.memo || a.patient.memo || '',
             adminMemo: a.adminMemo || undefined,
             isMemoResolved: a.isMemoResolved ?? false,
+            adminMemoResolvedBy: a.adminMemoResolvedBy || undefined,
+            adminMemoResolvedAt: a.adminMemoResolvedAt || undefined,
+            adminMemoResolverName: a.adminMemoResolvedBy
+                ? resolverMap.get(a.adminMemoResolvedBy)
+                : undefined,
             staffName: a.staff?.name,
             staffId: a.staffId || undefined,
             status: a.status,
@@ -293,7 +338,7 @@ export const getNextAppointment = async (patientId: string) => {
     };
 };
 
-export const createAppointment = async (patientId: string, startAt: Date, memo?: string, staffId?: string, duration: number = 60, adminMemo?: string) => {
+export const createAppointment = async (patientId: string, startAt: Date, memo?: string, staffId?: string, duration: number = 60, adminMemo?: string, createdBy?: string) => {
     // 1. Check Staff Availability
     const isStaffOk = await checkStaffAvailability(startAt, duration, staffId);
     if (!isStaffOk) {
@@ -313,7 +358,8 @@ export const createAppointment = async (patientId: string, startAt: Date, memo?:
             memo,
             staffId,
             duration,
-            adminMemo
+            adminMemo,
+            createdBy: createdBy || null,
         }
     });
 };
@@ -413,6 +459,22 @@ export const getUnresolvedAdminMemos = async (): Promise<Appointment[]> => {
         orderBy: { startAt: 'desc' }
     });
 
+    // Collect resolver IDs and fetch their names
+    const resolverIds = [...new Set(
+        appointments
+            .filter(a => a.adminMemoResolvedBy)
+            .map(a => a.adminMemoResolvedBy as string)
+    )];
+
+    const resolvers = resolverIds.length > 0
+        ? await prisma.staff.findMany({
+            where: { id: { in: resolverIds } },
+            select: { id: true, name: true }
+        })
+        : [];
+
+    const resolverMap = new Map(resolvers.map(r => [r.id, r.name]));
+
     return appointments.map((a: AppointmentWithRel) => {
         const visitCount = a.patient._count.records + 1;
         return {
@@ -427,6 +489,11 @@ export const getUnresolvedAdminMemos = async (): Promise<Appointment[]> => {
             memo: a.memo || undefined,
             adminMemo: a.adminMemo || undefined,
             isMemoResolved: a.isMemoResolved ?? false,
+            adminMemoResolvedBy: a.adminMemoResolvedBy || undefined,
+            adminMemoResolvedAt: a.adminMemoResolvedAt || undefined,
+            adminMemoResolverName: a.adminMemoResolvedBy
+                ? resolverMap.get(a.adminMemoResolvedBy)
+                : undefined,
             staffName: a.staff?.name,
             staffId: a.staffId || undefined,
             status: a.status,
