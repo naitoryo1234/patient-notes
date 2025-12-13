@@ -96,10 +96,8 @@ export function AiUsageGuide() {
                     {/* 入力例 */}
                     <section className="bg-amber-50 p-3 rounded-md border-l-4 border-amber-400">
                         <p className="text-xs font-bold text-amber-800 mb-1">💡 こんな雑なメモでOK！</p>
-                        <p className="text-sm text-slate-700 font-mono leading-relaxed">
-                            腰痛い、昨日重いもの持った<br />
-                            右腰圧痛、前屈で増強<br />
-                            腰鍼した、電気も
+                        <p className="text-sm text-slate-700 font-mono leading-relaxed whitespace-pre-line">
+                            {TERMS.RECORD_EXAMPLE_MEMO}
                         </p>
                     </section>
 

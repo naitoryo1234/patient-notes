@@ -1,4 +1,4 @@
-import { LABELS } from './labels';
+import { LABELS, TERMS } from './labels';
 
 // Config-Driven Form Definitions
 
@@ -25,16 +25,16 @@ export const PatientFormConfig = [
 ];
 
 export const RecordFormConfig = [
-    { name: 'visitDate', label: '来院日時', type: 'datetime-local', required: true },
-    { name: 'subjective', label: 'S (主訴)', type: 'textarea', rows: 4, placeholder: '「腰が痛い」「昨晩から」' },
-    { name: 'objective', label: 'O (所見)', type: 'textarea', rows: 4, placeholder: '可動域制限あり...' },
-    { name: 'assessment', label: 'A (施術・評価)', type: 'textarea', rows: 4, placeholder: '鍼通電を実施' },
-    { name: 'plan', label: 'P (計画)', type: 'textarea', rows: 2, placeholder: '次回3日後' },
+    { name: 'visitDate', label: `${TERMS.VISIT}日時`, type: 'datetime-local', required: true },
+    { name: 'subjective', label: 'S (主訴)', type: 'textarea', rows: 4, placeholder: TERMS.RECORD_EXAMPLE_S },
+    { name: 'objective', label: 'O (所見)', type: 'textarea', rows: 4, placeholder: TERMS.RECORD_EXAMPLE_O },
+    { name: 'assessment', label: 'A (施術・評価)', type: 'textarea', rows: 4, placeholder: TERMS.RECORD_EXAMPLE_A },
+    { name: 'plan', label: 'P (計画)', type: 'textarea', rows: 2, placeholder: TERMS.RECORD_EXAMPLE_P },
     {
         name: 'tags',
         label: 'タグ',
         type: 'tags',
-        placeholder: 'カンマ区切り (例: 腰痛, 急性)',
-        options: ['腰痛', '肩こり', '首の痛み', '膝痛', '頭痛', '初診', '再診', '鍼治療', '灸', 'マッサージ', '電気療法', '急性', '慢性', '労災', '自賠責']
+        placeholder: `例: ${TERMS.TAG_EXAMPLE}`,
+        options: TERMS.TAG_OPTIONS as unknown as string[]
     },
 ];

@@ -228,7 +228,7 @@ P: `);
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-xs text-slate-500 font-bold block">来院日時</label>
+                            <label className="text-xs text-slate-500 font-bold block">{TERMS.VISIT}日時</label>
                             <input
                                 type="datetime-local"
                                 value={formValues.visitDate || ''}
@@ -254,7 +254,7 @@ P: `);
                             <TagInput
                                 value={String(formValues.tags || '')}
                                 onChange={(val) => setFormValues({ ...formValues, tags: val })}
-                                placeholder="例: 腰痛, 初診"
+                                placeholder={`例: ${TERMS.TAG_EXAMPLE}`}
                                 suggestions={RecordFormConfig.find(f => f.name === 'tags')?.options as string[]}
                             />
                         </div>
@@ -364,11 +364,11 @@ P: `);
                     <div className="bg-indigo-50 border border-indigo-100 rounded-md p-4 text-sm text-indigo-800">
                         <p className="font-bold mb-2">💡 データ自動解析</p>
                         <p className="mb-2">Gemini等で作成した「S: 〜 O: 〜」形式のテキストを解析し、下のフォームに自動入力します。</p>
-                        <pre className="bg-white/50 p-2 rounded text-xs font-mono border border-indigo-100/50">
-                            {`S: 腰が痛い、昨日から悪化
-O: 腰部に圧痛あり、前屈制限
-A: 鍼治療（腰部）、マッサージ
-P: 1週間後に経過観察`}
+                        <pre className="bg-white/50 p-2 rounded text-xs font-mono border border-indigo-100/50 whitespace-pre-line">
+                            {`S: ${TERMS.RECORD_EXAMPLE_S}
+O: ${TERMS.RECORD_EXAMPLE_O}
+A: ${TERMS.RECORD_EXAMPLE_A}
+P: ${TERMS.RECORD_EXAMPLE_P}`}
                         </pre>
                         <div className="mt-2 flex justify-end">
                             <AiUsageGuide />

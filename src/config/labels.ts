@@ -15,6 +15,14 @@ const GENERIC = {
     ROLE_THERAPIST: 'スタッフ',
     ROLE_CLERK: '受付',
     ROLE_OTHER: 'その他',
+    // AI取込・フォームの例文
+    RECORD_EXAMPLE_MEMO: '前回の施術内容を確認\n気になる点を聞き取り',
+    RECORD_EXAMPLE_S: '今日の状態を確認',
+    RECORD_EXAMPLE_O: '状態を観察',
+    RECORD_EXAMPLE_A: 'サービスを提供',
+    RECORD_EXAMPLE_P: '次回の予定を確認',
+    PATIENT_EXAMPLE_MEMO: '紹介で来店',
+    TAG_OPTIONS: ['常連', '新規', 'VIP', '要フォロー'],
 } as const;
 
 // =========================================
@@ -35,6 +43,13 @@ const PRESETS = {
         ROLE_DIRECTOR: '院長',
         ROLE_THERAPIST: '施術者',
         ROLE_CLERK: '受付・事務',
+        RECORD_EXAMPLE_MEMO: '腰痛い、昨日重いもの持った\n右腰圧痛、前屈で増強\n腰鍼した、電気も',
+        RECORD_EXAMPLE_S: '「腰が痛い」「昨晩から」',
+        RECORD_EXAMPLE_O: '可動域制限あり...',
+        RECORD_EXAMPLE_A: '鍼通電を実施',
+        RECORD_EXAMPLE_P: '次回3日後',
+        PATIENT_EXAMPLE_MEMO: '糖尿病の持病があります',
+        TAG_OPTIONS: ['腰痛', '肩こり', '首の痛み', '膝痛', '頭痛', '初診', '再診', '鍼治療', '灸', 'マッサージ', '電気療法', '急性', '慢性'],
     },
 
     // サロン・美容室向け（例）
@@ -45,6 +60,13 @@ const PRESETS = {
         ROLE_THERAPIST: 'スタイリスト',
         ROLE_CLERK: 'レセプション',
         TAG_EXAMPLE: 'カットモデル',
+        RECORD_EXAMPLE_MEMO: 'カット希望\n前回と同じスタイル',
+        RECORD_EXAMPLE_S: 'ヘアスタイルの希望',
+        RECORD_EXAMPLE_O: '髪質・状態を確認',
+        RECORD_EXAMPLE_A: 'カット・カラーを実施',
+        RECORD_EXAMPLE_P: '次回1ヶ月後',
+        PATIENT_EXAMPLE_MEMO: 'アレルギー注意',
+        TAG_OPTIONS: ['カット', 'カラー', 'パーマ', 'トリートメント', '新規', '常連', 'モデル'],
     },
 } as const;
 

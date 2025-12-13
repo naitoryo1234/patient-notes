@@ -105,7 +105,7 @@ Memo: その他の情報
                         <p className="text-xs font-bold text-amber-800 mb-1">💡 こんなテキストからでもOK！</p>
                         <p className="text-xs text-slate-700 font-mono leading-relaxed">
                             「佐藤花子です。1985年3月15日生まれ、女性です。<br />
-                            電話は090-9876-5432。糖尿病の持病があります」
+                            電話は090-9876-5432。{TERMS.PATIENT_EXAMPLE_MEMO}」
                         </p>
                     </section>
 
