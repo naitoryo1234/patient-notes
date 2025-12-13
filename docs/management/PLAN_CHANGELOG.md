@@ -8,6 +8,30 @@
 
 ## 🕒 バージョン履歴 (Version History)
 
+### v1.4.1: Electron + Next.js 統合完了
+**日付**: 2025-12-14
+**ステータス**: 実装完了
+
+#### 変更内容
+*   **内蔵サーバー方式の採用**:
+    *   Next.jsの`output: 'standalone'`を有効化し、自己完結型ビルドを生成。
+    *   Electronメインプロセスから`child_process.spawn`でNext.jsサーバーを起動。
+    *   Server Actionsをそのまま使用可能（IPC通信への書き換え不要）。
+*   **問題解決**:
+    *   ホスト名問題(`HOSTNAME=localhost`環境変数で解決)
+    *   静的ファイル配置（ビルド後にstatic/publicをstandalone内にコピー）
+    *   preload.jsの作成
+    *   winCodeSign手動ダウンロード対応
+*   **ドキュメント化**:
+    *   `docs/technical/ELECTRON_NEXTJS_GUIDE.md` に技術ガイドを作成。
+
+#### 変更の背景 / 意思決定
+*   Static Export (`output: 'export'`)ではServer Actionsが使用できないため却下。
+*   IPC通信への書き換えは工数が大きすぎるため、内蔵サーバー方式を採用。
+*   ユーザーのPCにNode.jsがインストールされている前提で、パッケージサイズを最小限に抑えた。
+
+---
+
 ### v1.4.0: プラグイン設定管理 & 配布戦略策定
 **日付**: 2025-12-13
 **ステータス**: 実装完了
