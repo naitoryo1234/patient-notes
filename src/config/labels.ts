@@ -1,39 +1,62 @@
-// 業態ごとの用語定義バリアント
-const TERM_VARIANTS = {
+// =========================================
+// GENERICプリセット（ベース・デフォルト）
+// =========================================
+// すべての業態で共通して使える汎用的な表現
+// 各業態プリセットはこれを継承して差分のみ上書きする
+const GENERIC = {
+    PATIENT: 'お客様',
+    RECORD: '記録',
+    APPOINTMENT: '予約',
+    STAFF: '担当者',
+    SHOP: '当店',
+    VISIT: '来店',
+    TAG_EXAMPLE: '常連',
+    ROLE_DIRECTOR: '責任者',
+    ROLE_THERAPIST: 'スタッフ',
+    ROLE_CLERK: '受付',
+    ROLE_OTHER: 'その他',
+} as const;
+
+// =========================================
+// 業態別プリセット（GENERICからの差分）
+// =========================================
+const PRESETS = {
+    // 汎用（デフォルト）
+    GENERIC: { ...GENERIC },
+
+    // 鍼灸院・クリニック向け
     CLINIC: {
+        ...GENERIC,
         PATIENT: '患者様',
         RECORD: 'カルテ',
-        APPOINTMENT: '予約',
-        STAFF: '担当者',
-        CLINIC: '当院',
+        SHOP: '当院',
         VISIT: '来院',
         TAG_EXAMPLE: '腰痛',
         ROLE_DIRECTOR: '院長',
         ROLE_THERAPIST: '施術者',
         ROLE_CLERK: '受付・事務',
-        ROLE_OTHER: 'その他',
     },
-    // 将来的な拡張用（例: SALON）
-    // SALON: {
-    //     PATIENT: 'お客様',
-    //     RECORD: '施術記録',
-    //     APPOINTMENT: '予約',
-    //     STAFF: 'スタッフ',
-    //     CLINIC: '当店',
-    //     VISIT: '来店',
-    //     TAG_EXAMPLE: 'カットモデル',
-    //     ROLE_DIRECTOR: '店長',
-    //     ROLE_THERAPIST: 'スタイリスト',
-    //     ROLE_CLERK: 'レセプション',
-    //     ROLE_OTHER: 'その他',
-    // }
+
+    // サロン・美容室向け（例）
+    SALON: {
+        ...GENERIC,
+        RECORD: '施術記録',
+        ROLE_DIRECTOR: '店長',
+        ROLE_THERAPIST: 'スタイリスト',
+        ROLE_CLERK: 'レセプション',
+        TAG_EXAMPLE: 'カットモデル',
+    },
 } as const;
 
-// ★設定: ここを変更することでアプリ全体の用語セットが切り替わります
-// 現時点では 'CLINIC' 固定ですが、将来的に環境変数等での切り替えを想定しています。
-const APP_TYPE: keyof typeof TERM_VARIANTS = 'CLINIC';
+// =========================================
+// ★設定: アプリ全体の用語セットを切り替え
+// =========================================
+// 'GENERIC' | 'CLINIC' | 'SALON' から選択
+// 配布時にここを変更するか、将来的には環境変数での切り替えも可能
+type PresetKey = keyof typeof PRESETS;
+const APP_TYPE: PresetKey = 'GENERIC';
 
-export const TERMS = TERM_VARIANTS[APP_TYPE];
+export const TERMS = PRESETS[APP_TYPE];
 
 export const LABELS = {
     // 汎用的なシステムメッセージのみ保持
