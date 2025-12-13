@@ -9,7 +9,9 @@ import { useToast } from '@/components/ui/Toast';
 import { RECORD_FIELDS } from '@/config/recordFields';
 import { TERMS } from '@/config/labels';
 import { features } from '@/config/features';
+import { useFeatures } from '@/contexts/FeaturesContext';
 import type { RecordWithCreator } from '@/services/recordService';
+
 
 // Plugin imports (conditional rendering based on feature flag)
 import { AttachmentButton, AttachmentModal, AttachmentGallery } from '@/plugins/attachments';
@@ -36,7 +38,9 @@ export function RecordList({ records }: RecordListProps) {
     });
     const { showToast } = useToast();
 
+    const { features } = useFeatures();
     const attachmentsEnabled = features.plugins.attachments.enabled;
+
 
     if (records.length === 0) {
         return (
