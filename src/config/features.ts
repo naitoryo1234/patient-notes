@@ -34,6 +34,25 @@ export const features = {
         operatorTracking: true,  // createdBy/updatedBy tracking
         auditLog: false,         // Full audit log (future feature)
     },
+
+    /**
+     * Plugin Configuration
+     * 
+     * Optional features that can be enabled per-deployment.
+     * Each plugin should be self-contained in src/plugins/<name>/
+     */
+    plugins: {
+        /**
+         * Record Attachments (Images)
+         * Allows adding images to existing records.
+         * ATTACHMENTS_ENABLED=true to enable
+         */
+        attachments: {
+            enabled: parseBoolean(process.env.NEXT_PUBLIC_ATTACHMENTS_ENABLED, false),
+            maxFileSizeMB: parseInt(process.env.NEXT_PUBLIC_ATTACHMENTS_MAX_SIZE_MB || '5', 10),
+            allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+        },
+    },
 } as const;
 
 // Type exports for use in other files

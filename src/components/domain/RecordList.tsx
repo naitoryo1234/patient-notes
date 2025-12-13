@@ -8,10 +8,19 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/components/ui/Toast';
 import { RECORD_FIELDS } from '@/config/recordFields';
 import { TERMS } from '@/config/labels';
+import { features } from '@/config/features';
 import type { RecordWithCreator } from '@/services/recordService';
 
+// Plugin imports (conditional rendering based on feature flag)
+import { AttachmentButton, AttachmentModal, AttachmentGallery } from '@/plugins/attachments';
+import type { Attachment } from '@prisma/client';
+
+interface RecordWithAttachments extends RecordWithCreator {
+    attachments?: Attachment[];
+}
+
 interface RecordListProps {
-    records: RecordWithCreator[];
+    records: RecordWithAttachments[];
 }
 
 export function RecordList({ records }: RecordListProps) {
@@ -20,7 +29,14 @@ export function RecordList({ records }: RecordListProps) {
         recordId: '',
         patientId: '',
     });
+    const [attachmentModal, setAttachmentModal] = useState<{ open: boolean; recordId: string; patientId: string }>({
+        open: false,
+        recordId: '',
+        patientId: '',
+    });
     const { showToast } = useToast();
+
+    const attachmentsEnabled = features.plugins.attachments.enabled;
 
     if (records.length === 0) {
         return (
@@ -76,7 +92,17 @@ export function RecordList({ records }: RecordListProps) {
                                     </span>
                                 ))}
                             </div>
-                            <div>
+                            <div className="flex items-center gap-1">
+                                {/* Attachment Button (Plugin) */}
+                                {attachmentsEnabled && (
+                                    <AttachmentButton
+                                        onClick={() => setAttachmentModal({
+                                            open: true,
+                                            recordId: record.id,
+                                            patientId: record.patientId,
+                                        })}
+                                    />
+                                )}
                                 <button
                                     onClick={() => setDeleteConfirm({ open: true, recordId: record.id, patientId: record.patientId })}
                                     className="p-1 text-slate-300 hover:text-red-500 transition-colors"
@@ -99,6 +125,16 @@ export function RecordList({ records }: RecordListProps) {
                                     </p>
                                 </div>
                             ))}
+
+                            {/* Attachment Gallery (Plugin) */}
+                            {attachmentsEnabled && record.attachments && record.attachments.length > 0 && (
+                                <div className="md:col-span-2">
+                                    <AttachmentGallery
+                                        attachments={record.attachments}
+                                        patientId={record.patientId}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
@@ -107,12 +143,22 @@ export function RecordList({ records }: RecordListProps) {
             <ConfirmDialog
                 open={deleteConfirm.open}
                 onOpenChange={(open) => setDeleteConfirm(prev => ({ ...prev, open }))}
-                title="この{TERMS.RECORD}を削除しますか？"
-                description="この操作は取り消せません。{TERMS.RECORD}が完全に削除されます。"
+                title={`この${TERMS.RECORD}を削除しますか？`}
+                description={`この操作は取り消せません。${TERMS.RECORD}が完全に削除されます。`}
                 confirmLabel="削除する"
                 variant="danger"
                 onConfirm={handleDelete}
             />
+
+            {/* Attachment Modal (Plugin) */}
+            {attachmentsEnabled && (
+                <AttachmentModal
+                    recordId={attachmentModal.recordId}
+                    patientId={attachmentModal.patientId}
+                    isOpen={attachmentModal.open}
+                    onClose={() => setAttachmentModal(prev => ({ ...prev, open: false }))}
+                />
+            )}
         </div>
     );
 }
