@@ -13,6 +13,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS } from '@/config/labels';
 import { useToast } from '@/components/ui/Toast';
 import { AiUsageGuide } from '@/components/guide/AiUsageGuide';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ActionResult {
     success?: boolean;
@@ -60,6 +61,7 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { showToast } = useToast();
+    const { operator } = useAuth();
 
     // 1. Process Input from ConfigForm or AI Parser
     const processInput = async (formData: FormData) => {
@@ -118,6 +120,10 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
                     formData.append(key, value as string);
                 }
             });
+            // Add operator ID for tracking
+            if (operator?.id) {
+                formData.append('operatorId', operator.id);
+            }
 
             const result = await action(formData);
 

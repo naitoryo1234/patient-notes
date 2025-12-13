@@ -9,6 +9,7 @@ import { updateAppointmentAction, toggleAdminMemoResolutionAction, cancelAppoint
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS, LABELS } from '@/config/labels';
 import { useToast } from '@/components/ui/Toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AppointmentDetailModalProps {
     appointment: Appointment;
@@ -25,6 +26,7 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
     const { showToast } = useToast();
+    const { operator } = useAuth();
 
     if (!isOpen) return null;
 
@@ -59,7 +61,7 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
         const nextStatus = !appointment.isMemoResolved;
 
         try {
-            const res = await toggleAdminMemoResolutionAction(appointment.id, nextStatus);
+            const res = await toggleAdminMemoResolutionAction(appointment.id, nextStatus, operator?.id);
             if (res.success) {
                 onClose();
             } else {

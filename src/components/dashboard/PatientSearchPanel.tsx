@@ -18,6 +18,7 @@ import { differenceInMinutes } from 'date-fns';
 import { Patient, ClinicalRecord } from '@prisma/client';
 import { getNow } from '@/lib/dateUtils';
 import { useToast } from '@/components/ui/Toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Minimal patient type for Recent History (stored in localStorage)
 export interface RecentPatient {
@@ -44,6 +45,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
     const [memoConfirm, setMemoConfirm] = useState<{ open: boolean; id: string; targetStatus: boolean }>({ open: false, id: '', targetStatus: true });
     const [completeConfirm, setCompleteConfirm] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
     const { showToast } = useToast();
+    const { operator } = useAuth();
     const [currentTime, setCurrentTime] = useState(getNow());
 
     const [attentionFilter, setAttentionFilter] = useState<'all' | 'delayed' | 'unassigned' | 'memo'>('all');
@@ -73,7 +75,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
         const nextStatus = !target?.isMemoResolved;
 
         try {
-            await toggleAdminMemoResolutionAction(memoConfirm.id, nextStatus);
+            await toggleAdminMemoResolutionAction(memoConfirm.id, nextStatus, operator?.id);
             // Router refresh is handled in the action
         } catch (e) {
             console.error(e);

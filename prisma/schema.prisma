@@ -73,9 +73,10 @@ model ClinicalRecord {
   staff       Staff    @relation(fields: [staffId], references: [id])
   staffId     String
 
-  // Audit Fields (Lite)
-  revision    Int      @default(1)
+  // Audit Fields (Operator Tracking)
+  createdBy   String?  // staffId of the original creator
   updatedBy   String?  // staffId of the last editor
+  revision    Int      @default(1)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -123,6 +124,12 @@ model Appointment {
   
   staff       Staff?   @relation(fields: [staffId], references: [id])
   staffId     String?
+
+  // Audit Fields (Operator Tracking)
+  createdBy           String?   // staffId of the original creator
+  updatedBy           String?   // staffId of the last editor
+  adminMemoResolvedBy String?   // staffId of who resolved the admin memo
+  adminMemoResolvedAt DateTime? // When the admin memo was resolved
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

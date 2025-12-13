@@ -21,11 +21,13 @@ export function TagInput({ value = '', onChange, suggestions = [], placeholder, 
     const [isFocused, setIsFocused] = useState(false);
 
     // Sync internal state with external value prop ONLY if controlled (value changes)
+    /* eslint-disable react-hooks/set-state-in-effect -- Intentional: syncing controlled value */
     useEffect(() => {
         if (value !== internalValue) {
             setInternalValue(value);
         }
     }, [value]);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     // Parse the current value (from local state) into tags
     const selectedTags = internalValue.split(',').map(t => t.trim()).filter(Boolean);

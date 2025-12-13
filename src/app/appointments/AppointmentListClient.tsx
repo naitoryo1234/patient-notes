@@ -16,6 +16,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { LABELS, TERMS } from '@/config/labels';
 import { getNow } from '@/lib/dateUtils';
 import { useToast } from '@/components/ui/Toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AppointmentListClientProps {
     initialAppointments: Appointment[];
@@ -26,6 +27,7 @@ interface AppointmentListClientProps {
 export function AppointmentListClient({ initialAppointments, staffList, includePast }: AppointmentListClientProps) {
     const router = useRouter();
     const { showToast } = useToast();
+    const { operator } = useAuth();
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
     const [viewingMemo, setViewingMemo] = useState<{ patient: string; memo: string } | null>(null);
     const [filterStaffId, setFilterStaffId] = useState<string>('all');
@@ -51,7 +53,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
     };
 
     const handleMemoToggle = async () => {
-        await toggleAdminMemoResolutionAction(memoConfirm.id, memoConfirm.resolved);
+        await toggleAdminMemoResolutionAction(memoConfirm.id, memoConfirm.resolved, operator?.id);
         router.refresh();
     };
 

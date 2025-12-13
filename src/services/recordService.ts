@@ -12,7 +12,7 @@ export const getRecordsByPatientId = async (patientId: string) => {
     });
 };
 
-export const createRecord = async (data: RecordInput, patientId: string) => {
+export const createRecord = async (data: RecordInput, patientId: string, createdBy?: string) => {
     // Validate staffId is provided (required by schema)
     if (!data.staffId) {
         throw new Error('担当者の選択は必須です');
@@ -36,6 +36,8 @@ export const createRecord = async (data: RecordInput, patientId: string) => {
             metadata: '{}',
             rawText: '', // Future use
             staffId: data.staffId,
+            createdBy: createdBy || null,
+            updatedBy: createdBy || null,
         },
     });
 };
