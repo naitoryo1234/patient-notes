@@ -82,24 +82,34 @@
     - [x] 予約詳細からのキャンセル機能追加
     - [x] アテンションタブ（患者検索）のフィルター強化
 
-### Phase 10: v1.2 Launch Pad (Optimization & Dist) [Completed]
+### Phase 10: v1.2 Launch Pad (Optimization & Dist) ✅ Completed
 > **Goal**: 配布・本番運用に向けた最終調整と「Base Kit」としての整理。
 
 - [x] **ラベル管理 (Label Management)**:
-    - [x] 文言の変数化（ラベル外出し） (`src/config/labels.ts` 作成 & 全画面適用)
-    - [x] `ConfirmDialog` および主要コンポーネントのリファクタリング完了
+    - [x] 文言の変数化（ラベル外出し） (`src/config/labels.ts` 作成)
+    - [x] `ConfirmDialog` および主要コンポーネントへの適用
 - [x] **データ保全 (Backup)**:
     - [x] システム設定画面 (`/settings`) の実装
     - [x] バックアップ機能 (SQLiteファイルのダウンロード) 実装
-- [ ] **パッケージング (Next Phase)**:
-    - [ ] 起動スクリプトの整理
-    - [ ] 初期データ投入フローの整
-- [ ] **パッケージング**:
-    - [ ] 起動スクリプトの整理
-    - [ ] 初期データ投入フローの整備
+- [x] **AI取込ガイドUI統一**:
+    - [x] ハイブリッド設計（シンプル版・詳細版）
+- [x] **ひらがな・カタカナ統一検索**:
+    - [x] `kanaUtils.ts` を作成し全検索機能に適用
 
-### Phase 11: Future Extensions (See IDEAS.md)
-> **Note**: AIサマリー、LINE連携、高度な集計機能などは `docs/management/IDEAS.md` にアーカイブされました。v2.0以降での実装を検討します。
+---
+
+## 🗺️ 今後の方向性
+
+> **重要**: 今後の機能開発ロードマップは [docs/ROADMAP.md](../ROADMAP.md) を参照してください。
+> Base Kit（標準機能）とカスタム機能の区分を明確にし、汎用的な土台を維持します。
+
+### 次期候補（要検討）
+- 汎用化基盤の確立（業種別プリセット対応）
+- 予約カレンダービュー（カスタム機能として設計）
+- 繰り返し予約機能
+
+### Phase 11以降: Future Extensions
+> AIサマリー、LINE連携、高度な集計機能などは [IDEAS.md](../management/IDEAS.md) にアーカイブ済み。
 
 
 ---
