@@ -1,7 +1,8 @@
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
+const { createBackup, listBackups, restoreBackup, getBackupDir } = require('./backup');
 
 let mainWindow = null;
 let serverProcess = null;
@@ -120,6 +121,15 @@ function createWindow() {
 
 async function startApp() {
     try {
+        // Create backup on startup
+        console.log('[Electron] Creating startup backup...');
+        const backupResult = await createBackup();
+        if (backupResult.success) {
+            console.log('[Electron] Startup backup created:', backupResult.path);
+        } else {
+            console.log('[Electron] Startup backup skipped:', backupResult.error);
+        }
+
         if (!isDev) {
             await startProductionServer();
         }
@@ -130,6 +140,27 @@ async function startApp() {
         app.quit();
     }
 }
+
+// ============================================
+// IPC Handlers for Backup Operations
+// ============================================
+
+ipcMain.handle('backup:list', async () => {
+    return listBackups();
+});
+
+ipcMain.handle('backup:restore', async (event, backupName) => {
+    return restoreBackup(backupName);
+});
+
+ipcMain.handle('backup:getDir', async () => {
+    return getBackupDir();
+});
+
+ipcMain.handle('app:restart', async () => {
+    app.relaunch();
+    app.exit(0);
+});
 
 app.on('ready', startApp);
 
@@ -146,6 +177,16 @@ app.on('activate', () => {
     }
 });
 
-app.on('before-quit', () => {
+app.on('before-quit', async () => {
+    // Create backup on quit
+    console.log('[Electron] Creating shutdown backup...');
+    try {
+        const backupResult = await createBackup();
+        if (backupResult.success) {
+            console.log('[Electron] Shutdown backup created:', backupResult.path);
+        }
+    } catch (error) {
+        console.error('[Electron] Shutdown backup failed:', error);
+    }
     stopProductionServer();
 });

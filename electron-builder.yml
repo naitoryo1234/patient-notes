@@ -16,3 +16,4 @@ files:
       - "*.db"
 win:
   target: dir
+  icon: build/icon.png
