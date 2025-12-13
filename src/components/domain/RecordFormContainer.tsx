@@ -6,11 +6,11 @@ import { RecordFormConfig } from '@/config/forms';
 import { Button } from '@/components/ui/button';
 import { TagInput } from '@/components/form/TagInput';
 import { parseAiText } from '@/services/aiParser';
-import { format } from 'date-fns';
 import { Staff } from '@/services/staffService';
 import { FormFieldConfig } from '@/components/form/ConfigForm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS } from '@/config/labels';
+import { RECORD_FIELDS, RECORD_FIELD_KEYS } from '@/config/recordFields';
 import { useToast } from '@/components/ui/Toast';
 import { AiUsageGuide } from '@/components/guide/AiUsageGuide';
 import { useAuth } from '@/contexts/AuthContext';
@@ -70,10 +70,12 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
         const visitDate = formData.get('visitDate') as string;
         const staffId = formData.get('staffId') as string;
         const tags = formData.get('tags') as string;
-        const subjective = (formData.get('subjective') as string)?.trim() || '';
-        const objective = (formData.get('objective') as string)?.trim() || '';
-        const assessment = (formData.get('assessment') as string)?.trim() || '';
-        const plan = (formData.get('plan') as string)?.trim() || '';
+
+        // SOAPフィールドの値を動的に取得
+        const fieldValues: Record<string, string> = {};
+        RECORD_FIELD_KEYS.forEach(key => {
+            fieldValues[key] = (formData.get(key) as string)?.trim() || '';
+        });
 
         const validationErrors: Record<string, string[]> = {};
 
@@ -82,9 +84,10 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
             validationErrors.staffId = ['担当者を選択してください'];
         }
 
-        // SOAP content validation
-        if (!subjective && !objective && !assessment && !plan) {
-            validationErrors.subjective = [`${TERMS.RECORD}の内容が空です。S/O/A/Pのいずれかを入力してください。`];
+        // SOAP content validation: 少なくとも1つのフィールドに入力が必要
+        const hasContent = RECORD_FIELD_KEYS.some(key => fieldValues[key]);
+        if (!hasContent) {
+            validationErrors[RECORD_FIELD_KEYS[0]] = [`${TERMS.RECORD}の内容が空です。いずれかを入力してください。`];
         }
 
         if (Object.keys(validationErrors).length > 0) {
@@ -98,10 +101,7 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
             visitDate,
             staffId,
             tags,
-            subjective,
-            objective,
-            assessment,
-            plan
+            ...fieldValues
         }));
 
         setStep('confirm');
@@ -137,12 +137,11 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
             } else {
                 // Success
                 // Clear SOAP fields but keep Date/Staff/Tags for smooth workflow
+                const clearedFields: Record<string, string> = {};
+                RECORD_FIELD_KEYS.forEach(key => { clearedFields[key] = ''; });
                 setFormValues(prev => ({
                     ...prev,
-                    subjective: '',
-                    objective: '',
-                    assessment: '',
-                    plan: '',
+                    ...clearedFields,
                     // Keep visitDate, tags, staffId as is
                 }));
                 // Reset AI text if used
@@ -183,8 +182,8 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
     const handleCopyLastRecord = () => {
         if (!lastRecord) return;
 
-        // Check if form has existing content
-        const hasContent = formValues.subjective || formValues.objective || formValues.assessment || formValues.plan;
+        // Check if form has existing content (動的にチェック)
+        const hasContent = RECORD_FIELD_KEYS.some(key => formValues[key]);
 
         if (hasContent) {
             setCopyConfirmOpen(true);
@@ -195,18 +194,20 @@ export function RecordFormContainer({ action, initialValues = {}, staffList, las
 
     const executeCopy = () => {
         if (!lastRecord) return;
+        // lastRecord から動的にコピー
+        const copiedFields: Record<string, string> = {};
+        RECORD_FIELD_KEYS.forEach(key => {
+            copiedFields[key] = (lastRecord as Record<string, string | undefined>)[key] || '';
+        });
         setFormValues(prev => ({
             ...prev,
-            subjective: lastRecord.subjective || '',
-            objective: lastRecord.objective || '',
-            assessment: lastRecord.assessment || '',
-            plan: lastRecord.plan || '',
+            ...copiedFields,
         }));
     };
 
     const handleInsertTemplate = () => {
         const today = new Date().toISOString().slice(0, 10);
-        setAiText(`来院日: ${today}
+        setAiText(`日付: ${today}
 タグ: 
 
 S: 
@@ -255,51 +256,31 @@ P: `);
                                 value={String(formValues.tags || '')}
                                 onChange={(val) => setFormValues({ ...formValues, tags: val })}
                                 placeholder={`例: ${TERMS.TAG_EXAMPLE}`}
-                                suggestions={RecordFormConfig.find(f => f.name === 'tags')?.options as string[]}
+                                suggestions={TERMS.TAG_OPTIONS as unknown as string[]}
                             />
                         </div>
                     </div>
 
-                    {/* Validation hint */}
-                    {!formValues.subjective && !formValues.objective && !formValues.assessment && !formValues.plan && (
+                    {/* Validation hint (動的にチェック) */}
+                    {!RECORD_FIELD_KEYS.some(key => formValues[key]) && (
                         <div className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-md border border-amber-200 flex items-center gap-2">
-                            <span>⚠️</span> S/O/A/Pのいずれかを入力してください
+                            <span>⚠️</span> いずれかのフィールドを入力してください
                         </div>
                     )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-red-400 block">S (Subjective)</label>
-                            <textarea
-                                value={formValues.subjective || ''}
-                                onChange={(e) => setFormValues({ ...formValues, subjective: e.target.value })}
-                                className={`w-full text-sm rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px] ${formValues.subjective ? 'border-green-300' : 'border-slate-300'}`}
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-blue-400 block">O (Objective)</label>
-                            <textarea
-                                value={formValues.objective || ''}
-                                onChange={(e) => setFormValues({ ...formValues, objective: e.target.value })}
-                                className={`w-full text-sm rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px] ${formValues.objective ? 'border-green-300' : 'border-slate-300'}`}
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-green-400 block">A (Assessment)</label>
-                            <textarea
-                                value={formValues.assessment || ''}
-                                onChange={(e) => setFormValues({ ...formValues, assessment: e.target.value })}
-                                className={`w-full text-sm rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px] ${formValues.assessment ? 'border-green-300' : 'border-slate-300'}`}
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-purple-400 block">P (Plan)</label>
-                            <textarea
-                                value={formValues.plan || ''}
-                                onChange={(e) => setFormValues({ ...formValues, plan: e.target.value })}
-                                className={`w-full text-sm rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px] ${formValues.plan ? 'border-green-300' : 'border-slate-300'}`}
-                            />
-                        </div>
+                        {RECORD_FIELDS.map(field => (
+                            <div key={field.dbColumn} className="space-y-1">
+                                <label className={`text-xs font-bold ${field.colorClass} block`}>
+                                    {field.displayLabel}
+                                </label>
+                                <textarea
+                                    value={String(formValues[field.dbColumn] || '')}
+                                    onChange={(e) => setFormValues({ ...formValues, [field.dbColumn]: e.target.value })}
+                                    className={`w-full text-sm rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 bg-white min-h-[60px] ${formValues[field.dbColumn] ? 'border-green-300' : 'border-slate-300'}`}
+                                />
+                            </div>
+                        ))}
                     </div>
                 </div>
 

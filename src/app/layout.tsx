@@ -16,8 +16,8 @@ import { features } from '@/config/features';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Clinic Notebook',
-  description: 'A simple CRM for private clinics.',
+  title: 'Customer Notebook',
+  description: 'A simple CRM for service businesses.',
 };
 
 // Force dynamic rendering to prevent DB calls during build
@@ -42,8 +42,8 @@ export default async function RootLayout({
               <header className="flex-none z-10 w-full border-b bg-white/80 backdrop-blur-sm">
                 <div className="container mx-auto flex h-14 items-center justify-between px-4">
                   <Link href="/" className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                    <span>🩺</span>
-                    Clinic Notebook
+                    <span>📋</span>
+                    Customer Notebook
                     {demoMode && (
                       <span className="bg-amber-400 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse ml-2">
                         DEMO

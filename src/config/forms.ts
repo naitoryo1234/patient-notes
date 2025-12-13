@@ -1,4 +1,5 @@
 import { LABELS, TERMS } from './labels';
+import { RECORD_FIELDS } from './recordFields';
 
 // Config-Driven Form Definitions
 
@@ -24,12 +25,17 @@ export const PatientFormConfig = [
     }
 ];
 
+// 記録フォーム設定（RECORD_FIELDSから動的生成）
 export const RecordFormConfig = [
     { name: 'visitDate', label: `${TERMS.VISIT}日時`, type: 'datetime-local', required: true },
-    { name: 'subjective', label: 'S (主訴)', type: 'textarea', rows: 4, placeholder: TERMS.RECORD_EXAMPLE_S },
-    { name: 'objective', label: 'O (所見)', type: 'textarea', rows: 4, placeholder: TERMS.RECORD_EXAMPLE_O },
-    { name: 'assessment', label: 'A (施術・評価)', type: 'textarea', rows: 4, placeholder: TERMS.RECORD_EXAMPLE_A },
-    { name: 'plan', label: 'P (計画)', type: 'textarea', rows: 2, placeholder: TERMS.RECORD_EXAMPLE_P },
+    // SOAPフィールドは recordFields.ts から動的に生成
+    ...RECORD_FIELDS.map(field => ({
+        name: field.dbColumn,
+        label: field.displayLabel,
+        type: 'textarea' as const,
+        rows: field.rows,
+        placeholder: field.placeholder,
+    })),
     {
         name: 'tags',
         label: 'タグ',
@@ -38,3 +44,4 @@ export const RecordFormConfig = [
         options: TERMS.TAG_OPTIONS as unknown as string[]
     },
 ];
+

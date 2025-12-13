@@ -11,19 +11,27 @@ import {
 import { Button } from "@/components/ui/button"
 import { Copy, ExternalLink, Sparkles, CheckCircle2 } from "lucide-react"
 import { useToast } from '@/components/ui/Toast'
-import { TERMS, LABELS } from '@/config/labels';
+import { TERMS } from '@/config/labels';
+import { RECORD_FIELDS } from '@/config/recordFields';
 
 export function AiUsageGuide() {
     const { showToast } = useToast();
 
-    // 統合版プロンプト（出力安定化）
-    // TERMSを使用して業態に応じた文言に対応
+    // SOAPフィールドのリストを動的に生成
+    const fieldsList = RECORD_FIELDS.map(f => `- ${f.shortLabel}: ${f.displayLabel.replace(`${f.shortLabel} (`, '').replace(')', '')}`).join('\n');
+
+    // 統合版プロンプト（出力安定化・設定駆動化）
+    // TERMSとRECORD_FIELDSを使用して業態に応じた文言に対応
     const recordPrompt = `以下の情報を${TERMS.RECORD}の下書きにしてください。
 
 【出力ルール】
 - 結果のみをコードブロック（\`\`\`）で囲んで出力
 - Markdown記号（#, *, **）は使わずプレーンテキストで
 - 各項目は「項目名: 内容」の形式で
+
+【項目】
+${fieldsList}
+- タグ: キーワード（任意）
 
 ---
 （ここにメモを入力）`;

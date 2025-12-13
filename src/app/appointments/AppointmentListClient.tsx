@@ -444,7 +444,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                             <Link
                                                 href={`/patients/${apt.patientId}`}
                                                 className="hover:underline flex flex-col"
-                                                title={isCancelled ? "キャンセル済み：詳細を確認して再予約" : "患者詳細を表示"}
+                                                title={isCancelled ? "キャンセル済み：詳細を確認して再予約" : "詳細を表示"}
                                             >
                                                 <div className="flex items-center gap-2">
                                                     <span className={`font-bold text-base truncate block ${isCancelled ? 'text-slate-400 line-through' : (isExpired ? '' : 'text-indigo-900')}`}>

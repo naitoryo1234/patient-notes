@@ -44,7 +44,7 @@ export default async function EditPatientPage({ params }: { params: { id: string
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800">基本情報の変更</h1>
-                    <p className="text-slate-500">患者情報を修正します</p>
+                    <p className="text-slate-500">お客様情報を修正します</p>
                 </div>
                 <Link href={`/patients/${id}`}>
                     <Button variant="outline">キャンセル</Button>

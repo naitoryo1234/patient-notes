@@ -48,7 +48,7 @@ export function LoginScreen({ staffList }: LoginScreenProps) {
             <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-4">
                 <div className="text-center mb-8">
                     <h1 className="text-2xl font-bold text-gray-800 mb-2">
-                        Clinic Notebook
+                        Customer Notebook
                     </h1>
                     <p className="text-gray-500 text-sm">
                         ログインしてください

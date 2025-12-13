@@ -6,6 +6,8 @@ import { Trash2, User, UserCheck } from 'lucide-react';
 import { deleteRecord } from '@/actions/recordActions';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/components/ui/Toast';
+import { RECORD_FIELDS } from '@/config/recordFields';
+import { TERMS } from '@/config/labels';
 import type { RecordWithCreator } from '@/services/recordService';
 
 interface RecordListProps {
@@ -23,7 +25,7 @@ export function RecordList({ records }: RecordListProps) {
     if (records.length === 0) {
         return (
             <div className="text-center py-12 text-slate-400 border-2 border-dashed border-slate-100 rounded-lg">
-                <p>施術記録がまだありません</p>
+                <p>{TERMS.RECORD}がまだありません</p>
             </div>
         );
     }
@@ -85,23 +87,18 @@ export function RecordList({ records }: RecordListProps) {
                             </div>
                         </div>
 
+                        {/* SOAP フィールドを動的に表示 */}
                         <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <span className="text-xs font-bold text-red-400 block">S (Subjective)</span>
-                                <p className="text-sm text-slate-800 whitespace-pre-wrap min-h-[1.5rem]">{record.subjective}</p>
-                            </div>
-                            <div className="space-y-1">
-                                <span className="text-xs font-bold text-blue-400 block">O (Objective)</span>
-                                <p className="text-sm text-slate-800 whitespace-pre-wrap min-h-[1.5rem]">{record.objective}</p>
-                            </div>
-                            <div className="space-y-1">
-                                <span className="text-xs font-bold text-green-400 block">A (Assessment)</span>
-                                <p className="text-sm text-slate-800 whitespace-pre-wrap min-h-[1.5rem]">{record.assessment}</p>
-                            </div>
-                            <div className="space-y-1">
-                                <span className="text-xs font-bold text-purple-400 block">P (Plan)</span>
-                                <p className="text-sm text-slate-800 whitespace-pre-wrap min-h-[1.5rem]">{record.plan}</p>
-                            </div>
+                            {RECORD_FIELDS.map(field => (
+                                <div key={field.dbColumn} className="space-y-1">
+                                    <span className={`text-xs font-bold ${field.colorClass} block`}>
+                                        {field.displayLabel}
+                                    </span>
+                                    <p className="text-sm text-slate-800 whitespace-pre-wrap min-h-[1.5rem]">
+                                        {(record as unknown as Record<string, string>)[field.dbColumn]}
+                                    </p>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 );
@@ -110,8 +107,8 @@ export function RecordList({ records }: RecordListProps) {
             <ConfirmDialog
                 open={deleteConfirm.open}
                 onOpenChange={(open) => setDeleteConfirm(prev => ({ ...prev, open }))}
-                title="この記録を削除しますか？"
-                description="この操作は取り消せません。施術記録が完全に削除されます。"
+                title="この{TERMS.RECORD}を削除しますか？"
+                description="この操作は取り消せません。{TERMS.RECORD}が完全に削除されます。"
                 confirmLabel="削除する"
                 variant="danger"
                 onConfirm={handleDelete}

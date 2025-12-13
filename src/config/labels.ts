@@ -16,7 +16,7 @@ const GENERIC = {
     ROLE_CLERK: '受付',
     ROLE_OTHER: 'その他',
     // AI取込・フォームの例文
-    RECORD_EXAMPLE_MEMO: '前回の施術内容を確認\n気になる点を聞き取り',
+    RECORD_EXAMPLE_MEMO: '前回の内容を確認\n気になる点を聞き取り',
     RECORD_EXAMPLE_S: '今日の状態を確認',
     RECORD_EXAMPLE_O: '状態を観察',
     RECORD_EXAMPLE_A: 'サービスを提供',
@@ -75,8 +75,8 @@ const PRESETS = {
 // =========================================
 // 'GENERIC' | 'CLINIC' | 'SALON' から選択
 // 配布時にここを変更するか、将来的には環境変数での切り替えも可能
-type PresetKey = keyof typeof PRESETS;
-const APP_TYPE: PresetKey = 'GENERIC';
+export type PresetKey = keyof typeof PRESETS;
+export const APP_TYPE: PresetKey = 'GENERIC';
 
 export const TERMS = PRESETS[APP_TYPE];
 
