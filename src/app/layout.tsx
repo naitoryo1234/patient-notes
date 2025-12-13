@@ -10,6 +10,7 @@ import { NewAppointmentButton } from '@/components/dashboard/NewAppointmentButto
 import { isDemoMode, getDemoDateString } from '@/lib/dateUtils';
 import { Providers } from '@/components/Providers';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { UserMenu } from '@/components/auth/UserMenu';
 import { features } from '@/config/features';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -84,6 +85,7 @@ export default async function RootLayout({
                     >
                       <Settings className="w-5 h-5" />
                     </Link>
+                    <UserMenu authEnabled={features.auth.enabled} />
                   </nav>
                 </div>
               </header>
