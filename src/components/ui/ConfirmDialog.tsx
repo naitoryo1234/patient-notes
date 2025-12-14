@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertTriangle, Info, Trash2, X } from 'lucide-react';
 
 import { LABELS } from '@/config/labels';
@@ -27,6 +28,12 @@ export function ConfirmDialog({
     onConfirm,
 }: ConfirmDialogProps) {
     const [loading, setLoading] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    // Ensure we only render portal on client
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleConfirm = async () => {
         setLoading(true);
@@ -70,14 +77,18 @@ export function ConfirmDialog({
 
     const Icon = config.icon;
 
-    if (!open) return null;
+    if (!open || !mounted) return null;
 
-    return (
+    const dialogContent = (
         <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 flex items-center justify-center p-4"
+            style={{ zIndex: 99999 }}
             onClick={handleBackdropClick}
         >
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-200">
+            <div
+                className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-200"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
                 <div className={`${config.headerBg} text-white p-4 flex items-center gap-3`}>
                     <Icon className="w-5 h-5" />
@@ -124,4 +135,7 @@ export function ConfirmDialog({
             </div>
         </div>
     );
+
+    // Render directly to document.body using portal
+    return createPortal(dialogContent, document.body);
 }
