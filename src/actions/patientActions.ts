@@ -206,7 +206,8 @@ export async function searchPatientsForSelect(query: string) {
             kana: true,
             pId: true,
             birthDate: true,
-            phone: true
+            phone: true,
+            memo: true
         },
         take: 10,
         orderBy: { updatedAt: 'desc' }

@@ -30,6 +30,7 @@ type PatientResult = {
     kana: string;
     pId: number;
     birthDate: string | null;
+    memo: string | null;
 };
 
 interface AppointmentFormModalProps {
@@ -117,6 +118,10 @@ export function AppointmentFormModal({
             onClose();
             return;
         }
+        // Skip confirmation if submit confirm dialog is open (user is just navigating)
+        if (showSubmitConfirm) {
+            return; // Do nothing - let the submit confirm dialog handle it
+        }
         if (hasUnsavedChanges()) {
             setShowCloseConfirm(true);
         } else {
@@ -199,6 +204,7 @@ export function AppointmentFormModal({
             name: patient.name,
             kana: patient.kana,
             pId: patient.pId,
+            note: patient.memo || undefined, // Map memo to note for confirmation display
         });
         setShowPatientSearch(false);
         setSearchQuery('');
