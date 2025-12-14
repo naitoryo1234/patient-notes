@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -86,6 +87,12 @@ export function AppointmentFormModal({
     const [showCloseConfirm, setShowCloseConfirm] = useState(false);
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
     const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    // Client-side only rendering for portals
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Check if form has any changes (to prevent accidental close)
     const hasUnsavedChanges = () => {
@@ -382,13 +389,13 @@ export function AppointmentFormModal({
                                                         key={patient.id}
                                                         type="button"
                                                         onClick={() => handleSelectPatient(patient)}
-                                                        className="w-full text-left px-3 py-2 hover:bg-indigo-50 hover:text-indigo-700 rounded-md transition-colors flex items-center gap-2"
+                                                        className="w-full text-right px-3 py-2 hover:bg-indigo-50 hover:text-indigo-700 rounded-md transition-colors flex items-center justify-end gap-2"
                                                     >
+                                                        <span className="text-xs text-slate-400 truncate">{patient.kana}</span>
+                                                        <span className="font-bold text-sm flex-shrink-0">{patient.name}</span>
                                                         <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex-shrink-0 min-w-[48px] text-center">
                                                             No.{patient.pId}
                                                         </span>
-                                                        <span className="font-bold text-sm">{patient.name}</span>
-                                                        <span className="text-xs text-slate-400 truncate">{patient.kana}</span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -543,16 +550,18 @@ export function AppointmentFormModal({
                 variant="warning"
             />
 
-            {/* Submit Confirmation Dialog */}
-            {showSubmitConfirm && selectedPatient && (
+            {/* Submit Confirmation Dialog - rendered via portal */}
+            {mounted && showSubmitConfirm && selectedPatient && createPortal(
                 <div
                     className="fixed inset-0 bg-black/60 flex items-center justify-center p-4"
                     style={{ zIndex: 99999, pointerEvents: 'auto' }}
+                    onMouseDown={(e) => e.stopPropagation()}
                 >
                     <div
                         className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"
                         style={{ pointerEvents: 'auto' }}
                         onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
                         <div className="bg-indigo-600 text-white p-4 flex items-center gap-3">
@@ -643,7 +652,8 @@ export function AppointmentFormModal({
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </>
     );
