@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Appointment } from '@/services/appointmentService';
 import { Staff } from '@/services/staffService';
 import { AppointmentListClient } from './AppointmentListClient';
@@ -35,8 +35,27 @@ export function AppointmentsPageClient({
 }: AppointmentsPageClientProps) {
     const router = useRouter();
     const { showToast } = useToast();
+    // View Mode Persistence
+    const STORAGE_KEY_VIEW_MODE = 'crm_appointments_view_mode';
     const [pageViewMode, setPageViewMode] = useState<PageViewMode>('list');
+
+    // Load preference on mount
+    useEffect(() => {
+        const saved = localStorage.getItem(STORAGE_KEY_VIEW_MODE) as PageViewMode;
+        if (saved === 'list' || saved === 'calendar') {
+            setPageViewMode(saved);
+        }
+    }, []);
+
+    const handleViewModeChange = (mode: PageViewMode) => {
+        setPageViewMode(mode);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(STORAGE_KEY_VIEW_MODE, mode);
+        }
+    };
+
     const [patientFilter, setPatientFilter] = useState('');
+    const [staffFilter, setStaffFilter] = useState<string>('all');
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,6 +68,21 @@ export function AppointmentsPageClient({
     const handlePatientClick = (patientName: string) => {
         setPatientFilter(patientName);
     };
+
+    // Filtered appointments for Calendar View
+    const filteredAppointments = staffFilter === 'all'
+        ? appointments
+        : appointments.filter(app => !app.staffId || app.staffId === staffFilter);
+    // Note: keeping unassigned appointments visible? Maybe debatable.
+    // User request: "Specific staff only". So strictly filtering by staffId seems correct.
+    // But if I want to see "My Schedule", I might not want unassigned.
+    // Let's strict filter, but maybe allow 'unassigned' option.
+
+    const calendarAppointments = staffFilter === 'all'
+        ? appointments
+        : staffFilter === 'unassigned'
+            ? appointments.filter(app => !app.staffId)
+            : appointments.filter(app => app.staffId === staffFilter);
 
     // Modal Handlers
     const handleCreateClick = (date?: Date, timeStr?: string) => {
@@ -116,11 +150,30 @@ export function AppointmentsPageClient({
 
             {/* Right Column: Main Content */}
             <div className="flex-1 h-full flex flex-col min-h-0 overflow-hidden">
-                {/* View Switcher Header (Inline with page title or separate?) */}
-                <div className="flex justify-end pb-2">
+                {/* View Switcher Header */}
+                <div className="flex justify-between items-center pb-2">
+                    {/* Filter Controls (only visible in Calendar mode for now) */}
+                    <div>
+                        {pageViewMode === 'calendar' && (
+                            <select
+                                value={staffFilter}
+                                onChange={(e) => setStaffFilter(e.target.value)}
+                                className="text-sm border-slate-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 py-1.5 pl-3 pr-8"
+                            >
+                                <option value="all">全ての担当者</option>
+                                <option value="unassigned">担当なし</option>
+                                {staffList.map(staff => (
+                                    <option key={staff.id} value={staff.id}>
+                                        {staff.name}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+
                     <div className="bg-slate-100 p-1 rounded-lg border border-slate-200 inline-flex">
                         <button
-                            onClick={() => setPageViewMode('list')}
+                            onClick={() => handleViewModeChange('list')}
                             className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${pageViewMode === 'list'
                                 ? 'bg-white text-indigo-600 shadow-sm'
                                 : 'text-slate-500 hover:text-slate-700'
@@ -130,7 +183,7 @@ export function AppointmentsPageClient({
                             台帳
                         </button>
                         <button
-                            onClick={() => setPageViewMode('calendar')}
+                            onClick={() => handleViewModeChange('calendar')}
                             className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${pageViewMode === 'calendar'
                                 ? 'bg-white text-indigo-600 shadow-sm'
                                 : 'text-slate-500 hover:text-slate-700'
@@ -156,7 +209,7 @@ export function AppointmentsPageClient({
                         </div>
                     ) : (
                         <CalendarView
-                            appointments={appointments}
+                            appointments={calendarAppointments}
                             staffList={staffList}
                             initialDate={initialDateStr ? new Date(initialDateStr) : new Date()}
                             onAppointmentClick={handleEditClick}

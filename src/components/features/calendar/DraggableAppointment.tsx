@@ -45,8 +45,16 @@ export function DraggableAppointment({
         }
     };
 
+    // Tooltip text generation
+    const tooltipText = [
+        `${appointment.patientName} (${appointment.patientKana})`,
+        appointment.adminMemo && !appointment.isMemoResolved ? `⚠️ 申し送り:\n${appointment.adminMemo}` : null,
+        appointment.memo ? `📝 メモ:\n${appointment.memo}` : null
+    ].filter(Boolean).join('\n\n');
+
     return (
         <div
+            title={tooltipText}
             draggable={canDrag}
             onDragStart={handleDragStart}
             className={cn(

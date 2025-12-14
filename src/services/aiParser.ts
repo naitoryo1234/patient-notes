@@ -143,9 +143,9 @@ export function parseAiText(text: string): ParsedRecord {
             // Check extendedTriggers
             // Normalize key: if 1 char, upper. If longer, keep as is or Title case matching?
             // Just check raw and Upper/Lower in map
-            let key = foundKey;
+            const key = foundKey;
             // Try direct match, Upper, Capitalized
-            let targetSection: keyof ParsedRecord | undefined = extendedTriggers[key] || extendedTriggers[key.toUpperCase()] || extendedTriggers[key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()];
+            const targetSection: keyof ParsedRecord | undefined = extendedTriggers[key] || extendedTriggers[key.toUpperCase()] || extendedTriggers[key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()];
 
             if (targetSection) {
                 currentSection = targetSection;

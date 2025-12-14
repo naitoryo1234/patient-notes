@@ -240,7 +240,7 @@ export function WeekView({
 
                                         // Staff Color Assignment
                                         // Generate consistent color based on staff ID index in sorted staffList
-                                        const getStaffColor = (sId: string | null) => {
+                                        const getStaffColor = (sId: string | null | undefined) => {
                                             if (!sId) return "border-red-400"; // Unassigned
                                             const sortedStaff = [...staffList].sort((a, b) => a.id.localeCompare(b.id)); // Ensure stable order
                                             const index = sortedStaff.findIndex(s => s.id === sId);
@@ -298,8 +298,13 @@ export function WeekView({
                                                 >
                                                     <div className="font-bold">{format(appDate, 'HH:mm')}</div>
                                                     <div className="truncate font-medium">{app.patientName}</div>
+                                                    {app.memo && (
+                                                        <div className="truncate text-[10px] text-slate-500 mt-0.5">
+                                                            {app.memo}
+                                                        </div>
+                                                    )}
                                                     {app.duration && app.duration !== 60 && (
-                                                        <div className="text-[10px] opacity-75">{app.duration}分</div>
+                                                        <div className="text-[10px] opacity-75 mt-0.5">{app.duration}分</div>
                                                     )}
                                                 </DraggableAppointment>
                                             </div>
