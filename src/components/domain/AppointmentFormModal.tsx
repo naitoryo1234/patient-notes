@@ -299,7 +299,7 @@ export function AppointmentFormModal({
                         <DialogTitle>{title}</DialogTitle>
                     </DialogHeader>
 
-                    <form onSubmit={handleSubmit} className="space-y-3 overflow-y-auto flex-1 px-0.5">
+                    <form id="appointment-form" onSubmit={handleSubmit} className="space-y-3 overflow-y-auto flex-1 px-0.5" autoComplete="off">
                         {/* Error Display */}
                         {error && (
                             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm space-y-2">
@@ -350,8 +350,13 @@ export function AppointmentFormModal({
                                             placeholder={LABELS.DASHBOARD.SEARCH_PLACEHOLDER}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="pl-9 flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
+                                            className="pl-9 flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
                                             autoFocus
+                                            autoComplete="off"
+                                            autoCorrect="off"
+                                            autoCapitalize="off"
+                                            spellCheck="false"
+                                            name="patient-search-field"
                                         />
                                     </div>
                                     <div className="max-h-[150px] overflow-y-auto border rounded-md bg-slate-50">
@@ -362,23 +367,19 @@ export function AppointmentFormModal({
                                                 {searchQuery.length < 1 ? LABELS.DASHBOARD.PLEASE_SEARCH : LABELS.DASHBOARD.NO_SEARCH_RESULT(searchQuery)}
                                             </div>
                                         ) : (
-                                            <div className="p-1 space-y-1">
+                                            <div className="p-1 space-y-0.5">
                                                 {searchResults.map(patient => (
                                                     <button
                                                         key={patient.id}
                                                         type="button"
                                                         onClick={() => handleSelectPatient(patient)}
-                                                        className="w-full text-left p-2 hover:bg-white hover:shadow-sm rounded border border-transparent hover:border-slate-200 transition-all"
+                                                        className="w-full text-left px-3 py-2 hover:bg-indigo-50 hover:text-indigo-700 rounded-md transition-colors flex items-center gap-3"
                                                     >
-                                                        <div className="flex justify-between items-center">
-                                                            <div>
-                                                                <div className="font-bold text-slate-700 text-sm">{patient.name}</div>
-                                                                <div className="text-xs text-slate-500">{patient.kana}</div>
-                                                            </div>
-                                                            <div className="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                                                                No.{patient.pId}
-                                                            </div>
-                                                        </div>
+                                                        <span className="font-bold text-sm flex-shrink-0">{patient.name}</span>
+                                                        <span className="text-xs text-slate-400 truncate flex-1">{patient.kana}</span>
+                                                        <span className="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded flex-shrink-0">
+                                                            No.{patient.pId}
+                                                        </span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -502,11 +503,6 @@ export function AppointmentFormModal({
                             form="appointment-form"
                             className="bg-indigo-600 hover:bg-indigo-700 text-white"
                             disabled={isPending || !selectedPatient}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                const form = document.querySelector('form') as HTMLFormElement;
-                                if (form) form.requestSubmit();
-                            }}
                         >
                             {isPending
                                 ? LABELS.COMMON.UPDATING
