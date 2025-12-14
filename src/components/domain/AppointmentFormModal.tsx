@@ -20,6 +20,7 @@ type PatientInfo = {
     name: string;
     kana: string;
     pId?: number;
+    note?: string;
 };
 
 type PatientResult = {
@@ -83,6 +84,7 @@ export function AppointmentFormModal({
     const [isPending, setIsPending] = useState(false);
     const [error, setError] = useState<{ message: string; date?: string } | null>(null);
     const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+    const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
     const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false);
 
     // Check if form has any changes (to prevent accidental close)
@@ -201,13 +203,20 @@ export function AppointmentFormModal({
         setShowPatientSearch(true);
     };
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    // Show confirmation dialog before submit
+    const handleShowSubmitConfirm = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
         if (!selectedPatient) {
             showToast(`${TERMS.PATIENT}を選択してください`, 'error');
             return;
         }
+        setShowSubmitConfirm(true);
+    };
+
+    const handleConfirmedSubmit = async () => {
+        if (!selectedPatient) return;
+
+        setShowSubmitConfirm(false);
 
         setIsPending(true);
         setError(null);
@@ -299,7 +308,7 @@ export function AppointmentFormModal({
                         <DialogTitle>{title}</DialogTitle>
                     </DialogHeader>
 
-                    <form id="appointment-form" onSubmit={handleSubmit} className="space-y-3 overflow-y-auto flex-1 px-0.5" autoComplete="off">
+                    <form id="appointment-form" onSubmit={handleShowSubmitConfirm} className="space-y-3 overflow-y-auto flex-1 px-0.5" autoComplete="off">
                         {/* Error Display */}
                         {error && (
                             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm space-y-2">
@@ -373,13 +382,13 @@ export function AppointmentFormModal({
                                                         key={patient.id}
                                                         type="button"
                                                         onClick={() => handleSelectPatient(patient)}
-                                                        className="w-full text-left px-3 py-2 hover:bg-indigo-50 hover:text-indigo-700 rounded-md transition-colors flex items-center gap-3"
+                                                        className="w-full text-left px-3 py-2 hover:bg-indigo-50 hover:text-indigo-700 rounded-md transition-colors flex items-center gap-2"
                                                     >
-                                                        <span className="font-bold text-sm flex-shrink-0">{patient.name}</span>
-                                                        <span className="text-xs text-slate-400 truncate flex-1">{patient.kana}</span>
-                                                        <span className="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded flex-shrink-0">
+                                                        <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex-shrink-0 min-w-[48px] text-center">
                                                             No.{patient.pId}
                                                         </span>
+                                                        <span className="font-bold text-sm">{patient.name}</span>
+                                                        <span className="text-xs text-slate-400 truncate">{patient.kana}</span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -533,6 +542,109 @@ export function AppointmentFormModal({
                 confirmLabel="破棄する"
                 variant="warning"
             />
+
+            {/* Submit Confirmation Dialog */}
+            {showSubmitConfirm && selectedPatient && (
+                <div
+                    className="fixed inset-0 bg-black/60 flex items-center justify-center p-4"
+                    style={{ zIndex: 99999, pointerEvents: 'auto' }}
+                >
+                    <div
+                        className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"
+                        style={{ pointerEvents: 'auto' }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="bg-indigo-600 text-white p-4 flex items-center gap-3">
+                            <span className="text-xl">📋</span>
+                            <h3 className="font-bold text-base flex-1">
+                                {mode === 'edit' ? '予約変更の確認' : '予約内容の確認'}
+                            </h3>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-5 space-y-4">
+                            {/* Patient Info */}
+                            <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                                <div className="text-xs text-slate-500 mb-1">{TERMS.PATIENT}</div>
+                                <div className="font-bold text-lg">{selectedPatient.name}</div>
+                                <div className="text-sm text-slate-500">{selectedPatient.kana}</div>
+                            </div>
+
+                            {/* Date/Time */}
+                            <div className="grid grid-cols-3 gap-3 text-sm">
+                                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                                    <div className="text-xs text-slate-500 mb-1">日付</div>
+                                    <div className="font-bold">{date}</div>
+                                </div>
+                                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                                    <div className="text-xs text-slate-500 mb-1">時間</div>
+                                    <div className="font-bold">{time}</div>
+                                </div>
+                                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                                    <div className="text-xs text-slate-500 mb-1">所要時間</div>
+                                    <div className="font-bold">{duration}分</div>
+                                </div>
+                            </div>
+
+                            {/* Staff */}
+                            {staffId && (
+                                <div className="text-sm">
+                                    <span className="text-slate-500">担当者: </span>
+                                    <span className="font-medium">
+                                        {staffList.find(s => s.id === staffId)?.name || '未設定'}
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* Memo - show patient's default memo if no memo entered */}
+                            {(memo || selectedPatient.note) && (
+                                <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                                    <div className="text-xs text-blue-600 mb-1 flex items-center gap-1">
+                                        📝 受付メモ
+                                        {!memo && selectedPatient.note && (
+                                            <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px]">
+                                                お客様情報から引用
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="text-sm">{memo || selectedPatient.note}</div>
+                                </div>
+                            )}
+
+                            {/* Admin Memo */}
+                            {adminMemo && (
+                                <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+                                    <div className="text-xs text-yellow-700 mb-1">⚠️ 申し送り事項</div>
+                                    <div className="text-sm">{adminMemo}</div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="p-4 border-t border-slate-100 flex gap-3">
+                            <button
+                                onClick={() => setShowSubmitConfirm(false)}
+                                disabled={isPending}
+                                type="button"
+                                style={{ pointerEvents: 'auto' }}
+                                className="flex-1 px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-colors"
+                            >
+                                戻って修正
+                            </button>
+                            <button
+                                onClick={handleConfirmedSubmit}
+                                disabled={isPending}
+                                type="button"
+                                style={{ pointerEvents: 'auto' }}
+                                className="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+                            >
+                                {isPending ? '処理中...' : mode === 'edit' ? '変更を確定' : '予約を確定'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
