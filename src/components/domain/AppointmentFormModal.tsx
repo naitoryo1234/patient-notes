@@ -297,12 +297,21 @@ export function AppointmentFormModal({
 
     return (
         <>
-            <Dialog open={isOpen} onOpenChange={(open) => !open && handleSafeClose()}>
+            <Dialog open={isOpen} onOpenChange={(open) => {
+                // Ignore if submit confirmation is shown or we're returning from it
+                if (showSubmitConfirm || returningFromSubmitConfirmRef.current) {
+                    returningFromSubmitConfirmRef.current = false;
+                    return;
+                }
+                if (!open) handleSafeClose();
+            }}>
                 <DialogContent
                     className="w-full max-w-[min(32rem,calc(100vw-2rem))] max-h-[min(95vh,calc(100vh-2rem))] flex flex-col"
                     onPointerDownOutside={(e) => {
                         // Always prevent default close behavior
                         e.preventDefault();
+                        // Ignore if submit confirmation is shown
+                        if (showSubmitConfirm || returningFromSubmitConfirmRef.current) return;
                         // Show confirmation if there are unsaved changes
                         if (hasUnsavedChanges()) {
                             setShowCloseConfirm(true);
@@ -313,6 +322,8 @@ export function AppointmentFormModal({
                     onEscapeKeyDown={(e) => {
                         // Always prevent default close behavior  
                         e.preventDefault();
+                        // Ignore if submit confirmation is shown
+                        if (showSubmitConfirm || returningFromSubmitConfirmRef.current) return;
                         // Show confirmation if there are unsaved changes
                         if (hasUnsavedChanges()) {
                             setShowCloseConfirm(true);
@@ -358,19 +369,26 @@ export function AppointmentFormModal({
                             </label>
 
                             {selectedPatient && !showPatientSearch ? (
-                                <div className="bg-slate-50 p-3 rounded-md flex items-center justify-between border border-slate-200">
-                                    <div>
-                                        <div className="font-bold text-sm text-slate-700">{selectedPatient.name}</div>
-                                        <div className="text-xs text-slate-500">
-                                            {selectedPatient.kana}
-                                            {selectedPatient.pId && ` / No.${selectedPatient.pId}`}
+                                <div className="bg-green-50 p-3 rounded-lg border-2 border-green-400 shadow-sm">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className="bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">
+                                                ✓ 選択済み
+                                            </span>
+                                            <span className="text-xs text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
+                                                No.{selectedPatient.pId}
+                                            </span>
                                         </div>
+                                        {mode === 'create' && (
+                                            <Button type="button" variant="ghost" size="sm" onClick={handleClearPatient} className="h-7 text-slate-500 hover:text-red-500">
+                                                <X className="w-4 h-4" />
+                                            </Button>
+                                        )}
                                     </div>
-                                    {mode === 'create' && (
-                                        <Button type="button" variant="ghost" size="sm" onClick={handleClearPatient} className="h-7">
-                                            <X className="w-4 h-4" />
-                                        </Button>
-                                    )}
+                                    <div className="mt-2">
+                                        <div className="font-bold text-lg text-slate-800">{selectedPatient.name}</div>
+                                        <div className="text-sm text-slate-500">{selectedPatient.kana}</div>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="space-y-2">
