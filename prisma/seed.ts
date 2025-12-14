@@ -42,8 +42,9 @@ async function main() {
         }
     })
 
-    // Helper for date manipulation (relative to NOW)
-    const today = new Date();
+    // Helper for date manipulation (FIXED DATE for testing: 2026-01-15)
+    // This allows consistent demo data regardless of when seed is run
+    const today = new Date('2026-01-15T00:00:00');
     const setTime = (date: Date, hours: number, minutes: number) => setMinutes(setHours(date, hours), minutes);
 
     // ==========================================
@@ -66,20 +67,19 @@ async function main() {
         }
     })
 
-    // Scenario B: The "Edge Case" Limit Tester
-    // - Extremely long name
-    // - Long kana
-    // - Max length tags
+    // Scenario B: The "Edge Case" Name Tester
+    // - Slightly longer than average name
+    // - For testing text overflow handling
     const patientEdge = await prisma.patient.create({
         data: {
             pId: 9999,
-            name: '寿限無寿限無五劫の擦り切れ海砂利水魚の水行末雲来末風来末食う寝る処に住む処やぶら小路の藪柑子パイポパイポパイポのシューリンガンシューリンガンのグーリンダイグーリンダイのポンポコピーのポンポコナーの長久命の長助',
-            kana: 'じゅげむじゅげむごこうのすりきれかいじゃりすいぎょのすいぎょうまつうんらいまつふうらいまつくうねるところにすむところでやぶらこうじのやぶこうじぱいぽぱいぽぱいぽのしゅーりんがんしゅーりんがんのぐーりんだいぐーりんだいのぽんぽこぴーのぽんぽこなーのちょうきゅうめいのちょうすけ',
-            birthDate: new Date('1900-01-01'),
-            gender: 'その他',
-            phone: '000-0000-0000',
-            memo: '名前表示のUI崩れ確認用。',
-            tags: JSON.stringify(['名前長過', '要注意', 'テスト', 'VIP', 'クレーマー', '特別対応'])
+            name: '西園寺 美智子',
+            kana: 'さいおんじ みちこ',
+            birthDate: new Date('1975-03-20'),
+            gender: '女性',
+            phone: '090-5555-5555',
+            memo: '名前がやや長めの患者。UI確認用。',
+            tags: JSON.stringify(['VIP', '要注意', '特別対応'])
         }
     })
 
@@ -130,18 +130,14 @@ async function main() {
     })
 
     // ==========================================
-    // 3. APPOINTMENTS (Dynamic Time)
+    // 3. APPOINTMENTS (2026-01-15 基準)
     // ==========================================
 
-    // ==========================================
-    // 3. APPOINTMENTS (Dynamic Time - Bulk Generation)
-    // ==========================================
-
-    console.log('📅 Generating Bulk Appointments relative to:', today.toLocaleString())
+    console.log('📅 Generating Bulk Appointments for demo date:', today.toLocaleString())
 
     const appointments = [];
 
-    // 1. Generate 30 Appointments for TODAY to test Pagination (20 items/page)
+    // 1. Generate 30 Appointments for TODAY (2026-01-15) to test Pagination (20 items/page)
     for (let i = 0; i < 30; i++) {
         const hour = 9 + Math.floor(i / 2); // 9:00, 9:30, 10:00...
         const minute = (i % 2) * 30;
@@ -194,14 +190,74 @@ async function main() {
         });
     }
 
-    // Add specific "Tomorrow" case
+    // ==========================================
+    // 2026-01-16 (明日) の予約
+    // ==========================================
+    const tomorrow = addDays(today, 1); // 2026-01-16
+
     appointments.push({
         patientId: patientRegular.id,
-        startAt: addDays(setTime(today, 10, 0), 1),
+        startAt: setTime(tomorrow, 10, 0),
         duration: 60,
         status: 'scheduled',
         memo: '明日の予約テスト',
         staffId: director.id
+    });
+    appointments.push({
+        patientId: patientBusy.id,
+        startAt: setTime(tomorrow, 10, 0), // Same time, different staff - overlap test
+        duration: 60,
+        status: 'scheduled',
+        staffId: therapist.id
+    });
+    appointments.push({
+        patientId: patientGap.id,
+        startAt: setTime(tomorrow, 14, 30),
+        duration: 90,
+        status: 'scheduled',
+        staffId: director.id
+    });
+
+    // ==========================================
+    // 2026-01-17 (明後日) の予約
+    // ==========================================
+    const dayAfterTomorrow = addDays(today, 2); // 2026-01-17
+
+    appointments.push({
+        patientId: patientProblem.id,
+        startAt: setTime(dayAfterTomorrow, 9, 30),
+        duration: 60,
+        status: 'scheduled',
+        adminMemo: '前回キャンセル分の振替。',
+        staffId: therapist.id
+    });
+    appointments.push({
+        patientId: patientEdge.id,
+        startAt: setTime(dayAfterTomorrow, 11, 0),
+        duration: 90,
+        status: 'scheduled',
+        staffId: director.id
+    });
+
+    // ==========================================
+    // 2026-01-20 (来週月曜) の予約
+    // ==========================================
+    const nextMonday = addDays(today, 5); // 2026-01-20
+
+    appointments.push({
+        patientId: patientRegular.id,
+        startAt: setTime(nextMonday, 10, 0),
+        duration: 60,
+        status: 'scheduled',
+        memo: '来週の定期予約',
+        staffId: director.id
+    });
+    appointments.push({
+        patientId: patientBusy.id,
+        startAt: setTime(nextMonday, 13, 0),
+        duration: 60,
+        status: 'scheduled',
+        staffId: null // Unassigned
     });
 
     for (const apt of appointments) {

@@ -14,7 +14,7 @@
 // 環境変数からDEMOモード設定を読み取り
 // NEXT_PUBLIC_ プレフィックスでクライアント側でも参照可能
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-const DEMO_DATE_STR = process.env.DEMO_FIXED_DATE || '2025-01-15';
+const DEMO_DATE_STR = process.env.DEMO_FIXED_DATE || '2026-01-15';
 
 /**
  * 現在の Date オブジェクトを返す。

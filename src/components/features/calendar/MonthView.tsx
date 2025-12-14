@@ -154,30 +154,51 @@ export function MonthView({
                                             const time = format(new Date(app.visitDate), 'HH:mm');
                                             const staff = staffList.find(s => s.id === app.staffId);
 
-                                            // Determine minimal color style
-                                            let bgClass = "bg-white border-slate-200";
-                                            if (app.status === 'arrived') bgClass = "bg-green-50 border-green-200 text-green-800";
-                                            else if (app.status === 'completed') bgClass = "bg-slate-100 border-slate-200 text-slate-500 opacity-75";
-                                            else if (!app.staffId) bgClass = "bg-yellow-50 border-yellow-200 text-yellow-800"; // No staff warning
+                                            // Staff Color Assignment
+                                            const getStaffColor = (sId: string | null | undefined) => {
+                                                if (!sId) return "border-red-400";
+                                                const sortedStaff = [...staffList].sort((a, b) => a.id.localeCompare(b.id));
+                                                const index = sortedStaff.findIndex(s => s.id === sId);
+                                                const palette = [
+                                                    "border-blue-500", "border-emerald-500", "border-violet-500",
+                                                    "border-fuchsia-500", "border-cyan-500", "border-rose-500",
+                                                    "border-orange-500", "border-indigo-500"
+                                                ];
+                                                return index >= 0 ? palette[index % palette.length] : "border-slate-400";
+                                            };
+                                            const borderColor = getStaffColor(app.staffId);
+
+                                            // Status Background
+                                            let bgClass = "bg-white";
+                                            // let textClass = "text-slate-700";
+
+                                            if (app.status === 'arrived') {
+                                                bgClass = "bg-green-50";
+                                                // textClass = "text-green-900";
+                                            } else if (app.status === 'completed') {
+                                                bgClass = "bg-slate-100 text-slate-500";
+                                            } else if (app.status === 'cancelled') {
+                                                bgClass = "bg-red-50 opacity-50";
+                                            } else if (!app.staffId) {
+                                                bgClass = "bg-yellow-50";
+                                            }
 
                                             return (
-                                                <DraggableAppointment
+                                                <div
                                                     key={app.id}
-                                                    appointment={app}
-                                                    onDragStart={() => { }} // Can add haptic feedback here
                                                     className={cn(
-                                                        "text-[10px] p-1 rounded border shadow-sm truncate flex items-center gap-1 leading-tight",
+                                                        "text-[10px] p-1 rounded border shadow-sm truncate flex items-center gap-1 leading-tight select-none cursor-pointer hover:brightness-95 transition-all border-l-4",
+                                                        borderColor,
                                                         bgClass
                                                     )}
-                                                >
-                                                    <div onClick={(e) => {
-                                                        e.stopPropagation(); // Prevent date click
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
                                                         onAppointmentClick(app);
-                                                    }}>
-                                                        <span className="font-mono font-bold opacity-75">{time}</span>
-                                                        <span className="font-medium ml-1 truncate">{app.patientName}</span>
-                                                    </div>
-                                                </DraggableAppointment>
+                                                    }}
+                                                >
+                                                    <span className="font-mono font-bold opacity-75">{time}</span>
+                                                    <span className="font-medium ml-1 truncate">{app.patientName}</span>
+                                                </div>
                                             );
                                         })}
                                         {/* More indicator if needed, for now just scroll */}

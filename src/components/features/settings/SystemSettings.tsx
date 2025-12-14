@@ -2,10 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Camera, Loader2, RotateCcw, HardDrive, RefreshCw, FolderOpen } from 'lucide-react';
+import { Download, Camera, Loader2, RotateCcw, HardDrive, RefreshCw, FolderOpen, Calendar } from 'lucide-react';
 import { LABELS } from '@/config/labels';
 import { useFeatures } from '@/contexts/FeaturesContext';
-import { toggleAttachmentPluginAction } from '@/actions/settingActions';
+import { toggleAttachmentPluginAction, updateCalendarBusinessHoursAction } from '@/actions/settingActions';
+import { CALENDAR_DEFAULTS } from '@/services/systemSettingService';
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/components/ui/Toast';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -48,9 +49,18 @@ function formatDate(dateStr: string): string {
 }
 
 export const SystemSettings = () => {
-    const { features } = useFeatures();
+    const { features, calendarSettings } = useFeatures();
     const { showToast } = useToast();
     const [isTogglingAttachments, setIsTogglingAttachments] = useState(false);
+
+    // Calendar settings state
+    const [calendarStartHour, setCalendarStartHour] = useState(
+        calendarSettings?.startHour ?? CALENDAR_DEFAULTS.weekStartHour
+    );
+    const [calendarEndHour, setCalendarEndHour] = useState(
+        calendarSettings?.endHour ?? CALENDAR_DEFAULTS.weekEndHour
+    );
+    const [isSavingCalendarSettings, setIsSavingCalendarSettings] = useState(false);
 
     // Electron backup state
     const [isElectron, setIsElectron] = useState(false);
@@ -149,6 +159,30 @@ export const SystemSettings = () => {
             setIsTogglingAttachments(false);
         }
     };
+
+    const handleSaveCalendarSettings = async () => {
+        if (isSavingCalendarSettings) return;
+
+        setIsSavingCalendarSettings(true);
+        try {
+            const result = await updateCalendarBusinessHoursAction(calendarStartHour, calendarEndHour);
+            if (result.success) {
+                showToast('カレンダー設定を保存しました', 'success');
+            } else {
+                showToast(result.error || '設定の保存に失敗しました', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('予期せぬエラーが発生しました', 'error');
+        } finally {
+            setIsSavingCalendarSettings(false);
+        }
+    };
+
+    // Check if calendar settings have changed
+    const calendarSettingsChanged =
+        calendarStartHour !== (calendarSettings?.startHour ?? CALENDAR_DEFAULTS.weekStartHour) ||
+        calendarEndHour !== (calendarSettings?.endHour ?? CALENDAR_DEFAULTS.weekEndHour);
 
     return (
         <div className="space-y-6">
@@ -275,6 +309,58 @@ export const SystemSettings = () => {
                             >
                                 {isTogglingAttachments && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                                 {features.plugins.attachments.enabled ? '有効化済み' : '有効化する'}
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Calendar Settings Section */}
+                    <div className="p-4 border rounded-lg bg-white">
+                        <div className="flex items-start gap-3 mb-4">
+                            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                                <Calendar className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="font-medium text-slate-900">カレンダー表示設定</h3>
+                                <p className="text-sm text-slate-500 mt-1">
+                                    週表示カレンダーの営業時間（表示範囲）を設定します。
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4 ml-11">
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm text-slate-600">開始</label>
+                                <select
+                                    value={calendarStartHour}
+                                    onChange={(e) => setCalendarStartHour(Number(e.target.value))}
+                                    className="px-3 py-1.5 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                >
+                                    {Array.from({ length: 12 }, (_, i) => i + 5).map((hour) => (
+                                        <option key={hour} value={hour}>{hour}:00</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <span className="text-slate-400">〜</span>
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm text-slate-600">終了</label>
+                                <select
+                                    value={calendarEndHour}
+                                    onChange={(e) => setCalendarEndHour(Number(e.target.value))}
+                                    className="px-3 py-1.5 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                >
+                                    {Array.from({ length: 12 }, (_, i) => i + 12).map((hour) => (
+                                        <option key={hour} value={hour}>{hour}:00</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <Button
+                                onClick={handleSaveCalendarSettings}
+                                variant={calendarSettingsChanged ? "default" : "outline"}
+                                disabled={isSavingCalendarSettings || !calendarSettingsChanged}
+                                size="sm"
+                                className={calendarSettingsChanged ? "bg-emerald-600 hover:bg-emerald-700" : ""}
+                            >
+                                {isSavingCalendarSettings && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                {calendarSettingsChanged ? '保存' : '保存済み'}
                             </Button>
                         </div>
                     </div>

@@ -2,6 +2,15 @@ import { prisma } from '@/lib/prisma';
 
 export const SYSTEM_SETTINGS_KEYS = {
     PLUGIN_ATTACHMENTS_ENABLED: 'plugins.attachments.enabled',
+    // カレンダー設定
+    CALENDAR_WEEK_START_HOUR: 'calendar.week.startHour',
+    CALENDAR_WEEK_END_HOUR: 'calendar.week.endHour',
+} as const;
+
+// デフォルト値
+export const CALENDAR_DEFAULTS = {
+    weekStartHour: 9,
+    weekEndHour: 21,
 } as const;
 
 export type SystemSettingsKey = typeof SYSTEM_SETTINGS_KEYS[keyof typeof SYSTEM_SETTINGS_KEYS];

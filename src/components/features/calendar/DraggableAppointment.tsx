@@ -50,8 +50,9 @@ export function DraggableAppointment({
             draggable={canDrag}
             onDragStart={handleDragStart}
             className={cn(
-                "touch-none select-none transition-transform active:scale-95 active:opacity-80",
-                canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-default",
+                "touch-none select-none transition-all active:shadow-none",
+                "hover:brightness-95 hover:shadow-md hover:border-slate-300 hover:z-30", // Visual feedback
+                canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-pointer", // cursor-pointer if not draggable (but clickable)
                 className
             )}
         >

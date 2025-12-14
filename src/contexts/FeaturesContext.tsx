@@ -2,13 +2,25 @@
 
 import { createContext, useContext, ReactNode } from 'react';
 import { features as defaultFeatures, type Features } from '@/config/features';
+import { CALENDAR_DEFAULTS } from '@/services/systemSettingService';
+
+// カレンダー設定の型
+interface CalendarSettings {
+    startHour: number;
+    endHour: number;
+}
 
 interface FeaturesContextType {
     features: Features;
+    calendarSettings: CalendarSettings;
 }
 
 const FeaturesContext = createContext<FeaturesContextType>({
     features: defaultFeatures,
+    calendarSettings: {
+        startHour: CALENDAR_DEFAULTS.weekStartHour,
+        endHour: CALENDAR_DEFAULTS.weekEndHour,
+    },
 });
 
 interface FeaturesProviderProps {
@@ -37,8 +49,18 @@ export const FeaturesProvider = ({ children, dbSettings }: FeaturesProviderProps
         }
     };
 
+    // Calendar settings from DB or defaults
+    const calendarSettings: CalendarSettings = {
+        startHour: typeof dbSettings['calendar.week.startHour'] === 'number'
+            ? dbSettings['calendar.week.startHour']
+            : CALENDAR_DEFAULTS.weekStartHour,
+        endHour: typeof dbSettings['calendar.week.endHour'] === 'number'
+            ? dbSettings['calendar.week.endHour']
+            : CALENDAR_DEFAULTS.weekEndHour,
+    };
+
     return (
-        <FeaturesContext.Provider value={{ features: mergedFeatures }}>
+        <FeaturesContext.Provider value={{ features: mergedFeatures, calendarSettings }}>
             {children}
         </FeaturesContext.Provider>
     );
@@ -52,3 +74,4 @@ export const useFeatures = () => {
     return context;
 
 };
+

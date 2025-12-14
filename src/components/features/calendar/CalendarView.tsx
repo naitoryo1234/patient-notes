@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, List as ListIcon } from 'lucide-react';
 import { addMonths, subMonths, addWeeks, subWeeks, format } from 'date-fns';
 import { ja } from 'date-fns/locale';
+import { useFeatures } from '@/contexts/FeaturesContext';
 
 interface CalendarViewProps {
     appointments: Appointment[];
@@ -29,6 +30,7 @@ export function CalendarView({
     onDateClick,
     onDropAppointment
 }: CalendarViewProps) {
+    const { calendarSettings } = useFeatures();
     const [currentDate, setCurrentDate] = useState<Date>(initialDate);
     const [viewMode, setViewMode] = useState<ViewMode>('month');
 
@@ -125,6 +127,8 @@ export function CalendarView({
                         onAppointmentClick={onAppointmentClick}
                         onDateClick={handleDateClickInternal}
                         onDropAppointment={onDropAppointment}
+                        startHour={calendarSettings.startHour}
+                        endHour={calendarSettings.endHour}
                     />
                 )}
             </div>
