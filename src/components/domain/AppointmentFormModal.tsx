@@ -89,7 +89,8 @@ export function AppointmentFormModal({
     const hasUnsavedChanges = () => {
         if (mode === 'create') {
             // In create mode, check if any data has been entered
-            return selectedPatient !== null || memo.length > 0 || adminMemo.length > 0 || staffId !== '';
+            // Include searchQuery as user may be in the middle of searching
+            return selectedPatient !== null || memo.length > 0 || adminMemo.length > 0 || staffId !== '' || searchQuery.length > 0;
         } else {
             // In edit mode, check if anything has changed from initial values
             return memo !== (appointment?.memo || '') ||
@@ -267,24 +268,38 @@ export function AppointmentFormModal({
     return (
         <>
             <Dialog open={isOpen} onOpenChange={(open) => !open && handleSafeClose()}>
-                <DialogContent className="w-full max-w-[min(32rem,calc(100vw-2rem))] max-h-[min(95vh,calc(100vh-2rem))] flex flex-col" onPointerDownOutside={(e) => {
-                    // Prevent closing on backdrop click if there are unsaved changes
-                    if (hasUnsavedChanges()) {
+                <DialogContent
+                    className="w-full max-w-[min(32rem,calc(100vw-2rem))] max-h-[min(95vh,calc(100vh-2rem))] flex flex-col"
+                    onPointerDownOutside={(e) => {
+                        // Always prevent default close behavior
                         e.preventDefault();
-                        setShowCloseConfirm(true);
-                    }
-                }} onEscapeKeyDown={(e) => {
-                    // Prevent closing on ESC if there are unsaved changes
-                    if (hasUnsavedChanges()) {
+                        // Show confirmation if there are unsaved changes
+                        if (hasUnsavedChanges()) {
+                            setShowCloseConfirm(true);
+                        } else {
+                            onClose();
+                        }
+                    }}
+                    onEscapeKeyDown={(e) => {
+                        // Always prevent default close behavior  
                         e.preventDefault();
-                        setShowCloseConfirm(true);
-                    }
-                }}>
+                        // Show confirmation if there are unsaved changes
+                        if (hasUnsavedChanges()) {
+                            setShowCloseConfirm(true);
+                        } else {
+                            onClose();
+                        }
+                    }}
+                    onInteractOutside={(e) => {
+                        // Also handle interact outside
+                        e.preventDefault();
+                    }}
+                >
                     <DialogHeader className="flex-shrink-0">
                         <DialogTitle>{title}</DialogTitle>
                     </DialogHeader>
 
-                    <form onSubmit={handleSubmit} className="space-y-3 overflow-y-auto flex-1 pr-1">
+                    <form onSubmit={handleSubmit} className="space-y-3 overflow-y-auto flex-1 px-0.5">
                         {/* Error Display */}
                         {error && (
                             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm space-y-2">
