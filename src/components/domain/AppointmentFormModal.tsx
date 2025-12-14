@@ -83,6 +83,7 @@ export function AppointmentFormModal({
     const [isPending, setIsPending] = useState(false);
     const [error, setError] = useState<{ message: string; date?: string } | null>(null);
     const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+    const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false);
 
     // Check if form has any changes (to prevent accidental close)
     const hasUnsavedChanges = () => {
@@ -101,11 +102,22 @@ export function AppointmentFormModal({
 
     // Safe close handler - check for unsaved changes
     const handleSafeClose = () => {
+        // Skip confirmation if just submitted successfully
+        if (isSubmittedSuccessfully) {
+            onClose();
+            return;
+        }
         if (hasUnsavedChanges()) {
             setShowCloseConfirm(true);
         } else {
             onClose();
         }
+    };
+
+    // Force close without confirmation (after successful submit)
+    const handleForceClose = () => {
+        setIsSubmittedSuccessfully(true);
+        onClose();
     };
 
     // Initialize form when modal opens
@@ -115,6 +127,8 @@ export function AppointmentFormModal({
             setSearchQuery('');
             setSearchResults([]);
             setShowPatientSearch(false);
+            setShowCloseConfirm(false);
+            setIsSubmittedSuccessfully(false);
 
             if (mode === 'edit' && appointment) {
                 // Edit mode: populate from appointment
@@ -215,7 +229,8 @@ export function AppointmentFormModal({
                 formData.set('isMemoResolved', isMemoResolved ? 'true' : 'false');
                 const res = await updateAppointmentAction(formData);
                 if (res.success) {
-                    onClose();
+                    showToast('予約を更新しました', 'success');
+                    handleForceClose();
                     router.refresh();
                 } else {
                     setError({ message: res.message, date });
@@ -223,7 +238,8 @@ export function AppointmentFormModal({
             } else {
                 const res = await scheduleAppointment(formData);
                 if (res.success) {
-                    onClose();
+                    showToast(`${selectedPatient.name}様の予約を登録しました`, 'success');
+                    handleForceClose();
                     router.refresh();
                 } else {
                     showToast(res.message || '予約の作成に失敗しました', 'error');
@@ -251,7 +267,7 @@ export function AppointmentFormModal({
     return (
         <>
             <Dialog open={isOpen} onOpenChange={(open) => !open && handleSafeClose()}>
-                <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col" onPointerDownOutside={(e) => {
+                <DialogContent className="sm:max-w-lg max-h-[95vh] flex flex-col" onPointerDownOutside={(e) => {
                     // Prevent closing on backdrop click if there are unsaved changes
                     if (hasUnsavedChanges()) {
                         e.preventDefault();
