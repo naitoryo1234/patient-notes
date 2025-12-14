@@ -22,9 +22,17 @@ interface AppointmentListClientProps {
     initialAppointments: Appointment[];
     staffList: Staff[];
     includePast: boolean;
+    externalPatientFilter?: string; // Patient filter controlled by parent
+    onPatientFilterChange?: (value: string) => void; // Callback when filter changes
 }
 
-export function AppointmentListClient({ initialAppointments, staffList, includePast }: AppointmentListClientProps) {
+export function AppointmentListClient({
+    initialAppointments,
+    staffList,
+    includePast,
+    externalPatientFilter,
+    onPatientFilterChange,
+}: AppointmentListClientProps) {
     const router = useRouter();
     const { showToast } = useToast();
     const { operator } = useAuth();
@@ -32,7 +40,10 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
     const [viewingMemo, setViewingMemo] = useState<{ patient: string; memo: string } | null>(null);
     const [filterStaffId, setFilterStaffId] = useState<string>('all');
     const [filterDate, setFilterDate] = useState<Date | null>(null);
-    const [filterPatient, setFilterPatient] = useState<string>('');
+    // Use external filter if provided, otherwise use internal state
+    const [internalFilterPatient, setInternalFilterPatient] = useState<string>('');
+    const filterPatient = externalPatientFilter !== undefined ? externalPatientFilter : internalFilterPatient;
+    const setFilterPatient = onPatientFilterChange || setInternalFilterPatient;
     const [filterUnresolved, setFilterUnresolved] = useState<boolean>(false);
     const [cancelConfirm, setCancelConfirm] = useState<{ open: boolean; id: string }>({ open: false, id: '' });
     const [memoConfirm, setMemoConfirm] = useState<{ open: boolean; id: string; resolved: boolean }>({ open: false, id: '', resolved: false });

@@ -19,9 +19,10 @@ interface DailyAppointmentPanelProps {
     appointments: Appointment[]; // Initial server data
     staffList?: Staff[];
     unresolvedMemos?: Appointment[]; // All unresolved memos (including past)
+    onPatientClick?: (patientName: string) => void; // Callback when patient card is clicked (for search)
 }
 
-export function DailyAppointmentPanel({ appointments: initialData, staffList = [], unresolvedMemos = [] }: DailyAppointmentPanelProps) {
+export function DailyAppointmentPanel({ appointments: initialData, staffList = [], unresolvedMemos = [], onPatientClick }: DailyAppointmentPanelProps) {
     const [currentTime, setCurrentTime] = useState(getNow());
     const [appointments, setAppointments] = useState(initialData);
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
@@ -202,7 +203,15 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
             <div
                 key={apt.id}
                 className={`relative rounded-lg border transition-all hover:shadow-md cursor-pointer ${statusColor} group`}
-                onClick={() => setDetailAppointmentId(apt.id)}
+                onClick={() => {
+                    // If onPatientClick is provided (e.g., from appointments page), filter by patient name
+                    // Otherwise, open the detail modal (dashboard behavior)
+                    if (onPatientClick) {
+                        onPatientClick(apt.patientName);
+                    } else {
+                        setDetailAppointmentId(apt.id);
+                    }
+                }}
             >
                 <div className="block p-3">
                     {/* Row 1: Time + Status Badge + Visit Count */}
