@@ -633,7 +633,10 @@ export function AppointmentFormModal({
                         {/* Actions */}
                         <div className="p-4 border-t border-slate-100 flex gap-3">
                             <button
-                                onClick={() => setShowSubmitConfirm(false)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowSubmitConfirm(false);
+                                }}
                                 disabled={isPending}
                                 type="button"
                                 style={{ pointerEvents: 'auto' }}
