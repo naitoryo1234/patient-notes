@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -66,6 +66,9 @@ export function AppointmentFormModal({
     const { showToast } = useToast();
     const { operator } = useAuth();
 
+    // Ref to track if we're returning from submit confirmation (to prevent close confirmation)
+    const returningFromSubmitConfirmRef = useRef(false);
+
     // Patient state
     const [selectedPatient, setSelectedPatient] = useState<PatientInfo | null>(null);
     const [showPatientSearch, setShowPatientSearch] = useState(false);
@@ -121,6 +124,11 @@ export function AppointmentFormModal({
         // Skip confirmation if submit confirm dialog is open (user is just navigating)
         if (showSubmitConfirm) {
             return; // Do nothing - let the submit confirm dialog handle it
+        }
+        // Skip if returning from submit confirm dialog
+        if (returningFromSubmitConfirmRef.current) {
+            returningFromSubmitConfirmRef.current = false;
+            return;
         }
         if (hasUnsavedChanges()) {
             setShowCloseConfirm(true);
@@ -641,6 +649,8 @@ export function AppointmentFormModal({
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
+                                    // Set flag to prevent close confirmation from triggering
+                                    returningFromSubmitConfirmRef.current = true;
                                     setShowSubmitConfirm(false);
                                 }}
                                 disabled={isPending}
