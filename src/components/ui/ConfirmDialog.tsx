@@ -82,12 +82,16 @@ export function ConfirmDialog({
     const dialogContent = (
         <div
             className="fixed inset-0 bg-black/60 flex items-center justify-center p-4"
-            style={{ zIndex: 99999 }}
+            style={{ zIndex: 99999, pointerEvents: 'auto' }}
             onClick={handleBackdropClick}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
         >
             <div
-                className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-200"
+                className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-200 relative"
+                style={{ pointerEvents: 'auto' }}
                 onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
             >
                 {/* Header */}
                 <div className={`${config.headerBg} text-white p-4 flex items-center gap-3`}>
@@ -113,11 +117,12 @@ export function ConfirmDialog({
                     )}
 
                     {/* Actions */}
-                    <div className="flex gap-3">
+                    <div className="flex gap-3" style={{ pointerEvents: 'auto' }}>
                         <button
                             onClick={() => onOpenChange(false)}
                             disabled={loading}
                             type="button"
+                            style={{ pointerEvents: 'auto' }}
                             className="flex-1 px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {cancelLabel}
@@ -126,6 +131,7 @@ export function ConfirmDialog({
                             onClick={handleConfirm}
                             disabled={loading}
                             type="button"
+                            style={{ pointerEvents: 'auto' }}
                             className={`flex-1 px-4 py-2.5 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${config.buttonBg}`}
                         >
                             {loading ? '処理中...' : confirmLabel}
