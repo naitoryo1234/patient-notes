@@ -267,7 +267,7 @@ export function AppointmentFormModal({
     return (
         <>
             <Dialog open={isOpen} onOpenChange={(open) => !open && handleSafeClose()}>
-                <DialogContent className="sm:max-w-lg max-h-[95vh] flex flex-col" onPointerDownOutside={(e) => {
+                <DialogContent className="w-full max-w-[min(32rem,calc(100vw-2rem))] max-h-[min(95vh,calc(100vh-2rem))] flex flex-col" onPointerDownOutside={(e) => {
                     // Prevent closing on backdrop click if there are unsaved changes
                     if (hasUnsavedChanges()) {
                         e.preventDefault();
