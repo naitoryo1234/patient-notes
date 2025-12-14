@@ -125,18 +125,8 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
 
         if (isCancelled || isCompleted) return false;
 
-        // If time is over, remove ONLY IF NOT arrived, and NO admin memo.
-        // If arrived, keep it UNLESS it is significantly overdue (30 mins past end time) -> Move to Attention tab
-        if (isTimeOver) {
-            if (isArrived) {
-                // Hide if > 30 mins passed after end time
-                // diff is negative. e.g. -91. duration 60. limit -(60+30) = -90. -91 < -90. True.
-                if (diff < -(duration + 30)) return false;
-                return true;
-            }
-            if (a.adminMemo) return true; // Keep Items with Handover
-            return false; // Otherwise hide
-        }
+        // User request update: DO NOT REMOVE even if time is over. 
+        // Keep it until marked as completed/cancelled so users can fix forgotten statuses.
 
         return true;
     });
@@ -169,25 +159,23 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
         const isCompleted = apt.status === 'completed'; // New explicit done state
         const isArrivedStatus = apt.status === 'arrived';
 
-        // "Done" based on time is only if NOT arrived and NOT completed explicitly
-        // If arrived, it persists until manually completed.
+        // "Done" based on time is deprecated. Only explicit completion matters.
         const isTimeOver = diff < -duration;
-        const isDone = !isCancelled && !isArrivedStatus && !isCompleted && isTimeOver;
+        const isTimeOverUnfinished = !isCancelled && !isCompleted && isTimeOver;
 
-        // "In Progress" (対応中) = Arrived (Always, regardless of time)
-        // User request: Check-in -> In Progress immediately.
-        const isInProgress = isArrivedStatus;
-        const isArrived = false; // "Arrived" distinction removed
+        // "In Progress" (対応中) = Arrived (Always, regardless of time, unless completed)
+        const isInProgress = isArrivedStatus && !isCompleted;
 
         const isUpcoming = !isCancelled && !isArrivedStatus && !isCompleted && diff > 0 && diff <= 60;
         const isJustNow = !isCancelled && !isArrivedStatus && !isCompleted && diff <= 0 && diff >= -15;
         const isDuringSlot = !isCancelled && !isArrivedStatus && !isCompleted && diff < -15 && diff >= -duration;
-        const isUnassigned = !isCancelled && !isDone && !isCompleted && !apt.staffId;
+        const isUnassigned = !isCancelled && !isCompleted && !apt.staffId;
 
         let statusColor = "bg-white border-slate-200";
         if (isCancelled) statusColor = "bg-slate-50 border-slate-100 opacity-60 grayscale";
-        else if (isCompleted || isDone) statusColor = "bg-slate-50 border-slate-200 opacity-75";
+        else if (isCompleted) statusColor = "bg-slate-50 border-slate-200 opacity-75";
         else if (isInProgress) statusColor = "bg-indigo-50 border-indigo-300 shadow-md ring-1 ring-indigo-200"; // Highlight for In Progress
+        else if (isTimeOverUnfinished) statusColor = "bg-slate-50 border-slate-300 ring-1 ring-slate-200"; // Time over but active (Forgotten?)
         else if (isUnassigned) statusColor = "bg-red-50 border-red-200 shadow-sm ring-1 ring-red-100";
         else if (isUpcoming) statusColor = "bg-yellow-50 border-yellow-300 shadow-sm ring-1 ring-yellow-200";
         else if (isJustNow) statusColor = "bg-emerald-50 border-emerald-300 shadow-sm ring-1 ring-emerald-200";
@@ -195,7 +183,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
 
         // Important Check
         const isImportant = apt.tags.some(t => ['重要', '禁忌', '要注意'].includes(t));
-        if (isImportant && !isCancelled && !isDone && !isCompleted && !isUnassigned) {
+        if (isImportant && !isCancelled && !isCompleted && !isUnassigned) {
             statusColor += " border-l-4 border-l-red-400";
         }
 
@@ -242,7 +230,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                                     {LABELS.STATUS.CANCELLED}
                                 </span>
                             )}
-                            {(isDone || isCompleted) && (
+                            {isCompleted && (
                                 <span className="bg-slate-200 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                                     {LABELS.STATUS.DONE}
                                 </span>
@@ -270,7 +258,7 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                                 <span className="bg-slate-100 px-1 rounded text-[10px]">担</span>
                                 {apt.staffName}
                             </div>
-                        ) : !isCancelled && !isDone && !isCompleted ? (
+                        ) : !isCancelled && !isCompleted ? (
                             <div className="text-xs text-red-600 flex items-center gap-1 mb-1 font-bold animate-pulse">
                                 <AlertCircle className="w-3 h-3" />
                                 <span>{LABELS.STATUS.UNASSIGNED}</span>
@@ -318,8 +306,9 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                 ) : (
                     // Dashboard mode: show check-in/complete buttons
                     <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                        {/* Check-in Button (Only if not arrived yet) */}
-                        {!isCancelled && !isDone && !isCompleted && !isArrivedStatus && (
+                        {/* Check-in Button (Only if not arrived yet, and not active) */}
+                        {/* Allow check-in even if time is over, as long as not cancelled/completed/arrived */}
+                        {!isCancelled && !isCompleted && !isArrivedStatus && (
                             <button
                                 type="button"
                                 onClick={(e) => {
@@ -333,8 +322,8 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                                 <UserCheck className="w-3.5 h-3.5" />
                             </button>
                         )}
-                        {/* COMPLETE Button (If arrived or in progress) */}
-                        {(isInProgress || isArrived) && (
+                        {/* COMPLETE Button (If arrived or in progress OR time is over/unfinished) */}
+                        {(isInProgress || isArrivedStatus || isTimeOverUnfinished) && (
                             <button
                                 type="button"
                                 onClick={(e) => {
