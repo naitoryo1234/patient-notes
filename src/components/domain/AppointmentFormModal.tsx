@@ -527,6 +527,9 @@ export function AppointmentFormModal({
                     setShowCloseConfirm(open);
                 }}
                 onConfirm={() => {
+                    // Use force close to skip the hasUnsavedChanges check
+                    setShowCloseConfirm(false);
+                    setIsSubmittedSuccessfully(true); // Flag to skip confirmation
                     onClose();
                 }}
                 title="入力内容を破棄しますか？"
