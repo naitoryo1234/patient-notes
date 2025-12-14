@@ -10,7 +10,7 @@ import { format, differenceInMinutes } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Bell, Clock, RefreshCw, Pencil, Trash2, AlertCircle, AlertTriangle, UserCheck, CheckCircle } from 'lucide-react';
+import { Bell, Clock, RefreshCw, Pencil, Trash2, AlertCircle, AlertTriangle, UserCheck, CheckCircle, Search } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS, LABELS } from '@/config/labels';
 import { getNow, isDemoMode, getDemoDateString } from '@/lib/dateUtils';
@@ -304,62 +304,86 @@ export function DailyAppointmentPanel({ appointments: initialData, staffList = [
                     </div>
                 </div>
 
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                    {/* Check-in Button (Only if not arrived yet) */}
-                    {!isCancelled && !isDone && !isCompleted && !isArrivedStatus && (
-                        <button
-                            type="button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                e.nativeEvent.stopImmediatePropagation();
-                                handleCheckIn(apt.id);
-                            }}
-                            className="p-1.5 bg-white text-slate-500 hover:text-emerald-600 rounded-md shadow-sm border border-slate-200 hover:border-emerald-300 transition-all font-bold flex items-center gap-1 cursor-pointer"
-                            title={`${LABELS.STATUS.ARRIVED}記録`}
+                {/* Hover actions - different for reference mode vs dashboard mode */}
+                {onPatientClick ? (
+                    // Reference mode: show search icon on hover
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                        <div
+                            className="p-1.5 bg-indigo-100 text-indigo-600 rounded-md shadow-sm border border-indigo-200 flex items-center gap-1"
+                            title="クリックで予約一覧を絞り込み"
                         >
-                            <UserCheck className="w-3.5 h-3.5" />
-                        </button>
-                    )}
-                    {/* COMPLETE Button (If arrived or in progress) */}
-                    {(isInProgress || isArrived) && (
-                        <button
-                            type="button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                e.nativeEvent.stopImmediatePropagation();
-                                setCompleteConfirm({ open: true, id: apt.id, name: apt.patientName });
-                            }}
-                            className="p-1.5 bg-white text-indigo-500 hover:text-indigo-700 rounded-md shadow-sm border border-indigo-200 hover:border-indigo-400 transition-all font-bold flex items-center gap-1 cursor-pointer"
-                            title={LABELS.STATUS.COMPLETED_ACTION}
-                        >
-                            <CheckCircle className="w-3.5 h-3.5" />
-                        </button>
-                    )}
-
-                </div>
+                            <Search className="w-3.5 h-3.5" />
+                        </div>
+                    </div>
+                ) : (
+                    // Dashboard mode: show check-in/complete buttons
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                        {/* Check-in Button (Only if not arrived yet) */}
+                        {!isCancelled && !isDone && !isCompleted && !isArrivedStatus && (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.nativeEvent.stopImmediatePropagation();
+                                    handleCheckIn(apt.id);
+                                }}
+                                className="p-1.5 bg-white text-slate-500 hover:text-emerald-600 rounded-md shadow-sm border border-slate-200 hover:border-emerald-300 transition-all font-bold flex items-center gap-1 cursor-pointer"
+                                title={`${LABELS.STATUS.ARRIVED}記録`}
+                            >
+                                <UserCheck className="w-3.5 h-3.5" />
+                            </button>
+                        )}
+                        {/* COMPLETE Button (If arrived or in progress) */}
+                        {(isInProgress || isArrived) && (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.nativeEvent.stopImmediatePropagation();
+                                    setCompleteConfirm({ open: true, id: apt.id, name: apt.patientName });
+                                }}
+                                className="p-1.5 bg-white text-indigo-500 hover:text-indigo-700 rounded-md shadow-sm border border-indigo-200 hover:border-indigo-400 transition-all font-bold flex items-center gap-1 cursor-pointer"
+                                title={LABELS.STATUS.COMPLETED_ACTION}
+                            >
+                                <CheckCircle className="w-3.5 h-3.5" />
+                            </button>
+                        )}
+                    </div>
+                )}
             </div >
         );
     };
 
     return (
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[500px] lg:h-full max-h-full">
-            <div className="bg-slate-800 text-white p-4 flex justify-between items-center">
+            {/* Header - different style for reference mode */}
+            <div className={`${onPatientClick ? 'bg-indigo-700' : 'bg-slate-800'} text-white p-4 flex justify-between items-center`}>
                 <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-emerald-400" />
+                    {onPatientClick ? (
+                        <Search className="w-5 h-5 text-indigo-200" />
+                    ) : (
+                        <Clock className="w-5 h-5 text-emerald-400" />
+                    )}
                     <h2 className="font-bold text-lg">
                         {LABELS.DASHBOARD.TITLE}
+                        {onPatientClick && (
+                            <span className="ml-2 text-xs font-normal bg-indigo-500 text-indigo-100 px-2 py-0.5 rounded">
+                                参照用
+                            </span>
+                        )}
                         {isDemoMode() && (
                             <span className="text-xs text-amber-400 ml-2 font-normal">（デモ日: {getDemoDateString()}）</span>
                         )}
                     </h2>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-400">
+                <div className="flex items-center gap-2 text-xs text-slate-300">
                     <span>{format(currentTime, 'HH:mm')} {LABELS.COMMON.UPDATE}</span>
                     <button onClick={handleRefresh} className="hover:text-white transition-colors">
                         <RefreshCw className="w-4 h-4" />
                     </button>
                 </div>
             </div>
+
 
             {pendingAssignments > 0 && (
                 <div className="bg-amber-50 border-b border-amber-100 p-2 flex items-center gap-2 text-xs text-amber-700 font-bold px-4 animate-in slide-in-from-top-1">
