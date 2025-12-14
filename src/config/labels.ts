@@ -1,39 +1,84 @@
-// 業態ごとの用語定義バリアント
-const TERM_VARIANTS = {
+// =========================================
+// GENERICプリセット（ベース・デフォルト）
+// =========================================
+// すべての業態で共通して使える汎用的な表現
+// 各業態プリセットはこれを継承して差分のみ上書きする
+const GENERIC = {
+    PATIENT: 'お客様',
+    RECORD: '記録',
+    APPOINTMENT: '予約',
+    STAFF: '担当者',
+    SHOP: '当店',
+    VISIT: '来店',
+    TAG_EXAMPLE: '常連',
+    ROLE_DIRECTOR: '責任者',
+    ROLE_THERAPIST: 'スタッフ',
+    ROLE_CLERK: '受付',
+    ROLE_OTHER: 'その他',
+    // AI取込・フォームの例文
+    RECORD_EXAMPLE_MEMO: '前回の内容を確認\n気になる点を聞き取り',
+    RECORD_EXAMPLE_S: '今日の状態を確認',
+    RECORD_EXAMPLE_O: '状態を観察',
+    RECORD_EXAMPLE_A: 'サービスを提供',
+    RECORD_EXAMPLE_P: '次回の予定を確認',
+    PATIENT_EXAMPLE_MEMO: '紹介で来店',
+    TAG_OPTIONS: ['常連', '新規', 'VIP', '要フォロー'],
+} as const;
+
+// =========================================
+// 業態別プリセット（GENERICからの差分）
+// =========================================
+const PRESETS = {
+    // 汎用（デフォルト）
+    GENERIC: { ...GENERIC },
+
+    // 鍼灸院・クリニック向け
     CLINIC: {
+        ...GENERIC,
         PATIENT: '患者様',
         RECORD: 'カルテ',
-        APPOINTMENT: '予約',
-        STAFF: '担当者',
-        CLINIC: '当院',
+        SHOP: '当院',
         VISIT: '来院',
         TAG_EXAMPLE: '腰痛',
         ROLE_DIRECTOR: '院長',
         ROLE_THERAPIST: '施術者',
         ROLE_CLERK: '受付・事務',
-        ROLE_OTHER: 'その他',
+        RECORD_EXAMPLE_MEMO: '腰痛い、昨日重いもの持った\n右腰圧痛、前屈で増強\n腰鍼した、電気も',
+        RECORD_EXAMPLE_S: '「腰が痛い」「昨晩から」',
+        RECORD_EXAMPLE_O: '可動域制限あり...',
+        RECORD_EXAMPLE_A: '鍼通電を実施',
+        RECORD_EXAMPLE_P: '次回3日後',
+        PATIENT_EXAMPLE_MEMO: '糖尿病の持病があります',
+        TAG_OPTIONS: ['腰痛', '肩こり', '首の痛み', '膝痛', '頭痛', '初診', '再診', '鍼治療', '灸', 'マッサージ', '電気療法', '急性', '慢性'],
     },
-    // 将来的な拡張用（例: SALON）
-    // SALON: {
-    //     PATIENT: 'お客様',
-    //     RECORD: '施術記録',
-    //     APPOINTMENT: '予約',
-    //     STAFF: 'スタッフ',
-    //     CLINIC: '当店',
-    //     VISIT: '来店',
-    //     TAG_EXAMPLE: 'カットモデル',
-    //     ROLE_DIRECTOR: '店長',
-    //     ROLE_THERAPIST: 'スタイリスト',
-    //     ROLE_CLERK: 'レセプション',
-    //     ROLE_OTHER: 'その他',
-    // }
+
+    // サロン・美容室向け（例）
+    SALON: {
+        ...GENERIC,
+        RECORD: '施術記録',
+        ROLE_DIRECTOR: '店長',
+        ROLE_THERAPIST: 'スタイリスト',
+        ROLE_CLERK: 'レセプション',
+        TAG_EXAMPLE: 'カットモデル',
+        RECORD_EXAMPLE_MEMO: 'カット希望\n前回と同じスタイル',
+        RECORD_EXAMPLE_S: 'ヘアスタイルの希望',
+        RECORD_EXAMPLE_O: '髪質・状態を確認',
+        RECORD_EXAMPLE_A: 'カット・カラーを実施',
+        RECORD_EXAMPLE_P: '次回1ヶ月後',
+        PATIENT_EXAMPLE_MEMO: 'アレルギー注意',
+        TAG_OPTIONS: ['カット', 'カラー', 'パーマ', 'トリートメント', '新規', '常連', 'モデル'],
+    },
 } as const;
 
-// ★設定: ここを変更することでアプリ全体の用語セットが切り替わります
-// 現時点では 'CLINIC' 固定ですが、将来的に環境変数等での切り替えを想定しています。
-const APP_TYPE: keyof typeof TERM_VARIANTS = 'CLINIC';
+// =========================================
+// ★設定: アプリ全体の用語セットを切り替え
+// =========================================
+// 'GENERIC' | 'CLINIC' | 'SALON' から選択
+// 配布時にここを変更するか、将来的には環境変数での切り替えも可能
+export type PresetKey = keyof typeof PRESETS;
+export const APP_TYPE: PresetKey = 'GENERIC';
 
-export const TERMS = TERM_VARIANTS[APP_TYPE];
+export const TERMS = PRESETS[APP_TYPE];
 
 export const LABELS = {
     // 汎用的なシステムメッセージのみ保持

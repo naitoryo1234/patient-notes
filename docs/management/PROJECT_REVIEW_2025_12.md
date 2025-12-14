@@ -81,7 +81,25 @@
     - モバイル/PCでの操作感を統一するため、既存の `window.confirm` を全てカスタムモーダル `ConfirmDialog` に置換完了。
     - バリアント（Danger/Warning/Primary）により、操作の危険度を視覚的に伝達可能に改善。
 
-### 🚧 In Progress (Phase 10: v1.2 Launch Pad)
+### ✅ Phase 10: v1.2 Launch Pad (完了)
 - **Label Management (変数化)**:
-    - `src/config/labels.ts` を導入し、ハードコードされたテキスト（保存、キャンセル、確認メッセージ等）の集約を開始。
-    - `AppointmentListClient` および `ConfirmDialog` への適用完了。
+    - `src/config/labels.ts` を導入し、ハードコードされたテキスト（保存、キャンセル、確認メッセージ等）の集約完了。
+
+---
+
+## 6. v1.3 Auth 実装状況 (2025-12-13)
+
+### ✅ Completed
+- **PIN認証ログイン**: 環境変数 (`AUTH_ENABLED`) でON/OFF切替可能
+- **スタッフ選択**: ログイン時にスタッフを選択
+- **ヘッダーにユーザー名表示**: 認証ON時のみ `UserMenu` コンポーネントで表示
+- **ログアウトボタン**: ヘッダーに配置
+- **申し送り解決時の操作者記録**: `adminMemoResolvedBy`/`adminMemoResolvedAt` をDBに保存
+- **カルテ作成時の操作者記録**: `createdBy` をDBに保存
+
+### ✅ 全機能完了 (2025-12-13)
+- **申し送り解決者のUI表示**: `AppointmentDetailModal`で解決者名と日時を表示
+- **予約のcreatedBy/updatedBy記録**: 予約作成・更新時に操作者を記録
+- **カルテの記録者UI表示**: `RecordList`で担当者と異なる場合に記録者を表示
+
+**ブランチ**: `feature/v1.3-auth`（mainにマージ準備完了）

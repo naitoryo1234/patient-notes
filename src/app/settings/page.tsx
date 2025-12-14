@@ -5,7 +5,7 @@ import { ArrowLeft, Settings } from 'lucide-react';
 import { LABELS } from '@/config/labels';
 
 export const metadata = {
-    title: '設定 | Clinic Notebook',
+    title: '設定 | Customer Notebook',
 };
 
 export default async function SettingsPage() {

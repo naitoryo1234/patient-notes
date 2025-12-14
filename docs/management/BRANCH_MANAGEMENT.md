@@ -13,6 +13,7 @@
 | `feature/dashboard-optimization` | 開発ブランチ | 完了・main にマージ済み |
 | `release/v1.1.0` | リリースブランチ | 過去リリース |
 | `milestone/v1.1_ui_ux_improvements` | マイルストーン | 過去作業 |
+| `feature/electron-init` | 開発ブランチ | 🚧 Electron環境構築 (Phase 11) |
 
 ---
 

@@ -1,15 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import { ClinicalRecord, Staff } from '@prisma/client';
 import { format } from 'date-fns';
-import { Trash2, User } from 'lucide-react';
+import { Trash2, User, UserCheck } from 'lucide-react';
 import { deleteRecord } from '@/actions/recordActions';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/components/ui/Toast';
+import { RECORD_FIELDS } from '@/config/recordFields';
+import { TERMS } from '@/config/labels';
+import { features } from '@/config/features';
+import { useFeatures } from '@/contexts/FeaturesContext';
+import type { RecordWithCreator } from '@/services/recordService';
+
+
+// Plugin imports (conditional rendering based on feature flag)
+import { AttachmentButton, AttachmentModal, AttachmentGallery } from '@/plugins/attachments';
+import type { Attachment } from '@prisma/client';
+
+interface RecordWithAttachments extends RecordWithCreator {
+    attachments?: Attachment[];
+}
 
 interface RecordListProps {
-    records: (ClinicalRecord & { staff?: Staff | null })[];
+    records: RecordWithAttachments[];
 }
 
 export function RecordList({ records }: RecordListProps) {
@@ -18,12 +31,21 @@ export function RecordList({ records }: RecordListProps) {
         recordId: '',
         patientId: '',
     });
+    const [attachmentModal, setAttachmentModal] = useState<{ open: boolean; recordId: string; patientId: string }>({
+        open: false,
+        recordId: '',
+        patientId: '',
+    });
     const { showToast } = useToast();
+
+    const { features } = useFeatures();
+    const attachmentsEnabled = features.plugins.attachments.enabled;
+
 
     if (records.length === 0) {
         return (
             <div className="text-center py-12 text-slate-400 border-2 border-dashed border-slate-100 rounded-lg">
-                <p>施術記録がまだありません</p>
+                <p>{TERMS.RECORD}がまだありません</p>
             </div>
         );
     }
@@ -56,13 +78,35 @@ export function RecordList({ records }: RecordListProps) {
                                         {record.staff.name}
                                     </span>
                                 )}
+                                {/* Always show creator info for audit trail (Design Principle: Transparency) */}
+                                {record.creatorName && (
+                                    <span className="text-xs flex items-center gap-1 text-slate-400 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-full" title="記録者">
+                                        <UserCheck className="w-3 h-3" />
+                                        記録: {record.creatorName}
+                                        {record.createdAt && (
+                                            <span className="text-slate-300">
+                                                ({format(new Date(record.createdAt), 'M/d HH:mm')})
+                                            </span>
+                                        )}
+                                    </span>
+                                )}
                                 {tags.map((tag, i) => (
                                     <span key={i} className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
                                         {tag}
                                     </span>
                                 ))}
                             </div>
-                            <div>
+                            <div className="flex items-center gap-1">
+                                {/* Attachment Button (Plugin) */}
+                                {attachmentsEnabled && (
+                                    <AttachmentButton
+                                        onClick={() => setAttachmentModal({
+                                            open: true,
+                                            recordId: record.id,
+                                            patientId: record.patientId,
+                                        })}
+                                    />
+                                )}
                                 <button
                                     onClick={() => setDeleteConfirm({ open: true, recordId: record.id, patientId: record.patientId })}
                                     className="p-1 text-slate-300 hover:text-red-500 transition-colors"
@@ -73,23 +117,28 @@ export function RecordList({ records }: RecordListProps) {
                             </div>
                         </div>
 
+                        {/* SOAP フィールドを動的に表示 */}
                         <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <span className="text-xs font-bold text-red-400 block">S (Subjective)</span>
-                                <p className="text-sm text-slate-800 whitespace-pre-wrap min-h-[1.5rem]">{record.subjective}</p>
-                            </div>
-                            <div className="space-y-1">
-                                <span className="text-xs font-bold text-blue-400 block">O (Objective)</span>
-                                <p className="text-sm text-slate-800 whitespace-pre-wrap min-h-[1.5rem]">{record.objective}</p>
-                            </div>
-                            <div className="space-y-1">
-                                <span className="text-xs font-bold text-green-400 block">A (Assessment)</span>
-                                <p className="text-sm text-slate-800 whitespace-pre-wrap min-h-[1.5rem]">{record.assessment}</p>
-                            </div>
-                            <div className="space-y-1">
-                                <span className="text-xs font-bold text-purple-400 block">P (Plan)</span>
-                                <p className="text-sm text-slate-800 whitespace-pre-wrap min-h-[1.5rem]">{record.plan}</p>
-                            </div>
+                            {RECORD_FIELDS.map(field => (
+                                <div key={field.dbColumn} className="space-y-1">
+                                    <span className={`text-xs font-bold ${field.colorClass} block`}>
+                                        {field.displayLabel}
+                                    </span>
+                                    <p className="text-sm text-slate-800 whitespace-pre-wrap min-h-[1.5rem]">
+                                        {(record as unknown as Record<string, string>)[field.dbColumn]}
+                                    </p>
+                                </div>
+                            ))}
+
+                            {/* Attachment Gallery (Plugin) */}
+                            {attachmentsEnabled && record.attachments && record.attachments.length > 0 && (
+                                <div className="md:col-span-2">
+                                    <AttachmentGallery
+                                        attachments={record.attachments}
+                                        patientId={record.patientId}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
@@ -98,12 +147,22 @@ export function RecordList({ records }: RecordListProps) {
             <ConfirmDialog
                 open={deleteConfirm.open}
                 onOpenChange={(open) => setDeleteConfirm(prev => ({ ...prev, open }))}
-                title="この記録を削除しますか？"
-                description="この操作は取り消せません。施術記録が完全に削除されます。"
+                title={`この${TERMS.RECORD}を削除しますか？`}
+                description={`この操作は取り消せません。${TERMS.RECORD}が完全に削除されます。`}
                 confirmLabel="削除する"
                 variant="danger"
                 onConfirm={handleDelete}
             />
+
+            {/* Attachment Modal (Plugin) */}
+            {attachmentsEnabled && (
+                <AttachmentModal
+                    recordId={attachmentModal.recordId}
+                    patientId={attachmentModal.patientId}
+                    isOpen={attachmentModal.open}
+                    onClose={() => setAttachmentModal(prev => ({ ...prev, open: false }))}
+                />
+            )}
         </div>
     );
 }

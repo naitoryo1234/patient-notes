@@ -18,6 +18,7 @@ import { differenceInMinutes } from 'date-fns';
 import { Patient, ClinicalRecord } from '@prisma/client';
 import { getNow } from '@/lib/dateUtils';
 import { useToast } from '@/components/ui/Toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Minimal patient type for Recent History (stored in localStorage)
 export interface RecentPatient {
@@ -44,6 +45,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
     const [memoConfirm, setMemoConfirm] = useState<{ open: boolean; id: string; targetStatus: boolean }>({ open: false, id: '', targetStatus: true });
     const [completeConfirm, setCompleteConfirm] = useState<{ open: boolean; id: string; name: string }>({ open: false, id: '', name: '' });
     const { showToast } = useToast();
+    const { operator } = useAuth();
     const [currentTime, setCurrentTime] = useState(getNow());
 
     const [attentionFilter, setAttentionFilter] = useState<'all' | 'delayed' | 'unassigned' | 'memo'>('all');
@@ -73,7 +75,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
         const nextStatus = !target?.isMemoResolved;
 
         try {
-            await toggleAdminMemoResolutionAction(memoConfirm.id, nextStatus);
+            await toggleAdminMemoResolutionAction(memoConfirm.id, nextStatus, operator?.id);
             // Router refresh is handled in the action
         } catch (e) {
             console.error(e);
@@ -236,7 +238,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                             {LABELS.COMMON.ATTENTION}
                             <div className="flex gap-1 ml-1">
                                 {delayedCount > 0 && (
-                                    <span className="bg-blue-100 text-blue-700 text-xs px-1.5 rounded-full" title="カルテ未作成">
+                                    <span className="bg-blue-100 text-blue-700 text-xs px-1.5 rounded-full" title="記録未作成">
                                         {delayedCount}
                                     </span>
                                 )}
@@ -303,7 +305,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                                 {!searchQuery ? (
                                     <div className="p-8 text-center text-slate-400 text-sm">
                                         <Search className="w-12 h-12 mx-auto mb-2 opacity-20" />
-                                        <p>患者様の名前またはふりがなを入力して検索してください</p>
+                                        <p>お客様の名前またはふりがなを入力して検索してください</p>
                                     </div>
                                 ) : initialPatients.length === 0 ? (
                                     <div className="p-8 text-center text-slate-400 text-sm">
@@ -397,7 +399,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                                                     : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
                                             >
                                                 <FileText className="w-3 h-3" />
-                                                カルテ未作成
+                                                記録未作成
                                                 {delayedCount > 0 && <span className={`px-1.5 rounded-full text-[10px] ${attentionFilter === 'delayed' ? 'bg-blue-200 text-blue-800' : 'bg-slate-100 text-slate-500'}`}>{delayedCount}</span>}
                                             </button>
                                         </div>
@@ -453,6 +455,14 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                                                                         <div className="flex items-center gap-1 text-xs text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
                                                                             <CheckCircle className="w-3 h-3" />
                                                                             {LABELS.APPOINTMENT.ADMIN_MEMO_RESOLVED}
+                                                                            {apt.adminMemoResolverName && (
+                                                                                <span className="text-green-500 font-normal ml-1">
+                                                                                    ({apt.adminMemoResolverName}
+                                                                                    {apt.adminMemoResolvedAt && (
+                                                                                        <span className="ml-1">{format(new Date(apt.adminMemoResolvedAt), 'M/d HH:mm')}</span>
+                                                                                    )})
+                                                                                </span>
+                                                                            )}
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -514,7 +524,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                                             <div className="space-y-2">
                                                 <h3 className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-100 flex items-center gap-2">
                                                     <FileText className="w-3 h-3" />
-                                                    カルテ未作成 / 確認待ち ({delayedAppointments.length}件)
+                                                    記録未作成 / 確認待ち ({delayedAppointments.length}件)
                                                 </h3>
                                                 <ul className="space-y-1">
                                                     {delayedAppointments.map(apt => (
@@ -534,7 +544,7 @@ export function PatientSearchPanel({ initialPatients, appointments, unassignedAp
                                                                         </span>
                                                                         <div className="text-xs text-blue-500 font-bold flex items-center gap-1">
                                                                             <AlertCircle className="w-3 h-3" />
-                                                                            カルテ作成待ち
+                                                                            記録作成待ち
                                                                         </div>
                                                                     </div>
                                                                 </div>

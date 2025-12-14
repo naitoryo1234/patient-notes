@@ -2,15 +2,21 @@
 
 import { ReactNode } from 'react';
 import { ToastProvider } from '@/components/ui/Toast';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 interface ProvidersProps {
     children: ReactNode;
+    authEnabled: boolean;
+    authPin: string;
 }
 
-export function Providers({ children }: ProvidersProps) {
+export function Providers({ children, authEnabled, authPin }: ProvidersProps) {
     return (
-        <ToastProvider>
-            {children}
-        </ToastProvider>
+        <AuthProvider authEnabled={authEnabled} authPin={authPin}>
+            <ToastProvider>
+                {children}
+            </ToastProvider>
+        </AuthProvider>
     );
 }
+

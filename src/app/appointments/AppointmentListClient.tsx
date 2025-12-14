@@ -16,6 +16,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { LABELS, TERMS } from '@/config/labels';
 import { getNow } from '@/lib/dateUtils';
 import { useToast } from '@/components/ui/Toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AppointmentListClientProps {
     initialAppointments: Appointment[];
@@ -26,6 +27,7 @@ interface AppointmentListClientProps {
 export function AppointmentListClient({ initialAppointments, staffList, includePast }: AppointmentListClientProps) {
     const router = useRouter();
     const { showToast } = useToast();
+    const { operator } = useAuth();
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
     const [viewingMemo, setViewingMemo] = useState<{ patient: string; memo: string } | null>(null);
     const [filterStaffId, setFilterStaffId] = useState<string>('all');
@@ -51,7 +53,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
     };
 
     const handleMemoToggle = async () => {
-        await toggleAdminMemoResolutionAction(memoConfirm.id, memoConfirm.resolved);
+        await toggleAdminMemoResolutionAction(memoConfirm.id, memoConfirm.resolved, operator?.id);
         router.refresh();
     };
 
@@ -442,7 +444,7 @@ export function AppointmentListClient({ initialAppointments, staffList, includeP
                                             <Link
                                                 href={`/patients/${apt.patientId}`}
                                                 className="hover:underline flex flex-col"
-                                                title={isCancelled ? "キャンセル済み：詳細を確認して再予約" : "患者詳細を表示"}
+                                                title={isCancelled ? "キャンセル済み：詳細を確認して再予約" : "詳細を表示"}
                                             >
                                                 <div className="flex items-center gap-2">
                                                     <span className={`font-bold text-base truncate block ${isCancelled ? 'text-slate-400 line-through' : (isExpired ? '' : 'text-indigo-900')}`}>

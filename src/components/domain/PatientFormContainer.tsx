@@ -218,7 +218,7 @@ export function PatientFormContainer({ action, initialValues = {} }: PatientForm
 電話: 090-1234-5678
 
 [Memo]
-持病あり。紹介で来院。`}
+友人の紹介で来店。`}
                         </pre>
                         <div className="mt-2 flex justify-end">
                             <AiUsageGuidePatient />

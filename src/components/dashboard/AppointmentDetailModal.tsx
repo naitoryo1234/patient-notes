@@ -9,6 +9,7 @@ import { updateAppointmentAction, toggleAdminMemoResolutionAction, cancelAppoint
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TERMS, LABELS } from '@/config/labels';
 import { useToast } from '@/components/ui/Toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AppointmentDetailModalProps {
     appointment: Appointment;
@@ -19,14 +20,36 @@ interface AppointmentDetailModalProps {
     onUndoCheckIn: () => void;
 }
 
+// Local state for resolved info to enable immediate display after resolving
+interface LocalResolverInfo {
+    isResolved: boolean;
+    resolverName?: string;
+    resolvedAt?: Date;
+}
+
 export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, onCheckIn, onUndoCheckIn }: AppointmentDetailModalProps) {
     const router = useRouter();
     const [isResolving, setIsResolving] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
     const { showToast } = useToast();
+    const { operator } = useAuth();
+
+    // Local resolver info state - initialized from appointment, updated after resolve action
+    const [localResolverInfo, setLocalResolverInfo] = useState<LocalResolverInfo | null>(null);
 
     if (!isOpen) return null;
+
+    // Use local state if available, otherwise use appointment data
+    const isResolved = localResolverInfo !== null
+        ? localResolverInfo.isResolved
+        : (appointment.isMemoResolved ?? false);
+    const resolverName = localResolverInfo !== null
+        ? localResolverInfo.resolverName
+        : appointment.adminMemoResolverName;
+    const resolvedAt = localResolverInfo !== null
+        ? localResolverInfo.resolvedAt
+        : appointment.adminMemoResolvedAt;
 
     const handleBackdropClick = (e: React.MouseEvent) => {
         if (e.target === e.currentTarget) onClose();
@@ -55,13 +78,21 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
     const handleResolveAdminMemo = async () => {
         setIsResolving(true);
 
-        // Toggle logic
-        const nextStatus = !appointment.isMemoResolved;
+        // Toggle logic - use local state if available
+        const nextStatus = !isResolved;
 
         try {
-            const res = await toggleAdminMemoResolutionAction(appointment.id, nextStatus);
+            const res = await toggleAdminMemoResolutionAction(appointment.id, nextStatus, operator?.id);
             if (res.success) {
-                onClose();
+                // Update local state instead of closing modal
+                // This allows immediate display of resolver info
+                setLocalResolverInfo({
+                    isResolved: nextStatus,
+                    resolverName: nextStatus ? operator?.name : undefined,
+                    resolvedAt: nextStatus ? new Date() : undefined,
+                });
+                // Also trigger page refresh for other components
+                router.refresh();
             } else {
                 showToast(`${LABELS.COMMON.UPDATE}に失敗しました: ` + res.message, 'error');
             }
@@ -115,26 +146,38 @@ export function AppointmentDetailModal({ appointment, isOpen, onClose, onEdit, o
 
                     {/* Admin Memo (Alert) - Show always if exists, change style based on status */}
                     {appointment.adminMemo && (
-                        <div className={`border rounded-md p-3 ${appointment.isMemoResolved ? 'bg-slate-50 border-slate-200' : 'bg-red-50 border-red-100'
+                        <div className={`border rounded-md p-3 ${isResolved ? 'bg-slate-50 border-slate-200' : 'bg-red-50 border-red-100'
                             }`}>
-                            <div className={`flex items-center gap-2 font-bold text-sm mb-1 ${appointment.isMemoResolved ? 'text-slate-500' : 'text-red-700'}`}>
+                            <div className={`flex items-center gap-2 font-bold text-sm mb-1 ${isResolved ? 'text-slate-500' : 'text-red-700'}`}>
                                 <AlertTriangle className="w-4 h-4" />
-                                <span>{LABELS.APPOINTMENT.ADMIN_MEMO}{appointment.isMemoResolved ? LABELS.FORM.RESOLVED_SUFFIX : ''}</span>
+                                <span>{LABELS.APPOINTMENT.ADMIN_MEMO}{isResolved ? LABELS.FORM.RESOLVED_SUFFIX : ''}</span>
                             </div>
-                            <p className={`text-sm mb-2 ${appointment.isMemoResolved ? 'text-slate-500 line-through decoration-slate-400' : 'text-red-800'}`}>
+                            <p className={`text-sm mb-2 ${isResolved ? 'text-slate-500 line-through decoration-slate-400' : 'text-red-800'}`}>
                                 {appointment.adminMemo}
                             </p>
+
+                            {/* Show resolver info when resolved */}
+                            {isResolved && resolverName && (
+                                <p className="text-xs text-slate-400 mb-2">
+                                    ✓ {resolverName} が確認
+                                    {resolvedAt && (
+                                        <span className="ml-1">
+                                            ({format(new Date(resolvedAt), 'M/d HH:mm')})
+                                        </span>
+                                    )}
+                                </p>
+                            )}
 
                             <button
                                 onClick={() => setConfirmOpen(true)}
                                 disabled={isResolving}
-                                className={`w-full text-xs border px-2 py-1.5 rounded shadow-sm font-bold flex items-center justify-center gap-1 transition-colors ${appointment.isMemoResolved
+                                className={`w-full text-xs border px-2 py-1.5 rounded shadow-sm font-bold flex items-center justify-center gap-1 transition-colors ${isResolved
                                     ? 'bg-slate-50 border-slate-300 text-slate-500 hover:bg-slate-100'
                                     : 'bg-white border-red-200 text-red-600 hover:bg-red-50'
                                     }`}
                             >
                                 <CheckCircle className="w-3 h-3" />
-                                {isResolving ? LABELS.COMMON.PROCESSING : (appointment.isMemoResolved ? LABELS.FORM.UNRESOLVE_ACTION : LABELS.FORM.RESOLVE_ACTION)}
+                                {isResolving ? LABELS.COMMON.PROCESSING : (isResolved ? LABELS.FORM.UNRESOLVE_ACTION : LABELS.FORM.RESOLVE_ACTION)}
                             </button>
                         </div>
                     )}

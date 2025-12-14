@@ -6,6 +6,7 @@ import * as recordService from '@/services/recordService';
 
 export async function addRecord(patientId: string, formData: FormData) {
     const rawData = Object.fromEntries(formData.entries());
+    const operatorId = formData.get('operatorId') as string | null;
 
     // Transform tags from string "a,b,c" to array for validation if needed, 
     // currently Schema expects array but ConfigForm sends individual inputs. 
@@ -29,7 +30,7 @@ export async function addRecord(patientId: string, formData: FormData) {
     }
 
     try {
-        await recordService.createRecord(validated.data, patientId);
+        await recordService.createRecord(validated.data, patientId, operatorId || undefined);
     } catch (error) {
         console.error(error);
         return { success: false, message: 'Database Error' };

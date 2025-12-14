@@ -6,6 +6,7 @@ import { Staff } from '@/services/staffService';
 import { updateAppointmentAction } from '@/actions/appointmentActions';
 import { format } from 'date-fns';
 import { TERMS, LABELS } from '@/config/labels';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AppointmentEditModalProps {
     appointment: Appointment;
@@ -17,6 +18,7 @@ interface AppointmentEditModalProps {
 export function AppointmentEditModal({ appointment, staffList, isOpen, onClose }: AppointmentEditModalProps) {
     const [isPending, setIsPending] = useState(false);
     const [error, setError] = useState<{ message: string; date?: string } | null>(null);
+    const { operator } = useAuth();
 
     // Default values
     const defaultDate = format(new Date(appointment.visitDate), 'yyyy-MM-dd');
@@ -61,6 +63,7 @@ export function AppointmentEditModal({ appointment, staffList, isOpen, onClose }
 
                 <form action={handleSubmit} className="p-4 space-y-4">
                     <input type="hidden" name="id" value={appointment.id} />
+                    {operator?.id && <input type="hidden" name="operatorId" value={operator.id} />}
 
                     {error && (
                         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm space-y-2">

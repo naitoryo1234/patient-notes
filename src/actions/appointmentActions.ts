@@ -10,6 +10,7 @@ export async function scheduleAppointment(formData: FormData) {
     const timeStr = formData.get('visitTime') as string;
     const memo = formData.get('memo') as string;
     const staffId = formData.get('staffId') as string;
+    const operatorId = formData.get('operatorId') as string | null;
 
     if (!patientId || !dateStr || !timeStr) {
         return { success: false, message: '必須項目が不足しています' };
@@ -20,10 +21,11 @@ export async function scheduleAppointment(formData: FormData) {
     const duration = formData.get('duration') ? parseInt(formData.get('duration') as string) : 60;
 
     try {
-        await createAppointment(patientId, startAt, memo, staffId || undefined, duration, adminMemo);
+        await createAppointment(patientId, startAt, memo, staffId || undefined, duration, adminMemo, operatorId || undefined);
         revalidatePath('/');
         revalidatePath(`/patients/${patientId}`);
         return { success: true };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
         console.error(e);
         return { success: false, message: e.message || '登録に失敗しました' };
@@ -36,6 +38,7 @@ export async function cancelAppointmentAction(appointmentId: string) {
         await cancelAppointment(appointmentId);
         revalidatePath('/');
         return { success: true };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
         console.error(e);
         return { success: false, message: e.message || 'キャンセルに失敗しました' };
@@ -48,6 +51,7 @@ export async function updateAppointmentAction(formData: FormData) {
     const timeStr = formData.get('visitTime') as string;
     const memo = formData.get('memo') as string;
     const staffId = formData.get('staffId') as string;
+    const operatorId = formData.get('operatorId') as string | null;
 
     if (!id || !dateStr || !timeStr) {
         return { success: false, message: '必須項目が不足しています' };
@@ -84,10 +88,16 @@ export async function updateAppointmentAction(formData: FormData) {
 
     // Construct updateData with only present fields (or null if explicitly empty/cleared)
     // Use Prisma.AppointmentUpdateInput type? Or just partial object.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: Record<string, any> = { startAt };
     if (duration !== undefined) updateData.duration = duration;
     if (adminMemo !== undefined) updateData.adminMemo = adminMemo;
     updateData.isMemoResolved = isMemoResolved; // This forces false if missing. Accepted for Edit Modal.
+
+    // Track who updated
+    if (operatorId) {
+        updateData.updatedBy = operatorId;
+    }
 
     if (formData.has('memo')) {
         updateData.memo = formData.get('memo') as string;
@@ -104,6 +114,7 @@ export async function updateAppointmentAction(formData: FormData) {
         await updateAppointment(id, updateData);
         revalidatePath('/');
         return { success: true };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
         console.error(e);
         return { success: false, message: e.message || '更新に失敗しました' };
@@ -116,6 +127,7 @@ export async function checkInAppointmentAction(appointmentId: string) {
         await import('@/services/appointmentService').then(s => s.checkInAppointment(appointmentId));
         revalidatePath('/');
         return { success: true };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
         console.error(e);
         return { success: false, message: e.message || 'チェックインに失敗しました' };
@@ -128,19 +140,41 @@ export async function cancelCheckInAction(appointmentId: string) {
         await import('@/services/appointmentService').then(s => s.cancelCheckIn(appointmentId));
         revalidatePath('/');
         return { success: true };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
         console.error(e);
         return { success: false, message: e.message || 'チェックイン取り消しに失敗しました' };
     }
 }
 
-export async function toggleAdminMemoResolutionAction(appointmentId: string, isResolved: boolean) {
+export async function toggleAdminMemoResolutionAction(
+    appointmentId: string,
+    isResolved: boolean,
+    operatorId?: string // 操作者ID（オプション）
+) {
     if (!appointmentId) return { success: false, message: 'IDが不足しています' };
     try {
-        await import('@/services/appointmentService').then(s => s.updateAppointment(appointmentId, { isMemoResolved: isResolved }));
+        const updateData: Record<string, unknown> = {
+            isMemoResolved: isResolved,
+        };
+
+        // 操作者追跡: 解決時に誰が解決したかを記録
+        if (isResolved) {
+            updateData.adminMemoResolvedAt = new Date();
+            if (operatorId) {
+                updateData.adminMemoResolvedBy = operatorId;
+            }
+        } else {
+            // 解決を取り消す場合はクリア
+            updateData.adminMemoResolvedAt = null;
+            updateData.adminMemoResolvedBy = null;
+        }
+
+        await import('@/services/appointmentService').then(s => s.updateAppointment(appointmentId, updateData));
         revalidatePath('/');
         revalidatePath('/appointments');
         return { success: true };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
         console.error(e);
         return { success: false, message: e.message || '更新に失敗しました' };
@@ -153,6 +187,7 @@ export async function completeAppointmentAction(appointmentId: string) {
         await import('@/services/appointmentService').then(s => s.updateAppointment(appointmentId, { status: 'completed' }));
         revalidatePath('/');
         return { success: true };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
         console.error(e);
         return { success: false, message: e.message || '完了処理に失敗しました' };

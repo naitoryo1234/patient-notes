@@ -32,7 +32,7 @@ export const RecordSchema = z.object({
     const p = data.plan?.trim() || '';
     return s.length > 0 || o.length > 0 || a.length > 0 || p.length > 0;
 }, {
-    message: "カルテの内容が空です。S/O/A/Pのいずれかを入力してください。",
+    message: "記録の内容が空です。いずれかのフィールドを入力してください。",
     path: ["subjective"] // エラーを表示するフィールド（代表）
 });
 
