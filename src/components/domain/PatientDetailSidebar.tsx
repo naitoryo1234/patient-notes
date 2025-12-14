@@ -41,7 +41,7 @@ export function PatientDetailSidebar({ patient, nextAppt, staffList }: PatientDe
             )}
 
             <div className="flex gap-2">
-                <AppointmentButton patientId={patient.id} staffList={staffList} />
+                <AppointmentButton patientId={patient.id} patientName={patient.name} patientKana={patient.kana} staffList={staffList} />
             </div>
         </div>
     );
