@@ -24,6 +24,7 @@ interface AppointmentListClientProps {
     includePast: boolean;
     externalPatientFilter?: string; // Patient filter controlled by parent
     onPatientFilterChange?: (value: string) => void; // Callback when filter changes
+    onEditAppointment?: (appointment: Appointment) => void;
 }
 
 export function AppointmentListClient({
@@ -32,6 +33,7 @@ export function AppointmentListClient({
     includePast,
     externalPatientFilter,
     onPatientFilterChange,
+    onEditAppointment,
 }: AppointmentListClientProps) {
     const router = useRouter();
     const { showToast } = useToast();
@@ -556,7 +558,13 @@ export function AppointmentListClient({
                                                     </Link>
                                                 )}
                                                 <button
-                                                    onClick={() => setEditingAppointment(apt)}
+                                                    onClick={() => {
+                                                        if (onEditAppointment) {
+                                                            onEditAppointment(apt);
+                                                        } else {
+                                                            setEditingAppointment(apt);
+                                                        }
+                                                    }}
                                                     className="bg-white text-slate-600 border border-slate-200 px-2 py-1.5 rounded-md text-xs font-bold shadow-sm hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-1"
                                                     title={LABELS.COMMON.MENU_EDIT}
                                                 >
@@ -671,7 +679,13 @@ export function AppointmentListClient({
                                         </button>
                                     )}
                                     <button
-                                        onClick={() => setEditingAppointment(apt)}
+                                        onClick={() => {
+                                            if (onEditAppointment) {
+                                                onEditAppointment(apt);
+                                            } else {
+                                                setEditingAppointment(apt);
+                                            }
+                                        }}
                                         className="bg-white text-slate-600 border border-slate-200 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-1"
                                         title={LABELS.COMMON.MENU_EDIT}
                                     >

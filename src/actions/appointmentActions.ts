@@ -113,6 +113,7 @@ export async function updateAppointmentAction(formData: FormData) {
     try {
         await updateAppointment(id, updateData);
         revalidatePath('/');
+        revalidatePath('/appointments');
         return { success: true };
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {

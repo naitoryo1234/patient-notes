@@ -4,7 +4,7 @@ import { AppointmentsPageClient } from './AppointmentsPageClient';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AppointmentsPage({ searchParams }: { searchParams: Promise<{ history?: string }> }) {
+export default async function AppointmentsPage({ searchParams }: { searchParams: Promise<{ history?: string; date?: string }> }) {
     const params = await searchParams;
     // Default to SHOWING past appointments (Ledger mode)
     const includePast = params?.history !== 'false';
@@ -14,6 +14,9 @@ export default async function AppointmentsPage({ searchParams }: { searchParams:
     const unresolvedMemos = await getUnresolvedAdminMemos();
     const staffList = await getActiveStaff();
 
+    // Date param for Calendar View default
+    const dateParam = params?.date ? String(params.date) : undefined;
+
     return (
         <div className="h-full flex flex-col gap-4">
             <AppointmentsPageClient
@@ -22,6 +25,7 @@ export default async function AppointmentsPage({ searchParams }: { searchParams:
                 unresolvedMemos={unresolvedMemos}
                 staffList={staffList}
                 includePast={includePast}
+                initialDateStr={dateParam}
             />
         </div>
     );
