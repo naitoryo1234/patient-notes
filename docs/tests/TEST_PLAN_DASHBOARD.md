@@ -68,7 +68,7 @@
 | DA-01 | ⬜ | - | - | - |
 | DA-02 | ⬜ | - | - | - |
 | DA-03 | ⬜ | - | - | - |
-| DA-04 | ⬜ | - | - | - |
+| DA-04 | ✅ | 2025-12-15 12:55 | System | Browser Automation |
 | DA-05 | ⬜ | - | - | - |
 | DA-06 | ✅ | 2025-12-15 12:00 | System | Browser Automation |
 | DA-07 | ✅ | 2025-12-15 12:00 | System | Browser Automation |
