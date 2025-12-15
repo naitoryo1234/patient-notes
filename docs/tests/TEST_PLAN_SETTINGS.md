@@ -107,13 +107,13 @@
 | ST-04 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
 | ST-05 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
 | ST-06 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
-| AU-01 | ⬜ | - | - | - |
-| AU-02 | ⬜ | - | - | - |
-| AU-03 | ⬜ | - | - | - |
-| AU-04 | ⬜ | - | - | - |
-| AU-05 | ⬜ | - | - | - |
-| AU-06 | ⬜ | - | - | - |
-| AU-07 | ⬜ | - | - | - |
+| AU-01 | ✅ | 2025-12-15 15:00 | System | Browser Automation (Port 3001) |
+| AU-02 | ✅ | 2025-12-15 15:00 | System | Browser Automation (Port 3001) |
+| AU-03 | ✅ | 2025-12-15 15:00 | System | Browser Automation (Port 3001) |
+| AU-04 | ⬜ | - | - | Skip (Simple check) |
+| AU-05 | ✅ | 2025-12-15 15:00 | System | Browser Automation (Port 3001) |
+| AU-06 | ✅ | 2025-12-15 15:00 | System | Browser Automation (Session persisted after reload) |
+| AU-07 | ⬜ | - | - | Skip (Browser restart limited) |
 | PL-01 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
 | PL-02 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
 | PL-03 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
