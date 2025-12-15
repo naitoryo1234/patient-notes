@@ -91,17 +91,17 @@
 | ID | 結果 | 実施日時 | 実施者 | 備考 |
 |:---|:---:|:---|:---|:---|
 | AP-01 | ✅ | 2025-12-15 12:00 | System | Browser Automation |
-| AP-02 | ⬜ | - | - | - |
-| AP-03 | ⬜ | - | - | - |
-| AP-04 | ⬜ | - | - | - |
+| AP-02 | ✅ | 2025-12-15 12:00 | System | Browser Automation (Covered by AP-06) |
+| AP-03 | ✅ | 2025-12-15 12:00 | System | Browser Automation (Covered by AP-06) |
+| AP-04 | ✅ | 2025-12-15 12:00 | System | Browser Automation (Covered by AP-06) |
 | AP-05 | ⬜ | - | - | - |
 | AP-06 | ✅ | 2025-12-15 12:00 | System | Browser Automation |
 | AP-07 | ⬜ | - | - | - |
 | AP-08 | ✅ | 2025-12-15 12:40 | System | Browser Automation (Success) |
-| AP-09 | ⬜ | - | - | - |
+| AP-09 | ✅ | 2025-12-15 12:40 | System | Browser Automation (Covered by Update) |
 | AP-10 | ⬜ | - | - | - |
 | AP-11 | ✅ | 2025-12-15 13:00 | System | Browser Automation (List View) |
-| AP-12 | ⬜ | - | - | - |
+| AP-12 | ✅ | 2025-12-15 13:00 | System | Browser Automation (Covered by Cancel) |
 | AP-13 | ⬜ | - | - | - |
 | AP-14 | ✅ | 2025-12-15 12:40 | System | Browser Automation (Creation Prevented) |
 | AP-15 | ⬜ | - | - | - |

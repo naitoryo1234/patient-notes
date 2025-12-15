@@ -101,12 +101,12 @@
 
 | ID | 結果 | 実施日時 | 実施者 | 備考 |
 |:---|:---:|:---|:---|:---|
-| ST-01 | ⬜ | - | - | - |
-| ST-02 | ⬜ | - | - | - |
-| ST-03 | ⬜ | - | - | - |
-| ST-04 | ⬜ | - | - | - |
-| ST-05 | ⬜ | - | - | - |
-| ST-06 | ⬜ | - | - | - |
+| ST-01 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
+| ST-02 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
+| ST-03 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
+| ST-04 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
+| ST-05 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
+| ST-06 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
 | AU-01 | ⬜ | - | - | - |
 | AU-02 | ⬜ | - | - | - |
 | AU-03 | ⬜ | - | - | - |
@@ -114,11 +114,11 @@
 | AU-05 | ⬜ | - | - | - |
 | AU-06 | ⬜ | - | - | - |
 | AU-07 | ⬜ | - | - | - |
-| PL-01 | ⬜ | - | - | - |
-| PL-02 | ⬜ | - | - | - |
-| PL-03 | ⬜ | - | - | - |
-| PL-04 | ⬜ | - | - | - |
-| BK-01 | ⬜ | - | - | - |
+| PL-01 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
+| PL-02 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
+| PL-03 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
+| PL-04 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
+| BK-01 | ✅ | 2025-12-15 12:50 | System | Browser Automation (Button Check) |
 | BK-02 | ⬜ | - | - | - |
 | BK-03 | ⬜ | - | - | - |
 | BK-04 | ⬜ | - | - | - |
@@ -126,10 +126,10 @@
 | BK-06 | ⬜ | - | - | - |
 | BK-07 | ⬜ | - | - | - |
 | BK-08 | ⬜ | - | - | - |
-| SY-01 | ⬜ | - | - | - |
-| SY-02 | ⬜ | - | - | - |
-| ENV-01 | ⬜ | - | - | - |
-| ENV-02 | ⬜ | - | - | - |
+| SY-01 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
+| SY-02 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
+| ENV-01 | ✅ | 2025-12-15 12:50 | System | Browser Automation |
+| ENV-02 | ⬜ | - | - | Electron Only |
 | ENV-03 | ⬜ | - | - | - |
 
 **凡例**: ✅ = 通過 / ❌ = 失敗 / ⬜ = 未実施

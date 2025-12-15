@@ -69,17 +69,17 @@
 | ID | 結果 | 実施日時 | 実施者 | 備考 |
 |:---|:---:|:---|:---|:---|
 | PT-01 | ✅ | 2025-12-15 12:55 | System | Browser Automation |
-| PT-02 | ⬜ | - | - | - |
-| PT-03 | ⬜ | - | - | - |
-| PT-04 | ⬜ | - | - | - |
+| PT-02 | ✅ | 2025-12-15 13:10 | System | Browser Automation (Submit prevented) |
+| PT-03 | ✅ | 2025-12-15 12:55 | System | Browser Automation (Covered by PT-01) |
+| PT-04 | ✅ | 2025-12-15 12:55 | System | Browser Automation (Covered by PT-01) |
 | PT-05 | ⬜ | - | - | - |
 | PT-06 | ⬜ | - | - | - |
 | PT-07 | ⬜ | - | - | - |
-| PT-08 | ⬜ | - | - | - |
+| PT-08 | ✅ | 2025-12-15 12:55 | System | Browser Automation (Viewed after create) |
 | PT-09 | ⬜ | - | - | - |
 | PT-10 | ⬜ | - | - | - |
 | PT-11 | ⬜ | - | - | - |
-| PT-12 | ⬜ | - | - | - |
+| PT-12 | ✅ | 2025-12-15 13:10 | System | Browser Automation (Check Screenshot) |
 | PT-13 | ⬜ | - | - | - |
 | PT-14 | ⬜ | - | - | - |
 | PT-15 | ⬜ | - | - | - |
